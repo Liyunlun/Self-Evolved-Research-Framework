@@ -1,5 +1,7 @@
 # SER — Self-Evolved Research
 
+> **Note**: Active development has moved to the [`dev`](https://github.com/Liyunlun/Self-Evolved-Research-Framework/tree/dev) branch — 50 micro-skills, dual review, MetaScheduler integration, and more. See the [dev changelog](https://github.com/Liyunlun/Self-Evolved-Research-Framework/blob/dev/docs/CHANGELOG-v5-to-dev.md) for details.
+
 > A behavior-driven research framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 > Skills trigger automatically. The framework improves its own skills through use.
 
