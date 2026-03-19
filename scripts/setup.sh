@@ -33,7 +33,9 @@ fi
 
 # --- 2. Assemble experiment.md (binary install — source files removed after) ---
 if [[ "$UPDATE_MODE" == false ]]; then
-  if [[ "$EXPERIMENT_MODE" == "metascheduler" ]]; then
+  if [[ -f skills/micro/experiment.md ]]; then
+    echo "[=] experiment.md already assembled, skipping"
+  elif [[ "$EXPERIMENT_MODE" == "metascheduler" ]]; then
     cat skills/micro/experiment.base.md skills/micro/experiment.ms.md \
       > skills/micro/experiment.md
     echo "[+] Assembled experiment.md (MetaScheduler mode)"
@@ -44,7 +46,6 @@ if [[ "$UPDATE_MODE" == false ]]; then
   fi
   # Remove source files after assembly (binary install)
   rm -f skills/micro/experiment.base.md skills/micro/experiment.local.md skills/micro/experiment.ms.md
-  echo "[+] Removed experiment source files (assembled binary)"
 else
   if [[ -f skills/micro/experiment.md ]]; then
     echo "[=] experiment.md preserved (update mode — install mode unchanged)"

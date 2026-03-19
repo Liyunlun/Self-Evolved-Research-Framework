@@ -104,10 +104,10 @@ Priority matches from top to bottom. Each micro-skill has a detailed spec in `sk
 | 40 | User asks for checklist completion stats | `checklist.status` | `skills/micro/checklist.md` |
 | 41 | Open-ended research exploration | `research.explore` | `skills/micro/research.md` |
 | 42 | Architecture/design decision | `design.converge` | `skills/micro/research.md` |
-| 43 | User wants to add/track a task | `checklist.create` | `skills/micro/checklist.md` |
-| 44 | "找论文", "文献检索", "related work", "search arxiv" | `lit.search` | `skills/micro/paper.md` |
-| 45 | "写论文", "开始写", "paper writing" (full paper, not single section) | `checklist.create(category=paper-writing)` | `skills/micro/checklist.md` |
-| 46 | "完整流程", "end-to-end", "从头开始研究" | `checklist.create(category=research-pipeline)` | `skills/micro/checklist.md` |
+| 43 | "找论文", "文献检索", "related work", "search arxiv" | `lit.search` | `skills/micro/paper.md` |
+| 44 | "写论文", "开始写", "paper writing" (full paper, not single section) | `checklist.create(category=paper-writing)` | `skills/micro/checklist.md` |
+| 45 | "完整流程", "end-to-end", "从头开始研究" | `checklist.create(category=research-pipeline)` | `skills/micro/checklist.md` |
+| 46 | User wants to add/track a task | `checklist.create` | `skills/micro/checklist.md` |
 | 47 | Other research-related | `general.research` | `skills/micro/meta.md` |
 
 ---
@@ -258,11 +258,16 @@ See `skills/micro/memory.md` for write/retrieve/consolidate/forget specs.
 │   ├── proofs/            # Proof files (proof.write output)
 │   ├── theory/            # Theorem statements
 │   ├── figures/           # Figures and scripts
+│   │   └── scripts/       # Figure generation scripts
 │   ├── papers/            # Draft papers
 │   └── reviews/           # Review artifacts
-├── logs/digest/           # Session logs
-├── outputs/               # Research deliverables (short/mid/long-term + paper/)
-│   └── visuals/           # SVG/pixel art (pixel.create output)
+├── logs/
+│   ├── digest/            # Session logs (YAML + SUMMARY.md)
+│   ├── progress/          # Progress capture logs
+│   └── experiments/       # Experiment logs
+├── outputs/               # Research deliverables
+│   ├── visuals/           # SVG/pixel art (pixel.create output)
+│   └── paper/             # Paper output artifacts
 ├── resources/             # Reference materials
 │   ├── papers/            # Paper reading notes
 │   └── repos/             # Cloned reference repositories
@@ -284,4 +289,7 @@ See `skills/micro/memory.md` for write/retrieve/consolidate/forget specs.
 | Experiment execution (run + monitor) | 2-4K each |
 | Idea discovery + novelty verification | 4-8K + 3-6K |
 | Planning & progress | 1-5K |
+| Checklist operations | 1-3K |
+| Visual creation (pixel/illustrate) | 2-8K |
+| Literature search | 2-5K |
 | Memory operations | 1-3K |
