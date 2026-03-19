@@ -15,7 +15,7 @@ When experiment execution is needed (after `experiment.plan` approval or user re
    - Note the conda environment name and entry command
 2. **Submit via MetaBot Agent Bus**:
    ```
-   mb task manager <config.yaml § metascheduler.chat_id> "需要 {gpu_count}x {gpu_type}，
+   mb task manager <current_chat_id> "需要 {gpu_count}x {gpu_type}，
      项目 {project_name}，conda {env}，运行 {command}，
      工作目录 {working_dir}"
    ```
@@ -27,17 +27,17 @@ When experiment execution is needed (after `experiment.plan` approval or user re
 4. **Receive results**:
    - MetaScheduler notifies on completion/failure
    - Results are available in the experiment directory on the compute node
-   - Use `mb task manager <chat_id> "check status of task {task_id}"` for progress
+   - Use `mb task manager <current_chat_id> "check status of task {task_id}"` for progress
 
 ## Checking Experiment Status
 
 ```
-mb task manager <config.yaml § metascheduler.chat_id> "check status of task {task_id}"
+mb task manager <current_chat_id> "check status of task {task_id}"
 ```
 
 Or check all active experiments:
 ```
-mb task manager <config.yaml § metascheduler.chat_id> "list active experiments for {project_name}"
+mb task manager <current_chat_id> "list active experiments for {project_name}"
 ```
 
 ## After Experiment Completes
@@ -52,7 +52,7 @@ When MetaScheduler notifies completion:
 MetaScheduler settings are in `config.yaml § metascheduler`:
 ```yaml
 metascheduler:
-  chat_id: "{MetaScheduler chat ID}"
+  bot_name: "manager"
   default_gpu_type: "RTX4090"
   default_gpu_count: 1
   default_conda_env: "research"

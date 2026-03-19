@@ -125,7 +125,7 @@ dual_review:
 
 # MetaScheduler integration (only present if installed with MetaScheduler mode)
 # metascheduler:
-#   chat_id: "oc_xxx"                   # MetaScheduler bot chat ID
+#   bot_name: "manager"                 # MetaScheduler bot name for mb task
 #   default_gpu_type: "RTX4090"
 #   default_gpu_count: 1
 #   default_conda_env: "research"
