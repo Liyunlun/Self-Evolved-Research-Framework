@@ -7,26 +7,28 @@
 **Trigger**: User asks "what should I do next?", "what's the priority?", or seems unsure about next steps
 
 **Process**:
-1. Read: `config.yaml` (milestones, timeline), `methodology/approach.md` (phases), last few `logs/digest/*.yaml`
-2. Assess current state:
-   - Where are we in the timeline?
-   - What was accomplished recently?
-   - What's the next milestone?
-3. Generate 3-5 prioritized task suggestions:
+1. Read: `Checklist.md` (L0 project root) for overall progress
+2. Read: relevant L1 checklists (`checklists/short-term.md`, `checklists/mid-term.md`) for `[ ]` (incomplete) items
+3. Read: `config.yaml` (milestones, timeline) for deadline context
+4. Prioritize incomplete items by:
+   - Deadline proximity (nearest milestone first)
+   - Dependency chains (unblock other items first)
+   - Blocking status (items others depend on)
+5. Generate 3-5 prioritized task suggestions with checklist references:
    ```
-   1. [HIGH] {task} — {reason, milestone impact}
-   2. [MED]  {task} — {reason}
+   1. [HIGH] {task} — {reason, milestone impact} (→ checklists/{path})
+   2. [MED]  {task} — {reason} (→ checklists/{path})
    3. [LOW]  {task} — {nice-to-have}
    ```
-4. No multi-question wizard — direct output
+6. No multi-question wizard — direct output
 
 **Auto-strategy selection**:
-- Near milestone → emphasize milestone-critical tasks
+- Near milestone → emphasize milestone-critical tasks from checklist
 - Long gap since last session → suggest review/catch-up first
-- Blocked on external → suggest parallel tasks
+- Blocked on external → suggest parallel tasks from checklist
 
-**Inputs**: Project state (config, logs, methodology)
-**Outputs**: Prioritized task list (inline)
+**Inputs**: Checklist.md, L1 checklists, config.yaml
+**Outputs**: Prioritized task list with checklist references (inline)
 **Token**: ~2-3K
 **Composition**: User picks a theory task → triggers appropriate theory/proof skill
 
@@ -92,17 +94,21 @@
 **Trigger**: User asks "where are we?", "project status?", or "give me an overview"
 
 **Process**:
-1. Read: config.yaml, SUMMARY.md, recent logs, methodology/approach.md
-2. Generate comprehensive status:
-   - Overall progress (phase, timeline, token budget)
+1. Read: `Checklist.md` (L0) and all L1 checklists (`checklists/short-term.md`, `checklists/mid-term.md`, `checklists/long-term.md`)
+2. Compute completion stats from checklist tree:
+   - Per-term completion: short-term {done}/{total}, mid-term {done}/{total}, long-term {done}/{total}
+   - Per-category breakdown where L2 checklists exist
+3. Read: config.yaml (milestones), SUMMARY.md (recent activity)
+4. Generate comprehensive status:
+   - Overall checklist progress (per-term, per-category)
+   - Blocking items and their dependencies
    - Recent activity (last 3-5 sessions)
    - Key research outputs produced
-   - Open questions / blockers
    - Upcoming milestones
-3. Keep to ~15-20 lines
+5. Keep to ~15-20 lines
 
-**Inputs**: All project state files
-**Outputs**: Status report (inline)
+**Inputs**: Checklist.md, L1/L2 checklists, config.yaml, SUMMARY.md
+**Outputs**: Status report with checklist completion stats (inline)
 **Token**: ~1-2K
 **Composition**: Naturally leads to `plan.suggest` if user wants next steps
 

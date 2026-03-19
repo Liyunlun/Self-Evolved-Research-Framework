@@ -10,17 +10,17 @@
 1. Silently read: `config.yaml` (project status, milestone), last `logs/digest/*.yaml`, `logs/digest/SUMMARY.md`
 2. Read: `memory/MEMORY.md` + execute `memory.retrieve` for active context
 3. Read: `skills/td-nl/value-function.md` (current V^L)
-4. Output status banner:
+4. Read: `Checklist.md` (project progress root — compute done/total item counts)
+5. Output status banner:
    ```
-   [SER] {project_name} | Phase {X} | Token: {used}/{total} ({pct}%)
+   [SER] {project_name} | Phase {X} | [{done}/{total} items] | V^L={overall}/10
    Last session ({date}): {1-line summary from last log}
    Next milestone: {milestone_goal} ({days_remaining}d)
-   [MEM] {N} memories | [TD-NL] V^L={overall}/10
    ```
-5. If milestone <= 3 days away, append: `** MILESTONE APPROACHING **`
-6. Proceed immediately to user's request — no questions asked
+6. If milestone <= 3 days away, append: `** MILESTONE APPROACHING **`
+7. Proceed immediately to user's request — no questions asked
 
-**Inputs**: config.yaml, last digest log, SUMMARY.md
+**Inputs**: config.yaml, last digest log, SUMMARY.md, Checklist.md
 **Outputs**: Status banner (inline, not saved)
 **Token**: ~1K
 **Composition**: None (always first)
@@ -64,4 +64,5 @@
 - Chain to `memory.write` (capture unrecorded insights/decisions)
 - Chain to `memory.consolidate` (check if consolidation needed)
 - Chain to `evolve.suggest` (G1 aggregation + skill value updates + optional spec edit proposal)
+- Chain to `checklist.update` — mark completed items from this session
 - Terminal after all chains complete

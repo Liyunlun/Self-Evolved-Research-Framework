@@ -37,6 +37,9 @@ dirs=(
   docs
   skills/td-nl/history
   skills/td-nl/skill-values
+  checklists/short-term
+  checklists/mid-term
+  checklists/long-term
 )
 
 for d in "${dirs[@]}"; do
@@ -59,6 +62,9 @@ gitkeep_dirs=(
   resources/repos
   docs
   skills/td-nl/history
+  checklists/short-term
+  checklists/mid-term
+  checklists/long-term
 )
 
 for d in "${gitkeep_dirs[@]}"; do
@@ -102,6 +108,56 @@ SUMEOF
 else
   echo "[=] logs/digest/SUMMARY.md already exists, skipping"
 fi
+
+# --- 6. Checklist system ---
+
+# Try to extract project name from config.yaml
+PROJECT_NAME="My Project"
+if [ -f config.yaml ]; then
+  _name=$(grep -m1 '^  name:' config.yaml 2>/dev/null | sed 's/^  name: *"\?\([^"]*\)"\?/\1/' || true)
+  if [ -n "$_name" ]; then
+    PROJECT_NAME="$_name"
+  fi
+fi
+
+if [ ! -f Checklist.md ]; then
+  cat > Checklist.md << CLEOF
+# $PROJECT_NAME — Project Checklist (L0)
+
+## Short-Term
+- [0/0] Short-term tasks → checklists/short-term.md
+
+## Mid-Term
+- [0/0] Mid-term tasks → checklists/mid-term.md
+
+## Long-Term
+- [0/0] Long-term tasks → checklists/long-term.md
+CLEOF
+  echo "[+] Created Checklist.md (L0 root)"
+else
+  echo "[=] Checklist.md already exists, skipping"
+fi
+
+if [ ! -f checklists/CLAUDE.md ]; then
+  echo "# Checklist system — see skills/micro/checklist.md" > checklists/CLAUDE.md
+  echo "[+] Created checklists/CLAUDE.md"
+else
+  echo "[=] checklists/CLAUDE.md already exists, skipping"
+fi
+
+for term in short-term mid-term long-term; do
+  if [ ! -f "checklists/${term}.md" ]; then
+    cat > "checklists/${term}.md" << TERMEOF
+# ${term^} Checklist (L1)
+
+<!-- Add items as: - [ ] Task description -->
+<!-- Branch items link to L2: - [0/0] Category → checklists/${term}/category-slug.md -->
+TERMEOF
+    echo "[+] Created checklists/${term}.md"
+  else
+    echo "[=] checklists/${term}.md already exists, skipping"
+  fi
+done
 
 echo
 echo "Setup complete! Next steps:"

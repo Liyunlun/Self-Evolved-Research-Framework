@@ -20,10 +20,12 @@ based on accumulated usage feedback.
 | `micro/planning.md` | plan.suggest, .milestone, progress.capture, status.report, decision.analyze, experiment.analyze | Project planning |
 | `micro/experiment.md` | experiment.run, experiment.monitor | Experiment lifecycle |
 | `micro/idea.md` | idea.discover, idea.verify | Idea generation & novelty check |
-| `micro/checklist.md` | checklist.generate, .verify, .update | Paper submission checklist |
+| `micro/checklist.md` | checklist.create, .verify, .update, .status | Hierarchical checklist engine (core) |
 | `micro/meta.md` | evolve.suggest, evolve.apply, general.research | TD-NL skill evolution |
 | `micro/research.md` | research.explore, design.converge | Open-ended research |
 | `micro/memory.md` | memory.write, .retrieve, .consolidate, .forget | Memory operations |
+
+**Note**: Checklist is the core engine — all skills chain to `checklist.update` after completion.
 
 ## How Skills Work
 

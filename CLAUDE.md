@@ -27,15 +27,15 @@ At the start of each conversation, **silently execute** the following steps, the
 1. Read: `config.yaml` + the most recent `logs/digest/*.yaml` + `logs/digest/SUMMARY.md`
 2. Read: `memory/MEMORY.md` (always-loaded memory index)
 3. Execute `memory.retrieve`: load active context and relevant memories
-4. Output:
+4. Read: `Checklist.md` (project progress root)
+5. Output:
    ```
-   [SER] {project_name} | Phase {X} | Token: {used}/{total} ({pct}%)
+   [SER] {project_name} | Phase {X} | [{done}/{total} items] | V^L={overall}/10
    Last session ({date}): {1-line summary}
    Next milestone: {goal} ({days}d)
-   [MEM] {N} memories | [TD-NL] V^L={overall}/10
    ```
-5. If milestone ≤3 days away: append `** MILESTONE APPROACHING **`
-6. Proceed directly to the user's request without asking questions
+6. If milestone ≤3 days away: append `** MILESTONE APPROACHING **`
+7. Proceed directly to the user's request without asking questions
 
 ### During Session → G2 Inline Assessment
 
@@ -69,8 +69,8 @@ Priority matches from top to bottom. Each micro-skill has a detailed spec in `sk
 | 5 | User proposes a theorem/conjecture | `theory.formalize` | `skills/micro/theory.md` |
 | 6 | User presents a proof draft | `proof.critique` | `skills/micro/proof.md` |
 | 7 | User requests writing a paper section | `writing.draft` | `skills/micro/writing.md` |
-| 8 | User asks "what to do next" | `plan.suggest` | `skills/micro/planning.md` |
-| 9 | User asks "project status" | `status.report` | `skills/micro/planning.md` |
+| 8 | User asks "what to do next" | `plan.suggest` | `skills/micro/planning.md` (reads from checklists) |
+| 9 | User asks "project status" | `status.report` / `checklist.status` | `skills/micro/planning.md` |
 | 10 | User reports completing something | `progress.capture` | `skills/micro/planning.md` |
 | 11 | Complex proof decomposition needed | `theory.decompose` | `skills/micro/theory.md` |
 | 12 | Stuck on a proof/seeking methods | `theory.search` | `skills/micro/theory.md` |
@@ -86,6 +86,22 @@ Priority matches from top to bottom. Each micro-skill has a detailed spec in `sk
 | 22 | Open-ended research exploration | `research.explore` | `skills/micro/research.md` |
 | 23 | Architecture/design decision | `design.converge` | `skills/micro/research.md` |
 | 24 | Other research-related | `general.research` | `skills/micro/meta.md` |
+| 25 | User wants to add/track a task | `checklist.create` | `skills/micro/checklist.md` |
+
+---
+
+## Checklist Engine
+
+The hierarchical checklist is the single source of truth for project progress.
+
+- **L0** (`Checklist.md`): Project root — read at every session.open
+- **L1** (`checklists/{term}.md`): Short/mid/long-term phase checklists
+- **L2** (`checklists/{term}/{category}-{slug}.md`): Specific task checklists
+
+Items are Leaf (single checkable) or Branch (→ sub-checklist). Completion propagates upward.
+Verification stages: `[ ]` → `[x]` (done) → `[v]` (verified) → `[U]` (user signed off).
+
+All skills update the checklist after producing artifacts. See `skills/micro/checklist.md`.
 
 ---
 
@@ -136,6 +152,12 @@ read_date: "YYYY-MM-DD"
 
 **Reading rule**: Read only Quick Reference first. Only read the full document if deeper understanding is needed.
 
+### Checklist Items
+
+Leaf: `- [ ] {description}`
+Branch: `- [3/7] {description} → checklists/{path}.md`
+With artifact: `- [x] {description} | artifact: outputs/{path}`
+
 ### Memory System: `memory/`
 
 Three-tier persistent memory. See `memory/CLAUDE.md` for structure and capacity limits.
@@ -147,6 +169,12 @@ See `skills/micro/memory.md` for write/retrieve/consolidate/forget specs.
 
 ```
 ├── CLAUDE.md              # Behavioral protocol (this file)
+├── Checklist.md           # Project progress root (L0)
+├── checklists/            # Hierarchical task tracking
+│   ├── short-term.md      # L1 phase checklists
+│   ├── mid-term.md
+│   ├── long-term.md
+│   └── {term}/{cat}-{slug}.md  # L2 specific tasks
 ├── config.template.yaml   # Copy to config.yaml and customize
 ├── README.md / LICENSE
 ├── skills/

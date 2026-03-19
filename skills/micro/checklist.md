@@ -1,39 +1,464 @@
-# Checklist Micro-Skills
+# Checklist Engine — Hierarchical Project Tracking
 
-> Triggered by paper submission readiness checks, claim verification, or audit requests.
-> Automates the generate → verify → update pipeline for comprehensive paper checklists.
+> The checklist engine is the single source of truth for project progress.
+> It manages a 3-layer tree (L0 root, L1 term checklists, L2 task checklists)
+> and provides create/verify/update/status operations over that tree.
 >
-> Reference implementation: `/home/shs/codeforshare/SFB/Checklist.md` (NeurIPS 2025 SFB paper)
-
-## checklist.generate
-
-**Trigger**: User asks to "create a checklist", "audit the paper", "track paper claims", or when a paper draft reaches a milestone (first complete draft, pre-submission, revision)
-
-**Process**:
-
-### Step 1 — Gather sources
-
-- Read the paper `.tex` file(s) (identify from `paper/` directory or user-specified path)
-- Scan `experiments/` structure: code files, configs, result CSVs/JSONs, figures
-- Scan `paper/figures/` for submission figures, trace to source scripts
-- Execute `memory.retrieve` for relevant past decisions and experiment outcomes
-
-### Step 2 — Extract paper structure
-
-Parse the tex into a structured inventory:
-
-- **Formal statements**: definitions, propositions, theorems, corollaries, lemmas, assumptions — extract names, labels, tex line ranges, and any `\begin{proof}` blocks
-- **Empirical claims**: grep for numerical values in running text (e.g., "5x lower", "0.03–0.05", "297,000 configurations") — record tex line and the claimed value
-- **Figures and tables**: extract `\label`, `\ref`, `\includegraphics` paths, `\caption` text
-- **Sections**: map section hierarchy with tex line ranges
-
-### Step 3 — Generate `Checklist.md`
-
-All 8 parts are mandatory. Within each part, skip sections only if no items exist. Use **hierarchical numbering** (`1.1`, `1.2`, `2.1`, ...) that maps to logical claims, not paper section numbers.
+> The engine is generic: it tracks ideas, methods, experiments, and papers.
+> Paper-specific tasks get an L2 checklist using the 8-part audit template
+> defined at the bottom of this file.
 
 ---
 
-**PART I: THEORY & PROOFS**
+## Tree Structure
+
+```
+Checklist.md                          ← L0 root (project root)
+├── checklists/short-term.md          ← L1 (4 categories each)
+│   ├── checklists/short-term/idea-{slug}.md    ← L2 (on demand)
+│   ├── checklists/short-term/method-{slug}.md
+│   ├── checklists/short-term/experiment-{slug}.md
+│   └── checklists/short-term/paper-{slug}.md   ← uses 8-part audit template
+├── checklists/mid-term.md
+│   └── checklists/mid-term/{category}-{slug}.md
+└── checklists/long-term.md
+    └── checklists/long-term/{category}-{slug}.md
+```
+
+### Item Types
+
+- **Leaf**: A single checkable item. Has one status marker.
+  ```
+  - [x] Run ablation study on learning rate — `experiments/lr_ablation/`
+  ```
+- **Branch**: Links to a sub-checklist. Status auto-computed from children.
+  ```
+  - [3/7] NeurIPS 2025 paper audit → checklists/mid-term/paper-neurips25.md
+  ```
+
+### 4-Stage Verification Markers
+
+| Marker | Meaning | Who sets it |
+|--------|---------|-------------|
+| `[ ]`  | **Not started** — work not yet done | Default |
+| `[x]`  | **Done** — self-reported complete, not yet verified | Author / skill |
+| `[v]`  | **Verified** — evidence checked by Claude or script | `checklist.verify` |
+| `[U]`  | **Blocked / unable to complete** — needs intervention | Author / skill |
+
+**Flag markers** (for items needing flagging rather than checking):
+- `**NO**` — condition explicitly not met
+- `**YES**` — a problem condition is true
+- `**INCOMPLETE**` — partial work exists
+
+### Categories
+
+Each L1 checklist has four sections:
+
+| Category | Typical L2 template | Examples |
+|----------|-------------------|----------|
+| **Ideas** | Simple checklist | Literature check, novelty assessment, feasibility |
+| **Methods** | Design checklist | Formalization, implementation, validation |
+| **Experiments** | Pipeline checklist | Setup, run, analyze, verify |
+| **Papers** | 8-part audit (see template below) | Full paper submission audit |
+
+---
+
+## checklist.create
+
+**Trigger**: User wants to add a new task/goal to the project, OR a skill completes and needs to register its output as a tracked item.
+
+**Process**:
+
+### Step 1 — Classify the item
+
+Determine two properties:
+1. **Term**: `short-term` (days–1 week), `mid-term` (weeks–1 month), `long-term` (months+)
+2. **Category**: `idea`, `method`, `experiment`, `paper`
+
+If the user does not specify, infer from context:
+- "run this experiment" → short-term / experiment
+- "write the NeurIPS paper" → mid-term / paper
+- "explore whether X is feasible" → short-term / idea
+- "develop a new algorithm for Y" → mid-term / method
+
+### Step 2 — Determine leaf vs. branch
+
+**Add as leaf** if the task is atomic (single action, single deliverable):
+```markdown
+- [ ] {description} — `{artifact_path}`  <!-- added {YYYY-MM-DD} -->
+```
+
+**Add as branch** if the task needs decomposition (multiple steps, sub-deliverables):
+```markdown
+- [0/N] {description} → checklists/{term}/{category}-{slug}.md  <!-- added {YYYY-MM-DD} -->
+```
+
+### Step 3 — Create L2 file (branch items only)
+
+Create `checklists/{term}/{category}-{slug}.md` using the appropriate template:
+
+**idea template**:
+```markdown
+# Idea: {Title}
+
+Parent: checklists/{term}.md § Ideas | Created: {YYYY-MM-DD}
+
+## Checklist
+
+- [ ] Literature search — are there existing approaches?
+- [ ] Novelty assessment — what is genuinely new?
+- [ ] Feasibility check — can this be done with available resources?
+- [ ] Write up 1-paragraph summary in `methodology/ideas/{slug}.md`
+- [ ] Decision: pursue / park / abandon
+
+## Notes
+
+{Space for free-form notes during exploration}
+```
+
+**method template**:
+```markdown
+# Method: {Title}
+
+Parent: checklists/{term}.md § Methods | Created: {YYYY-MM-DD}
+
+## Checklist
+
+- [ ] Formal problem statement
+- [ ] Algorithm design / pseudocode
+- [ ] Theoretical analysis (if applicable)
+- [ ] Implementation — `{expected_code_path}`
+- [ ] Unit tests
+- [ ] Validation on toy problem
+- [ ] Integration with experiment pipeline
+
+## Design Decisions
+
+| Decision | Options | Chosen | Rationale | Date |
+|----------|---------|--------|-----------|------|
+```
+
+**experiment template**:
+```markdown
+# Experiment: {Title}
+
+Parent: checklists/{term}.md § Experiments | Created: {YYYY-MM-DD}
+
+## Pipeline
+
+- [ ] **Setup**: Config, data preparation, environment
+- [ ] **Implementation**: Script/code ready to run
+- [ ] **Run**: Execute on cluster — `{expected_log_path}`
+- [ ] **Analyze**: Process results, generate figures
+- [ ] **Verify**: Numbers match claims, results reproducible
+
+## Config
+
+| Parameter | Value |
+|-----------|-------|
+
+## Results
+
+{Populated after experiment completes}
+```
+
+**paper template**: Use the **Paper Audit Template (L2)** defined at the bottom of this file. This produces the full 8-part structure.
+
+### Step 4 — Update L1 completion count
+
+In `checklists/{term}.md`, under the appropriate `## {Category}` section:
+- Add the new leaf or branch item
+- Recompute the header count: `Updated: {YYYY-MM-DD} | Status: [{done}/{total}]`
+
+### Step 5 — Update L0 root
+
+In `Checklist.md`:
+- Recompute the `[{done}/{total}]` count for the affected term
+- Update the `Updated:` timestamp
+
+### Step 6 — Output
+
+```
+[CHECKLIST] Created: {leaf|branch} in {term}/{category}
+  "{description}"
+  {If branch: L2 file at checklists/{term}/{category}-{slug}.md with {N} items}
+  Progress: {term} [{done}/{total}] | Root [{done}/{total} phases]
+```
+
+**Inputs**: User request or skill output describing the task
+**Outputs**: Updated L0 + L1 files, optionally new L2 file
+**Token**: ~3-5K
+
+---
+
+## checklist.verify
+
+**Trigger**: User asks to "verify the checklist", "run verification", "check what's done", or at project milestones (pre-submission, phase transitions).
+
+**Process**:
+
+### Step 1 — Walk the tree
+
+Starting from `Checklist.md` (L0), traverse all L1 and L2 checklists. Build a flat list of all items with their current markers.
+
+### Step 2 — Verify each `[x]` item
+
+For each item marked `[x]` (done but not yet verified):
+
+1. **Artifact path check**: If the item references a file path (after `—`), verify the file exists.
+   - Exists → candidate for `[v]`
+   - Missing → flag: `<!-- MISSING: {path} not found -->`
+
+2. **Script verification**: If the item has a linked verification script, run it.
+   - Passes → candidate for `[v]`
+   - Fails → flag with output
+
+3. **Data spot-check**: If the item references data with specific numbers:
+   - Read the data file
+   - Compute the claimed statistic
+   - Compare within tolerance → `[v]`
+   - Mismatch → `<!-- DISCREPANCY: claimed {X}, computed {Y} from {file} -->`
+
+4. **Cross-reference check** (for paper L2 checklists):
+   - Verify `\ref{...}` targets exist in tex
+   - Verify figure paths in `\includegraphics` exist
+   - Verify provenance chains (figure → script → data)
+
+### Step 3 — Promote verified items
+
+- `[x]` with all checks passing → `[v]`
+- `[x]` with any check failing → stays `[x]`, flag added
+- `[ ]` items are skipped (not yet claimed done)
+- `[v]` and `[U]` are never downgraded
+
+### Step 4 — Recompute branch counts
+
+For every branch item `[M/N]`:
+- Recount from children: count items that are `[x]`, `[v]`, or `[U]` as "done"
+- Update the branch display: `[{new_done}/{new_total}]`
+- Propagate up: L2 → L1 → L0
+
+### Step 5 — Update files and report
+
+Write back all modified checklist files. Output:
+
+```
+[VERIFY] Tree walk complete
+  Total items: {N_total} | Verified: {N_v} [v] | Issues: {N_issues}
+  Promoted: {list of items promoted [x]→[v]}
+  Issues:
+  - {path} §{item}: {description}
+  Missing files:
+  - {path}: referenced by {item}
+```
+
+**Inputs**: Existing checklist tree (L0 + L1 + L2 files)
+**Outputs**: Updated checklist files + verification report (inline)
+**Token**: ~4-10K
+**Composition**:
+- Issues found → surface issues, suggest fixes
+- All verified → report clean status
+- Always → chain to `memory.write` (record verification results)
+
+---
+
+## checklist.update
+
+**Trigger**: After any skill completes that produces an artifact, after `writing.draft` / `writing.review` completes, or when the user reports completing something.
+
+**Process**:
+
+### Step 1 — Identify affected items
+
+From the skill output or user report, determine:
+- Which checklist item(s) are affected (match by description, artifact path, or category)
+- Whether new items need to be added (new work discovered during execution)
+
+### Step 2 — Mark completed items
+
+For each affected item:
+- `[ ]` → `[x]` if the work is reported done
+- Add artifact path if not already present: `— {path}`
+- Add timestamp comment: `<!-- completed {YYYY-MM-DD} -->`
+
+### Step 3 — Add new items
+
+If the skill discovered new work needed:
+- Add new `[ ]` items in the appropriate L1 section or L2 file
+- If a new task needs decomposition, trigger `checklist.create` for it
+
+### Step 4 — Recompute branch counts
+
+Walk up from modified items:
+- Recount each branch `[M/N]` from its children
+- Update L1 header counts
+- Update L0 root counts
+
+### Step 5 — Update timestamps
+
+- Each modified file gets its `Updated:` timestamp refreshed
+- Add change annotation where significant:
+  ```markdown
+  <!-- change {YYYY-MM-DD}: {what changed and why} -->
+  ```
+
+### Step 6 — Output
+
+```
+[CHECKLIST] Updated: +{N_added} items, {N_completed} marked [x], ~{N_modified} modified
+  Completed:
+  - {item description}
+  New items:
+  - {item description}
+  Progress: {affected_term} [{done}/{total}]
+```
+
+**Inputs**: Skill output or user report + existing checklist tree
+**Outputs**: Updated checklist files + change summary (inline)
+**Token**: ~2-4K
+**Composition**: After update with new items → suggest `checklist.verify` on existing `[x]` items
+
+---
+
+## checklist.status
+
+**Trigger**: User asks "project status", "what's done", "where are we", "progress report", or at session.open for the banner.
+
+**Process**:
+
+### Step 1 — Read the tree
+
+Read `Checklist.md` (L0). For each term, read the L1 file. Do NOT read L2 files unless the user asks for detail on a specific task.
+
+### Step 2 — Compute summary statistics
+
+For each term (short/mid/long) and each category (idea/method/experiment/paper):
+
+| Metric | How |
+|--------|-----|
+| Total items | Count all leaf + branch items |
+| Done | Count `[x]` + `[v]` + `[U]` |
+| Verified | Count `[v]` only |
+| Blocked | Count `[U]` only |
+| Not started | Count `[ ]` only |
+
+### Step 3 — Identify priorities
+
+From the checklist tree:
+1. Items marked `[U]` (blocked) — highest priority to unblock
+2. Items in `short-term` with `[ ]` — should be started soon
+3. Branch items with low completion ratio — may need attention
+4. Items approaching deadlines (if annotated)
+
+### Step 4 — Output
+
+```
+[STATUS] Project Progress
+  Short-term: [{done}/{total}] — {1-line summary of what's active}
+  Mid-term:   [{done}/{total}] — {1-line summary}
+  Long-term:  [{done}/{total}] — {1-line summary}
+
+  By category:
+  | Category    | [ ] | [x] | [v] | [U] | Total |
+  |-------------|-----|-----|-----|-----|-------|
+  | Ideas       |     |     |     |     |       |
+  | Methods     |     |     |     |     |       |
+  | Experiments |     |     |     |     |       |
+  | Papers      |     |     |     |     |       |
+
+  Priorities:
+  1. {highest priority item}
+  2. {next}
+  3. {next}
+```
+
+For session.open banner integration, output a condensed single line:
+```
+[CKL] {total_done}/{total_all} items | {N_blocked} blocked | Next: {top priority}
+```
+
+**Inputs**: Checklist tree (L0 + L1, optionally L2)
+**Outputs**: Progress report (inline)
+**Token**: ~2-4K
+
+---
+
+## Design Principles
+
+1. **Every claim links to evidence**: No item exists without a path to its artifact. The chain: task → artifact → verification is always traceable.
+2. **Bidirectional traceability**: L2 checklists link up to their L1 parent. L1 branch items link down to their L2 file. Any item can be traced in either direction.
+3. **Incremental maintenance**: The checklist tree is a living structure. `checklist.update` keeps it synchronized with evolving work without regenerating from scratch. Change annotations preserve edit history.
+4. **Four-stage verification**: `[ ]` → `[x]` (author marks done) → `[v]` (Claude/script verifies) → `[U]` (blocked/unable). This prevents "checked my own homework" blindness.
+5. **Separation of concerns**: Checklists track status only. Actual artifacts (drafts, results, proofs, code) live in their own directories. Checklists point to artifacts via paths, never duplicate content.
+6. **Branch completion propagates**: Completing a child item automatically updates the parent branch count, all the way to the root. No manual count maintenance.
+7. **Category-specific templates**: Each category (idea/method/experiment/paper) has a purpose-built L2 template. Paper tasks get the full 8-part audit. Experiments get a pipeline checklist. This ensures nothing is missed for the task type.
+8. **Comment-driven discovery**: `<!-- TODO: ... -->` and `<!-- MISSING: ... -->` comments in checklist files surface issues without breaking the checklist format.
+
+---
+
+## Composition Rules
+
+| After Skill A Completes | Condition | Chain to |
+|------------------------|-----------|----------|
+| ANY skill that produces an artifact | Always | → `checklist.update` |
+| `session.open` | Always | → read `Checklist.md` for banner (via `checklist.status` condensed) |
+| `plan.suggest` | Always (needs context) | ← read checklist tree to find `[ ]` items, prioritize |
+| `progress.capture` | Always | → `checklist.update` to mark items `[x]` |
+| `experiment.run` | Launch successful | → `checklist.update` (mark setup items `[x]`) |
+| `experiment.analyze` | Results captured | → `checklist.update` + `checklist.verify` |
+| `writing.draft` | Section complete | → `checklist.update` |
+| `writing.review` | Review complete | → `checklist.update` |
+| `theory.formalize` | Theorem formalized | → `checklist.update` |
+| `proof.critique` | Critique complete | → `checklist.update` |
+| `idea.discover` | Ideas generated | → `checklist.create` (add to short-term/ideas) |
+| `idea.verify` | Novelty confirmed | → `checklist.update` (mark verification `[x]`) |
+| `checklist.create` | Paper category | → use 8-part paper audit template for L2 |
+| `checklist.create` | Always | → `memory.write` (log creation) |
+| `checklist.verify` | Issues found | → surface issues, suggest fixes |
+| `checklist.verify` | Always | → `memory.write` (record verification) |
+| `checklist.update` | New items added | → `checklist.verify` on existing `[x]` items |
+
+---
+
+## Paper Audit Template (L2)
+
+> This is the template used when `checklist.create` is called with `category=paper`.
+> It produces a comprehensive 8-part audit checklist for paper submission readiness.
+> The L2 file is created at `checklists/{term}/paper-{slug}.md`.
+
+### Template Header
+
+```markdown
+# Paper Audit: {Title}
+
+Parent: checklists/{term}.md § Papers | Created: {YYYY-MM-DD}
+Source: `{tex_file_path}` | Last updated: {YYYY-MM-DD}
+Status: [{done}/{total}]
+```
+
+### Generation Process
+
+When creating a paper audit L2 checklist:
+
+1. **Gather sources**: Read the paper `.tex` file(s), scan `experiments/` for code/configs/results, scan `paper/figures/` for figures, execute `memory.retrieve` for past decisions.
+
+2. **Extract paper structure**: Parse tex into a structured inventory:
+   - **Formal statements**: definitions, propositions, theorems, corollaries, lemmas, assumptions — extract names, labels, tex line ranges, proof blocks
+   - **Empirical claims**: grep for numerical values in running text — record tex line and claimed value
+   - **Figures and tables**: extract `\label`, `\ref`, `\includegraphics` paths, `\caption` text
+   - **Sections**: map section hierarchy with tex line ranges
+
+3. **Generate all 8 parts** (defined below), applying status markers.
+
+4. **Apply initial status markers**:
+   - File exists at referenced path → `[x]`
+   - No evidence found → `[ ]`
+   - Add `<!-- TODO: ... -->` for items needing human attention
+   - Add `<!-- comment: ... -->` for contextual notes
+
+---
+
+### PART I: THEORY & PROOFS
 
 One subsection per formal statement. Section header format:
 ```markdown
@@ -46,6 +471,7 @@ Optional flags in header (bold, after `—`):
 - `— **DEPENDS ON {other statement}**` for dependency chains
 
 Each subsection contains:
+
 1. **Status table** (mandatory):
    ```markdown
    | Item | Status | Detail |
@@ -57,7 +483,7 @@ Each subsection contains:
    | All references correct | [x] | {label name, count of \ref uses} |
    ```
 
-   For items that require **flagging rather than checking**, use bold markers:
+   For items requiring **flagging rather than checking**, use bold markers:
    - `**NO**` — explicitly not satisfied (e.g., "Empirically validated | **NO**")
    - `**YES**` — a problem condition is true (e.g., "Too strong | **YES**")
 
@@ -88,7 +514,7 @@ Each subsection contains:
 
 ---
 
-**PART II: EMPIRICAL CLAIMS & EVIDENCE**
+### PART II: EMPIRICAL CLAIMS & EVIDENCE
 
 One subsection per claim or experiment. For complex experiments, expand with sub-subsections.
 
@@ -146,7 +572,7 @@ Cross-reference empirical validation back to theory: use `See §1.N` links.
 
 ---
 
-**PART III: FIGURES & TABLES**
+### PART III: FIGURES & TABLES
 
 Three subsections:
 
@@ -172,7 +598,7 @@ Every figure in the submission directory must have a provenance entry. Flag miss
 
 ---
 
-**PART IV: PAPER SECTIONS**
+### PART IV: PAPER SECTIONS
 
 One subsection per major section. For **key sections** (intro, methods, experiments), include paragraph-level structure analysis:
 
@@ -202,12 +628,12 @@ For **revised sections**, include before/after comparison:
 
 ---
 
-**PART V: BLOCKING ACTIONS**
+### PART V: BLOCKING ACTIONS
 
 Three subsections with **priority levels** (CRITICAL > HIGH > MED > LOW):
 
 ```markdown
-## 5.1 Verification Pass (run scripts, fill `[ ]` → `[v]`)
+## 5.1 Verification Pass (run scripts, fill [ ] → [v])
 | # | Action | Status | Script | Priority |
 |---|--------|--------|--------|----------|
 
@@ -225,7 +651,7 @@ Add `<!-- comment: {rationale} -->` for priority decisions.
 
 ---
 
-**PART VI: RAW DATA INVENTORY**
+### PART VI: RAW DATA INVENTORY
 
 ```markdown
 | Data file | Location | Contents |
@@ -234,7 +660,7 @@ Add `<!-- comment: {rationale} -->` for priority decisions.
 
 ---
 
-**PART VII: CODE INDEX**
+### PART VII: CODE INDEX
 
 Bidirectional: every script maps to the claims it supports.
 
@@ -246,7 +672,7 @@ Bidirectional: every script maps to the claims it supports.
 
 ---
 
-**PART VIII: COMMENT LOG**
+### PART VIII: COMMENT LOG
 
 Collect all `<!-- TODO: ... -->` and `<!-- comment: ... -->` from the entire checklist.
 
@@ -255,174 +681,3 @@ Collect all `<!-- TODO: ... -->` and `<!-- comment: ... -->` from the entire che
 |------|----------|---------|----------------|
 | {date} | §{N.M} | {comment text} | YES → {blocking action ref} / No ({reason}) |
 ```
-
----
-
-### Step 4 — Apply status markers
-
-**Standard markers** (for checkable items):
-```
-| Marker | Meaning | Who |
-|--------|---------|-----|
-| `[ ]`  | **Not Completed** — work not yet done | — |
-| `[x]`  | **Completed** — work done, not yet verified | Author |
-| `[v]`  | **Checked** — verified by Claude or script | Claude |
-| `[U]`  | **Checked by User** — final sign-off | User |
-```
-
-**Flag markers** (for items that need flagging, not checking):
-- `**NO**` — condition explicitly not met
-- `**YES**` — a problem condition is true
-- `**INCOMPLETE**` — partial work exists
-
-**Initial assignment rules**:
-- File exists at referenced path → `[x]`
-- No evidence found → `[ ]`
-- Add `<!-- TODO: ... -->` for items needing human attention
-- Add `<!-- comment: ... -->` for contextual notes
-
-### Step 5 — Add metadata header
-
-```markdown
-# {Venue} {Year} Submission — Master Checklist
-
-Source: `{tex_file_path}` | Last updated: {YYYY-MM-DD}
-```
-
-### Step 6 — Save and report
-
-- Write to `Checklist.md` in the project root (or paper directory if user specifies)
-- Output summary:
-  ```
-  [CHECKLIST] Generated: {N_total} items across {N_parts} parts
-  Completion: {N_done}/{N_total} ({pct}%)
-  Blocking: {top 3 blocking issues with priorities}
-  ```
-
-**Inputs**: Paper tex file + experiment code + results data
-**Outputs**: `Checklist.md` (comprehensive, typically 200-900 lines)
-**Token**: ~8-20K (depends on paper complexity)
-**Composition**: After generation → suggest `checklist.verify` for automated verification pass
-
----
-
-## checklist.verify
-
-**Trigger**: User asks to "verify the checklist", "run verification", "check paper numbers", or periodically during paper writing
-
-**Process**:
-1. **Read current `Checklist.md`**
-2. **Automated verification pass** — for each `[ ]` or `[x]` item that has a linked script or data file:
-   a. **Data existence checks**: Verify all referenced files exist
-      - Data CSVs, result JSONs, checkpoint files
-      - Scripts referenced in Code Index
-      - Figures referenced in Figure Provenance
-      - Flag missing files: `<!-- MISSING: {path} not found -->`
-   b. **Script execution** (if verification scripts exist):
-      - Run `verify_paper_numbers.py` or equivalent
-      - Capture output, match against claimed values
-   c. **Tex cross-reference checks**:
-      - Verify all `\ref{...}` targets exist (compile tex if possible)
-      - Check for undefined references
-      - Verify figure/table labels match `\includegraphics`/`\begin{table}`
-   d. **Numerical claim spot-checks** (sample up to 10 highest-priority):
-      - Read the data file
-      - Compute the claimed statistic
-      - Compare: if match within tolerance → `[v]`, else flag
-      - `<!-- DISCREPANCY: claimed {X}, computed {Y} from {file} -->`
-   e. **Provenance chain validation**:
-      - For each figure in Part III: verify source file exists, script exists, data file exists
-      - Flag broken chains
-3. **Update statuses**:
-   - `[ ]` → `[v]` if verified by script/data check
-   - `[x]` → `[v]` if automated verification passes
-   - Never downgrade: `[v]` and `[U]` stay as-is
-4. **Generate verification report** (inline):
-   ```
-   [VERIFY] {N_total} items | {N_verified}[v] | {N_issues} issues
-   Verified:
-   - §{N.M}: {item} ✓
-   Issues:
-   - §{N.M}: {description of problem}
-   Missing files:
-   - {path}: referenced by §{N.M}
-   ```
-5. **Update `Checklist.md`** with new statuses and comments
-
-**Inputs**: Existing `Checklist.md` + data files + scripts
-**Outputs**: Updated `Checklist.md` + verification report (inline)
-**Token**: ~4-10K
-**Composition**:
-- All verified → suggest `checklist.update` for any new claims added since last generation
-- Issues found → surface issues, suggest fixes
-- Always → chain to `memory.write` (record verification results as episode)
-
----
-
-## checklist.update
-
-**Trigger**: User reports changes to paper (new experiment, revised proof, added section), or after `writing.draft`/`writing.review` completes
-
-**Process**:
-1. **Read current `Checklist.md`** and **paper tex file**
-2. **Diff detection** — identify what changed since the checklist was last updated:
-   - New definitions/propositions/theorems in tex
-   - New empirical claims or revised numbers
-   - New figures or tables
-   - New experiment code or data files
-   - Deleted or renamed items
-   - Reclassified statements (e.g., theorem → corollary)
-3. **Incremental update**:
-   - Add new items with `[ ]` status in the correct part and numbering position
-   - Mark deleted items with `~~strikethrough~~` + date and reason
-   - Update tex line numbers if they shifted (re-scan tex)
-   - Update "Last updated" timestamp in header
-   - Add change annotations where applicable:
-     ```markdown
-     **Change ({date}):** {description of what changed and why}
-     ```
-   - For reclassified statements, update the section header flags
-4. **Consistency check**:
-   - Every formal statement in tex → has Part I entry
-   - Every numerical claim in tex → has Part II entry
-   - Every figure/table in tex → has Part III entry
-   - No orphaned items (checklist item but claim removed from tex)
-   - Part VIII Comment Log includes all new `<!-- TODO: -->` comments
-5. **Save updated `Checklist.md`**
-6. **Output change summary**:
-   ```
-   [CHECKLIST] Updated: +{N_added} items, ~{N_modified} modified, -{N_removed} removed
-   New items needing attention:
-   - §{N.M}: {description}
-   Orphaned items (removed from tex):
-   - §{N.M}: {description} — suggest removal
-   ```
-
-**Inputs**: Current `Checklist.md` + updated tex file
-**Outputs**: Updated `Checklist.md` + change summary (inline)
-**Token**: ~3-6K
-**Composition**: After update → suggest `checklist.verify` on new items
-
----
-
-## Design Principles
-
-1. **Every claim links to evidence**: No numerical claim exists without a path to raw data + analysis script + output artifact. The chain: claim → data → script → figure is always traceable.
-2. **Bidirectional traceability**: Code Index (Part VII) maps code → claims; empirical claims (Part II) map claims → code. Any file or claim can be traced in either direction.
-3. **Incremental maintenance**: The checklist is a living document. `checklist.update` keeps it synchronized with the evolving paper without regenerating from scratch. Change annotations preserve the edit history.
-4. **Four-stage verification**: `[ ]` → `[x]` (author marks done) → `[v]` (Claude/script verifies) → `[U]` (user signs off). This prevents "checked my own homework" blindness.
-5. **Comment-driven TODO discovery**: `<!-- TODO: ... -->` comments in the checklist body are automatically collected in Part VIII, ensuring nothing gets lost in a large document.
-6. **Rich annotations over bare checkmarks**: Issue flags, change logs, options tables, key insights, and background notes make the checklist a living research document — not just a list of boxes. When a problem is found, the checklist records the analysis and resolution options, not just "broken."
-7. **Cross-referencing**: Theory items (Part I) link to their empirical validation (Part II) via `See §N.M`. Blocking actions (Part V) link to the items they unblock. This creates a navigable web, not isolated lists.
-8. **Experiment evolution**: Experiments get redesigned. The checklist tracks this explicitly: old experiments get `BEING REDESIGNED` / `REPLACED BY` flags, new proposals get priority-tagged design tables (P1, P2, ...), and the old items are preserved for reference.
-
-## TD-NL Integration
-
-Track performance via option-values (to be created on first use):
-- `memory/td-nl/option-values/checklist-generate.md`
-- `memory/td-nl/option-values/checklist-verify.md`
-
-Key metrics for TD assessment:
-- `checklist.generate`: Coverage (% of paper claims captured), accuracy of initial status assignments, usefulness of structure to the user, richness of annotations
-- `checklist.verify`: Accuracy of automated verification, false positive/negative rate, discrepancy detection rate, provenance chain completeness
-- `checklist.update`: Completeness of diff detection, correct tex line number updates, no orphaned items, change annotation quality
