@@ -1,0 +1,4 @@
+# Python dependencies
+# For the Skill analytics script
+
+PyYAML>=6.0

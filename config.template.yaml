@@ -1,0 +1,75 @@
+# SER (Self-Evolved Research) Project Configuration
+# Copy this to config.yaml and customize for your research project.
+
+project:
+  name: "Your Research Project"
+  status: "phase-0-exploration"
+  created_at: "YYYY-MM-DD"
+
+research:
+  domain: "Your Domain"
+  sub_domain: "Your Sub-Domain"
+  keywords:
+    - keyword-1
+    - keyword-2
+    - keyword-3
+
+budget:
+  level: "Professional"
+  total_tokens: 5000000  # 5M
+  phases:
+    background: 250000     # 250K (5%)
+    methodology: 125000    # 125K (2.5%)
+    short_term: 500000     # 500K (10%)
+    mid_term: 1250000      # 1.25M (25%)
+    long_term: 2500000     # 2.5M (50%)
+    reserve: 375000        # 375K (7.5%)
+  used_tokens: 0
+
+timeline:
+  type: "Full cycle"
+  duration_months: 6
+  start_date: "YYYY-MM-DD"
+  end_date: "YYYY-MM-DD"
+  milestones:
+    - month: 1
+      goal: "Complete background research + method design"
+    - month: 2
+      goal: "Finish short-term outputs + start mid-term"
+    - month: 3
+      goal: "Peak mid-term output development"
+    - month: 4
+      goal: "Finish mid-term + start long-term outputs"
+    - month: 5
+      goal: "Long-term output development"
+    - month: 6
+      goal: "Complete long-term outputs + wrap up"
+
+workflow:
+  next_step: "Copy this file to config.yaml and fill in your project details"
+  completed_steps: []
+  remaining_steps:
+    - "Phase 0: Exploration"
+    - "Phase 1: Prototype"
+    - "Phase 2: Core Development"
+    - "Phase 3: Integration & Evaluation"
+
+# Autonomy control
+autonomy:
+  auto_proceed: false              # Set true for overnight unattended runs
+  max_auto_rounds: 4               # Max auto-review or auto-retry rounds
+  always_checkpoint: true           # Always save state before autonomous actions
+  notify_on_completion: true        # Send webhook on experiment/review completion
+  require_confirmation:
+    experiment_launch: true         # Confirm before launching GPU experiments
+    paper_submission: true          # Always confirm before any external submission
+
+# Skill architecture + evolution
+skill_architecture: "micro-v5.0"
+skill_evolution:
+  enabled: true                    # TD-NL skill optimization
+  max_spec_edits_per_session: 1    # Prevent cascading changes
+  rollback_threshold: 2            # Score drop that triggers auto-rollback proposal
+  min_sessions_before_edit: 3      # Minimum sessions of data before proposing changes
+
+evolution_history: []
