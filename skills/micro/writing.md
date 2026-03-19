@@ -166,3 +166,75 @@ When cross-model feedback is desired, `writing.review` can operate in **cross-mo
 **Outputs**: Polished text (inline, user copies to document)
 **Token**: ~2-5K
 **Composition**: Standalone — typically doesn't chain
+
+---
+
+## paper.figure
+
+**Trigger**: User says "画图", "作图", "generate figures", "paper figures", "plot results", or after `experiment.analyze` when visualization is needed
+
+**Process**:
+1. **Identify data source**:
+   - Read experiment results from `experiments/` or user-specified path
+   - Parse CSV, JSON, YAML, or log files for plottable data
+2. **Determine figure type**:
+   - Line plot: training curves, ablation trends
+   - Bar chart: comparison across methods/baselines
+   - Scatter plot: correlation analysis
+   - Heatmap: attention maps, confusion matrices
+   - Table: numerical comparisons (LaTeX `tabular`)
+   - Custom: architecture diagrams, algorithm visualization
+3. **Generate code**:
+   - Python/matplotlib for data-driven figures
+   - TikZ/PGFPlots for publication-quality LaTeX figures
+   - Include proper axis labels, legends, font sizes for target venue
+4. **Output**:
+   - Save figure script to `paper/figures/scripts/{figure_name}.py`
+   - Save generated figure to `paper/figures/{figure_name}.{pdf|png}`
+   - If TikZ: save to `paper/figures/{figure_name}.tex`
+
+**Inputs**: Experiment data + figure requirements + target venue style
+**Outputs**: Figure files + generation scripts in `paper/figures/`
+**Token**: ~3-10K
+**Composition**: Figures generated → suggest `checklist.update` + `writing.draft` for results section
+
+---
+
+## paper.compile
+
+**Trigger**: User says "编译论文", "compile paper", "build PDF", "生成PDF", or after `writing.draft` completes all sections
+
+**Process**:
+1. **Locate main tex file**: Search `paper/papers/` for main `.tex` file (contains `\begin{document}`)
+2. **Pre-compile checks**:
+   - Verify all `\input{}` / `\include{}` targets exist
+   - Verify all `\includegraphics{}` image paths exist
+   - Verify `\bibliography{}` bib file exists
+3. **Compile** (multi-pass):
+   ```bash
+   pdflatex -interaction=nonstopmode main.tex
+   bibtex main
+   pdflatex -interaction=nonstopmode main.tex
+   pdflatex -interaction=nonstopmode main.tex
+   ```
+4. **Parse output** for errors and warnings:
+   - **Errors**: Missing packages, undefined references, syntax errors → attempt auto-fix
+   - **Warnings**: Overfull hboxes, missing citations → report but continue
+5. **Auto-fix common issues**:
+   - Missing `\usepackage{}` → add to preamble
+   - Undefined `\ref{}` → scan for closest `\label{}` match
+   - Missing figure files → flag with path suggestion
+6. **Output**:
+   - PDF file to `outputs/paper/{slug}.pdf`
+   - Compilation log summary (inline)
+   ```
+   [COMPILE] {main.tex} → {output.pdf}
+   Status: {success|warnings|errors}
+   Pages: {N} | Errors: {N} | Warnings: {N}
+   {Error details if any}
+   ```
+
+**Inputs**: Path to main `.tex` file (or auto-detected)
+**Outputs**: PDF + compilation log
+**Token**: ~1-3K
+**Composition**: Compile success → suggest `checklist.update`. Errors → fix and re-compile

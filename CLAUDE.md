@@ -1,4 +1,4 @@
-# SER v5.0 — Behavioral Protocol
+# SER dev — Behavioral Protocol
 
 > Self-Evolved Research: A behavior-driven research collaboration framework.
 > All skills trigger automatically via intent detection — no explicit commands needed.
@@ -68,7 +68,7 @@ Priority matches from top to bottom. Each micro-skill has a detailed spec in `sk
 | 4 | Comparing multiple papers | `paper.compare` | `skills/micro/paper.md` |
 | 5 | User proposes a theorem/conjecture | `theory.formalize` | `skills/micro/theory.md` |
 | 6 | User presents a proof draft | `proof.critique` | `skills/micro/proof.md` |
-| 7 | User requests writing a paper section | `writing.draft` | `skills/micro/writing.md` |
+| 7 | User requests writing a specific paper section (e.g., "写 introduction") | `writing.draft` | `skills/micro/writing.md` |
 | 8 | User asks "what to do next" | `plan.suggest` | `skills/micro/planning.md` (reads from checklists) |
 | 9 | User asks "project status" | `status.report` / `checklist.status` | `skills/micro/planning.md` |
 | 10 | User reports completing something | `progress.capture` | `skills/micro/planning.md` |
@@ -87,6 +87,9 @@ Priority matches from top to bottom. Each micro-skill has a detailed spec in `sk
 | 23 | Architecture/design decision | `design.converge` | `skills/micro/research.md` |
 | 24 | Other research-related | `general.research` | `skills/micro/meta.md` |
 | 25 | User wants to add/track a task | `checklist.create` | `skills/micro/checklist.md` |
+| 26 | "找论文", "文献检索", "related work", "search arxiv" | `lit.search` | `skills/micro/paper.md` |
+| 27 | "写论文", "开始写", "paper writing" (full paper, not single section) | `checklist.create(category=paper-writing)` | `skills/micro/checklist.md` |
+| 28 | "完整流程", "end-to-end", "从头开始研究" | `checklist.create(category=research-pipeline)` | `skills/micro/checklist.md` |
 
 ---
 
@@ -114,6 +117,42 @@ The framework optimizes its own micro-skill specs using natural language TD lear
 3. **Apply (user-triggered)**: `evolve.apply` edits skill specs with version archive + rollback safety
 
 Infrastructure lives in `skills/td-nl/`. See `skills/micro/meta.md` for the full process.
+
+---
+
+## Dual Review
+
+When `config.yaml § dual_review.enabled` is true and the current skill is in the `when` list,
+use the MCP tool specified in `config.yaml § dual_review.tool` (default: `mcp__codex__codex`)
+to obtain an independent review from an external model (GPT-5.4).
+
+**Process**:
+1. Send the artifact (idea, draft, proof, results) to the external model via MCP tool
+2. Generate own internal review simultaneously
+3. Synthesize: mark consensus (high-confidence feedback) and divergence (flag for user)
+4. Report both perspectives with clear attribution
+
+**Applicable skills** (configured in `config.yaml § dual_review.when`):
+- `writing.review` — cross-model paper review
+- `idea.verify` — external novelty assessment
+- `proof.critique` — independent proof checking
+- `experiment.analyze` — external interpretation of results
+
+This is a framework **capability**, not a separate skill. Each skill decides internally
+whether to invoke the external model based on config and context.
+
+---
+
+## Memory Parameters
+
+All numerical thresholds in `memory.md` operations reference `config.yaml § memory`.
+TD-NL can optimize these parameters over time based on accumulated feedback:
+- `memory.write.importance_threshold` — minimum importance to persist (default 5)
+- `memory.retrieve.weights` — scoring weights for tag/keyword/recency/importance
+- `memory.consolidate.episode_threshold` — episodes before consolidation triggers
+- `memory.forget.stale_episode_days` — days before stale episode cleanup
+
+See `skills/micro/memory.md` for the full parameterized process.
 
 ---
 

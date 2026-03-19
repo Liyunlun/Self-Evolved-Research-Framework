@@ -69,3 +69,48 @@
 **Outputs**: Index (inline)
 **Token**: ~1-2K
 **Composition**: May suggest `paper.read` for unread high-relevance papers
+
+---
+
+## lit.search
+
+**Trigger**: User says "找论文", "文献检索", "related work", "search arxiv", "find papers on X", or during `idea.discover` when landscape context is needed
+
+**Process**:
+1. **Extract search parameters**:
+   - Keywords from user request
+   - Research domain from `config.yaml § research.keywords`
+   - Time range (default: last 2 years)
+   - Optional: specific venue, author, or topic constraints
+2. **Multi-source search**:
+   a. **arXiv API**: `http://export.arxiv.org/api/query?search_query={keywords}&max_results=20`
+      - Filter by relevance and recency
+   b. **Semantic Scholar API**: `https://api.semanticscholar.org/graph/v1/paper/search?query={keywords}`
+      - Retrieve citation counts and influential citations
+   c. **Local library**: Scan `resources/papers/*.md` for existing notes matching keywords
+3. **Rank results** by composite score:
+   - Relevance to query: 0.4
+   - Recency: 0.2
+   - Citation impact: 0.2
+   - Alignment with project goals: 0.2
+4. **Generate structured output** (top 10, inline):
+   ```
+   ### Literature Search: {query}
+   Date: {YYYY-MM-DD} | Sources: arXiv, Semantic Scholar, local
+
+   | # | Title | Authors | Year | Venue | Relevance | Already Read? |
+   |---|-------|---------|------|-------|-----------|---------------|
+
+   **Top 3 — One-sentence summaries:**
+   1. {title}: {core contribution in one sentence}
+   2. ...
+   3. ...
+
+   **Gaps identified**: {what the literature does NOT cover that's relevant}
+   ```
+5. **Cross-reference with local library**: Flag papers already in `resources/papers/`
+
+**Inputs**: Search query + `config.yaml § research.keywords`
+**Outputs**: Structured literature list (inline)
+**Token**: ~3-8K
+**Composition**: Found key paper → suggest `paper.read` + `checklist.update`

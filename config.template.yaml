@@ -65,7 +65,7 @@ autonomy:
     paper_submission: true          # Always confirm before any external submission
 
 # Skill architecture + evolution
-skill_architecture: "micro-v5.0"
+skill_architecture: "micro-dev"
 skill_evolution:
   enabled: true                    # TD-NL skill optimization
   max_spec_edits_per_session: 1    # Prevent cascading changes
@@ -73,3 +73,59 @@ skill_evolution:
   min_sessions_before_edit: 3      # Minimum sessions of data before proposing changes
 
 evolution_history: []
+
+# === SER dev extensions ===
+
+# Memory strategy parameters (TD-NL can optimize these)
+memory:
+  write:
+    importance_threshold: 5              # Min importance (1-10) to persist
+    max_episodes_per_session: 10         # Cap episode writes per session
+  retrieve:
+    top_candidates: 5                    # Index entries to score
+    top_read: 3                          # Full files to read
+    weights:
+      tag_overlap: 0.4
+      keyword_match: 0.3
+      recency: 0.15
+      importance: 0.15
+  consolidate:
+    episode_threshold: 15                # Unconsolidated episodes before trigger
+    cluster_min: 3                       # Min episodes to form a topic
+    memory_md_pressure_line: 180         # MEMORY.md line count to trigger consolidation
+  forget:
+    stale_episode_days: 7                # Days before stale episode cleanup
+    stale_topic_days: 90                 # Days before stale topic cleanup
+    protected_types:
+      - "architectural_decision"
+      - "key_finding"
+      - "active_hypothesis"
+
+# Workflow parameters (TD-NL can optimize these)
+workflows:
+  review_loop:
+    max_rounds: 3                        # Max review-improve iterations
+    convergence_threshold: 0.8           # Score threshold to stop early
+  idea_discovery:
+    candidate_count: 5                   # Ideas to generate per discovery
+    novelty_threshold: 0.7               # Novelty score to consider "novel"
+  paper_writing:
+    auto_improve_rounds: 2               # Auto-improvement iterations after draft
+
+# Cross-model dual review
+dual_review:
+  enabled: true                          # Enable external model review
+  tool: "mcp__codex__codex"              # MCP tool for external model access
+  model: "gpt-5.4"                       # External model identifier
+  when:                                  # Skills that invoke dual review
+    - "writing.review"
+    - "idea.verify"
+    - "proof.critique"
+    - "experiment.analyze"
+
+# MetaScheduler integration (only present if installed with MetaScheduler mode)
+# metascheduler:
+#   chat_id: "oc_xxx"                   # MetaScheduler bot chat ID
+#   default_gpu_type: "RTX4090"
+#   default_gpu_count: 1
+#   default_conda_env: "research"
