@@ -11,10 +11,10 @@
 1. **Gather context**:
    - Read `config.yaml` (research domain, keywords)
    - Read `methodology/approach.md` (current research direction)
-   - Read `papers/*.md` Quick Reference sections (known landscape)
+   - Read `resources/papers/*.md` Quick Reference sections (known landscape)
    - Execute `memory.retrieve` for relevant past explorations and decisions
 2. **Literature gap analysis**:
-   - Identify what existing papers in `papers/` address
+   - Identify what existing papers in `resources/papers/` address
    - Identify what current methodology does NOT address
    - Cross-reference with research keywords to find under-explored intersections
 3. **Generate ideas** (8-12 candidates):

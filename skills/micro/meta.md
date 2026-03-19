@@ -193,7 +193,7 @@ Safety net for bad edits:
    - Current project state (config.yaml)
    - Research direction (methodology/)
    - Recent progress (logs/)
-   - Paper reading history (papers/)
+   - Paper reading history (resources/papers/)
 3. If the response involves research artifacts, suggest the appropriate specialized micro-skill
 4. This is NOT a dumb fallback — it's a context-aware general assistant
 

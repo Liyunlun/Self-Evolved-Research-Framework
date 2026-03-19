@@ -12,7 +12,7 @@ in open-ended research exploration without a specific method in mind.
 1. Gather context:
    - Read `config.yaml` (project goals, current phase)
    - Execute `memory.retrieve` for relevant memories (past decisions, paper insights)
-   - Read recent `papers/*.md` Quick Reference sections for related work
+   - Read recent `resources/papers/*.md` Quick Reference sections for related work
 2. Generate 3-5 research directions, each with:
    ```
    ### Direction {N}: {title}

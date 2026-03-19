@@ -1,0 +1,167 @@
+<svg width="100%" viewBox="0 0 700 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="350" y="24" text-anchor="middle" style="fill:rgb(31, 30, 29);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:16px;font-weight:600">SER v5.0 — Self-Evolved Research Framework</text>
+
+  <!-- ═══ Layer 1: Checklist Engine (top) ═══ -->
+  <text x="620" y="60" text-anchor="start" style="fill:rgb(61, 61, 58);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:400">Checklist engine</text>
+
+  <!-- L0 Root -->
+  <rect x="220" y="48" width="180" height="48" rx="8" style="fill:rgb(238, 237, 254);stroke:rgb(83, 74, 183);stroke-width:0.5px"/>
+  <text x="310" y="64" text-anchor="middle" dominant-baseline="central" style="fill:rgb(60, 52, 137);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">L0: Checklist.md</text>
+  <text x="310" y="82" text-anchor="middle" dominant-baseline="central" style="fill:rgb(83, 74, 183);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">Project root — always loaded</text>
+
+  <!-- L1 term checklists -->
+  <rect x="50" y="120" width="150" height="44" rx="8" style="fill:rgb(238, 237, 254);stroke:rgb(83, 74, 183);stroke-width:0.5px"/>
+  <text x="125" y="142" text-anchor="middle" dominant-baseline="central" style="fill:rgb(60, 52, 137);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:13px;font-weight:500">L1: Short-term</text>
+
+  <rect x="220" y="120" width="150" height="44" rx="8" style="fill:rgb(238, 237, 254);stroke:rgb(83, 74, 183);stroke-width:0.5px"/>
+  <text x="295" y="142" text-anchor="middle" dominant-baseline="central" style="fill:rgb(60, 52, 137);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:13px;font-weight:500">L1: Mid-term</text>
+
+  <rect x="390" y="120" width="150" height="44" rx="8" style="fill:rgb(238, 237, 254);stroke:rgb(83, 74, 183);stroke-width:0.5px"/>
+  <text x="465" y="142" text-anchor="middle" dominant-baseline="central" style="fill:rgb(60, 52, 137);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:13px;font-weight:500">L1: Long-term</text>
+
+  <!-- L0 → L1 arrows -->
+  <line x1="260" y1="96" x2="125" y2="118" stroke="rgb(127, 119, 221)" stroke-width="0.5" marker-end="url(#arrow)"/>
+  <line x1="310" y1="96" x2="295" y2="118" stroke="rgb(127, 119, 221)" stroke-width="0.5" marker-end="url(#arrow)"/>
+  <line x1="360" y1="96" x2="465" y2="118" stroke="rgb(127, 119, 221)" stroke-width="0.5" marker-end="url(#arrow)"/>
+
+  <!-- L2 task boxes -->
+  <rect x="30" y="186" width="80" height="36" rx="6" style="fill:rgb(241, 239, 232);stroke:rgb(95, 94, 90);stroke-width:0.5px"/>
+  <text x="70" y="204" text-anchor="middle" dominant-baseline="central" style="fill:rgb(95, 94, 90);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">idea [x]</text>
+
+  <rect x="120" y="186" width="80" height="36" rx="6" style="fill:rgb(241, 239, 232);stroke:rgb(95, 94, 90);stroke-width:0.5px"/>
+  <text x="160" y="204" text-anchor="middle" dominant-baseline="central" style="fill:rgb(95, 94, 90);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">exp [3/7]</text>
+
+  <rect x="240" y="186" width="80" height="36" rx="6" style="fill:rgb(241, 239, 232);stroke:rgb(95, 94, 90);stroke-width:0.5px"/>
+  <text x="280" y="204" text-anchor="middle" dominant-baseline="central" style="fill:rgb(95, 94, 90);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">paper [v]</text>
+
+  <rect x="330" y="186" width="80" height="36" rx="6" style="fill:rgb(241, 239, 232);stroke:rgb(95, 94, 90);stroke-width:0.5px"/>
+  <text x="370" y="204" text-anchor="middle" dominant-baseline="central" style="fill:rgb(95, 94, 90);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">method [ ]</text>
+
+  <rect x="430" y="186" width="80" height="36" rx="6" style="fill:rgb(241, 239, 232);stroke:rgb(95, 94, 90);stroke-width:0.5px"/>
+  <text x="470" y="204" text-anchor="middle" dominant-baseline="central" style="fill:rgb(95, 94, 90);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">exp [ ]</text>
+
+  <!-- L1 → L2 arrows -->
+  <line x1="70" y1="164" x2="70" y2="184" stroke="rgba(31, 30, 29, 0.3)" stroke-width="0.5" marker-end="url(#arrow)"/>
+  <line x1="160" y1="164" x2="160" y2="184" stroke="rgba(31, 30, 29, 0.3)" stroke-width="0.5" marker-end="url(#arrow)"/>
+  <line x1="280" y1="164" x2="280" y2="184" stroke="rgba(31, 30, 29, 0.3)" stroke-width="0.5" marker-end="url(#arrow)"/>
+  <line x1="370" y1="164" x2="370" y2="184" stroke="rgba(31, 30, 29, 0.3)" stroke-width="0.5" marker-end="url(#arrow)"/>
+  <line x1="470" y1="164" x2="470" y2="184" stroke="rgba(31, 30, 29, 0.3)" stroke-width="0.5" marker-end="url(#arrow)"/>
+
+  <!-- Verification stages legend -->
+  <text x="555" y="194" text-anchor="start" style="fill:rgb(95, 94, 90);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">[ ] → [x] → [v] → [U]</text>
+  <text x="555" y="208" text-anchor="start" style="fill:rgb(115, 114, 108);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">4-stage verification</text>
+
+  <!-- ═══ Divider 1 ═══ -->
+  <line x1="30" y1="248" x2="660" y2="248" stroke="rgba(31, 30, 29, 0.3)" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.4"/>
+  <text x="350" y="268" text-anchor="middle" style="fill:rgb(61, 61, 58);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:400">Micro-skill layer — 25 skills across 12 domains</text>
+
+  <!-- ═══ Layer 2: Micro-Skills ═══ -->
+
+  <!-- Intent Router -->
+  <rect x="50" y="288" width="130" height="48" rx="8" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="115" y="304" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">Intent Router</text>
+  <text x="115" y="322" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">CLAUDE.md → skill</text>
+
+  <!-- Skill categories -->
+  <rect x="200" y="288" width="96" height="40" rx="6" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="248" y="300" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:500">Paper</text>
+  <text x="248" y="316" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">read, compare</text>
+
+  <rect x="306" y="288" width="96" height="40" rx="6" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="354" y="300" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:500">Theory</text>
+  <text x="354" y="316" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">formalize, prove</text>
+
+  <rect x="412" y="288" width="96" height="40" rx="6" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="460" y="300" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:500">Writing</text>
+  <text x="460" y="316" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">draft, review</text>
+
+  <rect x="518" y="288" width="96" height="40" rx="6" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="566" y="300" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:500">Experiment</text>
+  <text x="566" y="316" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">run, monitor</text>
+
+  <!-- Second row of skills -->
+  <rect x="200" y="340" width="96" height="40" rx="6" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="248" y="352" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:500">Idea</text>
+  <text x="248" y="368" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">discover, verify</text>
+
+  <rect x="306" y="340" width="96" height="40" rx="6" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="354" y="352" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:500">Planning</text>
+  <text x="354" y="368" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">suggest, status</text>
+
+  <rect x="412" y="340" width="96" height="40" rx="6" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="460" y="352" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:500">Memory</text>
+  <text x="460" y="368" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">write, retrieve</text>
+
+  <rect x="518" y="340" width="96" height="40" rx="6" style="fill:rgb(225, 245, 238);stroke:rgb(15, 110, 86);stroke-width:0.5px"/>
+  <text x="566" y="352" text-anchor="middle" dominant-baseline="central" style="fill:rgb(8, 80, 65);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:500">Checklist</text>
+  <text x="566" y="368" text-anchor="middle" dominant-baseline="central" style="fill:rgb(15, 110, 86);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">create, verify</text>
+
+  <!-- Router → skills arrows -->
+  <line x1="180" y1="312" x2="198" y2="308" stroke="rgb(115, 114, 108)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Skills → checklist update arrow (upward) -->
+  <path d="M614 340 L640 340 L640 204 L512 204" fill="none" stroke="rgb(83, 74, 183)" stroke-width="0.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="648" y="270" text-anchor="start" transform="rotate(90, 648, 270)" style="fill:rgb(83, 74, 183);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:10px;font-weight:400">checklist.update</text>
+
+  <!-- ═══ Divider 2 ═══ -->
+  <line x1="30" y1="404" x2="660" y2="404" stroke="rgba(31, 30, 29, 0.3)" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.4"/>
+  <text x="350" y="424" text-anchor="middle" style="fill:rgb(61, 61, 58);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:400">TD-NL skill evolution engine</text>
+
+  <!-- ═══ Layer 3: TD-NL Evolution ═══ -->
+
+  <!-- G2 inline -->
+  <rect x="60" y="444" width="140" height="52" rx="8" style="fill:rgb(250, 236, 231);stroke:rgb(153, 60, 29);stroke-width:0.5px"/>
+  <text x="130" y="462" text-anchor="middle" dominant-baseline="central" style="fill:rgb(113, 43, 19);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">G2: Assess</text>
+  <text x="130" y="480" text-anchor="middle" dominant-baseline="central" style="fill:rgb(153, 60, 29);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">Per-skill feedback</text>
+
+  <!-- G1 aggregate -->
+  <line x1="200" y1="470" x2="240" y2="470" stroke="rgb(115, 114, 108)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="240" y="444" width="140" height="52" rx="8" style="fill:rgb(250, 236, 231);stroke:rgb(153, 60, 29);stroke-width:0.5px"/>
+  <text x="310" y="462" text-anchor="middle" dominant-baseline="central" style="fill:rgb(113, 43, 19);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">G1: Aggregate</text>
+  <text x="310" y="480" text-anchor="middle" dominant-baseline="central" style="fill:rgb(153, 60, 29);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">Value update Q^L</text>
+
+  <!-- Propose -->
+  <line x1="380" y1="470" x2="420" y2="470" stroke="rgb(115, 114, 108)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="420" y="444" width="140" height="52" rx="8" style="fill:rgb(250, 236, 231);stroke:rgb(153, 60, 29);stroke-width:0.5px"/>
+  <text x="490" y="462" text-anchor="middle" dominant-baseline="central" style="fill:rgb(113, 43, 19);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">Propose</text>
+  <text x="490" y="480" text-anchor="middle" dominant-baseline="central" style="fill:rgb(153, 60, 29);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">Spec edit + rollback</text>
+
+  <!-- Evolution feedback loop -->
+  <path d="M490 496 L490 524 L130 524 L130 496" fill="none" stroke="rgb(216, 90, 48)" stroke-width="0.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="310" y="540" text-anchor="middle" style="fill:rgb(61, 61, 58);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:11px;font-weight:400">Skills improve over sessions — specs v{n} → v{n+1}</text>
+
+  <!-- ═══ Divider 3 ═══ -->
+  <line x1="30" y1="564" x2="660" y2="564" stroke="rgba(31, 30, 29, 0.3)" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.4"/>
+  <text x="350" y="584" text-anchor="middle" style="fill:rgb(61, 61, 58);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:12px;font-weight:400">Infrastructure layer</text>
+
+  <!-- ═══ Layer 4: Infrastructure ═══ -->
+  <rect x="50" y="600" width="140" height="44" rx="8" style="fill:rgb(230, 241, 251);stroke:rgb(24, 95, 165);stroke-width:0.5px"/>
+  <text x="120" y="622" text-anchor="middle" dominant-baseline="central" style="fill:rgb(12, 68, 124);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">Three-tier memory</text>
+
+  <rect x="210" y="600" width="140" height="44" rx="8" style="fill:rgb(230, 241, 251);stroke:rgb(24, 95, 165);stroke-width:0.5px"/>
+  <text x="280" y="622" text-anchor="middle" dominant-baseline="central" style="fill:rgb(12, 68, 124);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">Session logs</text>
+
+  <rect x="370" y="600" width="140" height="44" rx="8" style="fill:rgb(230, 241, 251);stroke:rgb(24, 95, 165);stroke-width:0.5px"/>
+  <text x="440" y="622" text-anchor="middle" dominant-baseline="central" style="fill:rgb(12, 68, 124);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">CLAUDE.md</text>
+
+  <rect x="530" y="600" width="110" height="44" rx="8" style="fill:rgb(230, 241, 251);stroke:rgb(24, 95, 165);stroke-width:0.5px"/>
+  <text x="585" y="622" text-anchor="middle" dominant-baseline="central" style="fill:rgb(12, 68, 124);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:14px;font-weight:500">Claude Code</text>
+
+  <!-- Infra → up connections -->
+  <line x1="120" y1="600" x2="120" y2="570" stroke="rgb(55, 138, 221)" stroke-width="0.5" opacity="0.5"/>
+  <line x1="280" y1="600" x2="280" y2="570" stroke="rgb(55, 138, 221)" stroke-width="0.5" opacity="0.5"/>
+  <line x1="440" y1="600" x2="440" y2="570" stroke="rgb(55, 138, 221)" stroke-width="0.5" opacity="0.5"/>
+  <line x1="585" y1="600" x2="585" y2="570" stroke="rgb(55, 138, 221)" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- Bottom banner -->
+  <rect x="50" y="668" width="590" height="36" rx="6" style="fill:rgb(234, 243, 222);stroke:rgb(59, 109, 17);stroke-width:0.5px"/>
+  <text x="345" y="686" text-anchor="middle" dominant-baseline="central" style="fill:rgb(39, 80, 10);font-family:'Anthropic Sans', -apple-system, system-ui, sans-serif;font-size:13px;font-weight:500">Natural language in → intent routing → structured workflow → checklist update → skill evolution</text>
+
+</svg>

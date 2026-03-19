@@ -49,7 +49,7 @@ When producing an outline, also generate a claims→evidence mapping table:
 1. Read the outline (if exists) and relevant source materials:
    - Proofs from `paper/proofs/`
    - Theory from `paper/theory/`
-   - Paper notes from `papers/*.md`
+   - Paper notes from `resources/papers/*.md`
 2. Draft the requested section:
    - Academic tone appropriate for target venue
    - Proper citations (placeholder format: \cite{author_year})

@@ -81,19 +81,54 @@ If the user does not specify, infer from context:
 - "explore whether X is feasible" → short-term / idea
 - "develop a new algorithm for Y" → mid-term / method
 
-### Step 2 — Determine leaf vs. branch
+### Step 2 — LEAF or BRANCH fast-path decision
 
-**Add as leaf** if the task is atomic (single action, single deliverable):
+Determine whether this task is **simple** (no sub-steps needed) or **complex** (needs decomposition):
+
+- **LEAF fast-path** — the task is atomic (single action, single deliverable):
+  Skip to **Step 2L** below. This completes in 3 steps and 2 file writes.
+- **BRANCH path** — the task needs decomposition (multiple steps, sub-deliverables):
+  Continue to **Step 2B** below. This is the full 6-step process.
+
+---
+
+#### LEAF fast-path (Steps 2L → 4L)
+
+##### Step 2L — Append leaf item to L1
+
+Add the item to `checklists/{term}.md` under the appropriate `## {Category}` section:
 ```markdown
 - [ ] {description} — `{artifact_path}`  <!-- added {YYYY-MM-DD} -->
 ```
 
-**Add as branch** if the task needs decomposition (multiple steps, sub-deliverables):
+##### Step 3L — Update L0 root count
+
+In `Checklist.md`:
+- Recompute the `[{done}/{total}]` count for the affected term
+- Update the `Updated:` timestamp
+
+##### Step 4L — Output
+
+```
+[CHECKLIST] Created: leaf in {term}/{category}
+  "{description}"
+  Progress: {term} [{done}/{total}] | Root [{done}/{total} phases]
+```
+
+**Done.** (3 steps, 2 file writes: L1 + L0)
+
+---
+
+#### BRANCH path (Steps 2B → 7B)
+
+##### Step 2B — Add branch item to L1
+
+Add the branch item to `checklists/{term}.md` under the appropriate `## {Category}` section:
 ```markdown
 - [0/N] {description} → checklists/{term}/{category}-{slug}.md  <!-- added {YYYY-MM-DD} -->
 ```
 
-### Step 3 — Create L2 file (branch items only)
+##### Step 3B — Create L2 file
 
 Create `checklists/{term}/{category}-{slug}.md` using the appropriate template:
 
@@ -164,30 +199,29 @@ Parent: checklists/{term}.md § Experiments | Created: {YYYY-MM-DD}
 
 **paper template**: Use the **Paper Audit Template (L2)** defined at the bottom of this file. This produces the full 8-part structure.
 
-### Step 4 — Update L1 completion count
+##### Step 4B — Update L1 completion count
 
 In `checklists/{term}.md`, under the appropriate `## {Category}` section:
-- Add the new leaf or branch item
 - Recompute the header count: `Updated: {YYYY-MM-DD} | Status: [{done}/{total}]`
 
-### Step 5 — Update L0 root
+##### Step 5B — Update L0 root
 
 In `Checklist.md`:
 - Recompute the `[{done}/{total}]` count for the affected term
 - Update the `Updated:` timestamp
 
-### Step 6 — Output
+##### Step 6B — Output
 
 ```
-[CHECKLIST] Created: {leaf|branch} in {term}/{category}
+[CHECKLIST] Created: branch in {term}/{category}
   "{description}"
-  {If branch: L2 file at checklists/{term}/{category}-{slug}.md with {N} items}
+  L2 file at checklists/{term}/{category}-{slug}.md with {N} items
   Progress: {term} [{done}/{total}] | Root [{done}/{total} phases]
 ```
 
 **Inputs**: User request or skill output describing the task
 **Outputs**: Updated L0 + L1 files, optionally new L2 file
-**Token**: ~3-5K
+**Token**: ~2K (leaf) / ~3-5K (branch)
 
 ---
 
@@ -281,20 +315,15 @@ For each affected item:
 - Add artifact path if not already present: `— {path}`
 - Add timestamp comment: `<!-- completed {YYYY-MM-DD} -->`
 
+**Only edit the item's own file** (L2 or the L1 where the leaf lives). Do NOT propagate counts upward here — see deferred propagation note below.
+
 ### Step 3 — Add new items
 
 If the skill discovered new work needed:
 - Add new `[ ]` items in the appropriate L1 section or L2 file
 - If a new task needs decomposition, trigger `checklist.create` for it
 
-### Step 4 — Recompute branch counts
-
-Walk up from modified items:
-- Recount each branch `[M/N]` from its children
-- Update L1 header counts
-- Update L0 root counts
-
-### Step 5 — Update timestamps
+### Step 4 — Update timestamps
 
 - Each modified file gets its `Updated:` timestamp refreshed
 - Add change annotation where significant:
@@ -302,7 +331,7 @@ Walk up from modified items:
   <!-- change {YYYY-MM-DD}: {what changed and why} -->
   ```
 
-### Step 6 — Output
+### Step 5 — Output
 
 ```
 [CHECKLIST] Updated: +{N_added} items, {N_completed} marked [x], ~{N_modified} modified
@@ -310,12 +339,18 @@ Walk up from modified items:
   - {item description}
   New items:
   - {item description}
-  Progress: {affected_term} [{done}/{total}]
+  (Branch counts deferred — will recompute at next status check or session.close)
 ```
 
+> **Deferred count propagation**: Branch counts `[M/N]` in L1/L0 are caches.
+> They are recomputed by `checklist.status` or at `session.close`. Direct item
+> updates (`[x]`) only edit the item's own file. This avoids cascading file
+> writes on every small completion and keeps the update operation fast (1-2 file
+> writes instead of 3).
+
 **Inputs**: Skill output or user report + existing checklist tree
-**Outputs**: Updated checklist files + change summary (inline)
-**Token**: ~2-4K
+**Outputs**: Updated item file(s) + change summary (inline). L1/L0 counts NOT updated here.
+**Token**: ~1-3K
 **Composition**: After update with new items → suggest `checklist.verify` on existing `[x]` items
 
 ---
@@ -329,6 +364,17 @@ Walk up from modified items:
 ### Step 1 — Read the tree
 
 Read `Checklist.md` (L0). For each term, read the L1 file. Do NOT read L2 files unless the user asks for detail on a specific task.
+
+### Step 1.5 — Recount branch caches
+
+Because `checklist.update` defers count propagation, cached `[M/N]` counts in L1 and L0 may be stale. Recompute them now:
+
+1. For each **branch item** in L1 files: read its linked L2 file header, count items by status (`[x]`, `[v]`, `[U]` = done; `[ ]` = not done), and update the branch's `[M/N]` display in the L1 file.
+2. For each **L1 file**: recount all items (leaf + branch) and update the L1 header `Status: [{done}/{total}]`.
+3. Update **L0 root** (`Checklist.md`): recompute `[{done}/{total}]` for each term from the L1 headers. Update timestamps.
+4. Write back any files whose counts changed.
+
+This step ensures all counts are authoritative before reporting.
 
 ### Step 2 — Compute summary statistics
 
@@ -398,6 +444,13 @@ For session.open banner integration, output a condensed single line:
 
 ## Composition Rules
 
+> **Batch G2 entries**: If the same checklist skill fires N>1 times in rapid
+> succession on similar inputs (e.g., marking 5 items `[x]` in a row, or
+> creating 3 leaf items from a single plan.suggest output), a single G2 entry
+> covering all N firings is acceptable. Note the count in the entry:
+> `skill:{name} (x{N})`. This avoids N near-identical feedback entries flooding
+> the TD-NL feedback log.
+
 | After Skill A Completes | Condition | Chain to |
 |------------------------|-----------|----------|
 | ANY skill that produces an artifact | Always | → `checklist.update` |
@@ -433,8 +486,15 @@ For session.open banner integration, output a condensed single line:
 
 Parent: checklists/{term}.md § Papers | Created: {YYYY-MM-DD}
 Source: `{tex_file_path}` | Last updated: {YYYY-MM-DD}
+Phase: {prospective|active|pre-submission|post-review}
 Status: [{done}/{total}]
 ```
+
+**Phase definitions**:
+- **prospective**: No tex file yet — checklist is a planning scaffold. Parts I-IV use TBD placeholders. Part V (Blocking Actions) is immediately useful.
+- **active**: Paper draft exists — full checklist with tex line references.
+- **pre-submission**: Final verification pass — all items should be `[x]` or `[v]`.
+- **post-review**: Revision tracking — add reviewer comments, track changes.
 
 ### Generation Process
 

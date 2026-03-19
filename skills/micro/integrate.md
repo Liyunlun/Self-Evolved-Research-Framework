@@ -24,7 +24,7 @@
    - Existing `CLAUDE.md` with project instructions
    - Git state (branch, uncommitted changes)
 3. **Detect conflicts**: Check if any SER directory names already exist in project root:
-   - `skills/`, `memory/`, `logs/`, `papers/`, `background/`, `methodology/`, `outputs/`, `resources/`, `scripts/`
+   - `skills/`, `memory/`, `logs/`, `resources/papers/`, `background/`, `methodology/`, `outputs/`, `resources/`, `scripts/`
    - `.claude/hooks/`, `config.yaml`, `CLAUDE.md`
 4. **Report inventory** to user:
    ```
@@ -56,13 +56,13 @@ cp -r ser-vX.Y/memory .          # Memory system (templates)
 cp -r ser-vX.Y/scripts .         # Utility scripts
 # Create empty SER directories (only if they don't exist):
 for dir in logs/digest background methodology \
-           papers; do
+           resources/papers; do
   mkdir -p "$dir"
   [ ! -f "$dir/.gitkeep" ] && touch "$dir/.gitkeep"
 done
 ```
 
-**Rule**: Never overwrite existing directories that contain user data. If `papers/` already has files, only add `.gitkeep` if missing.
+**Rule**: Never overwrite existing directories that contain user data. If `resources/papers/` already has files, only add `.gitkeep` if missing.
 
 #### 2.2: Install intent router hook
 

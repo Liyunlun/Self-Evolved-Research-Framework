@@ -14,7 +14,7 @@
    - Key results/claims
    - Relevance to the current project and research goals
 2. Generate structured reading notes
-3. Save to `papers/{PAPER_ID}.md` with front-matter:
+3. Save to `resources/papers/{PAPER_ID}.md` with front-matter:
    ```yaml
    ---
    title: "{title}"
@@ -26,10 +26,10 @@
    read_date: "YYYY-MM-DD"
    ---
    ```
-4. If `papers/README.md` exists, append to index
+4. If `resources/papers/README.md` exists, append to index
 
 **Inputs**: Paper content (any form: link, PDF, pasted text, title for lookup)
-**Outputs**: `papers/{PAPER_ID}.md`
+**Outputs**: `resources/papers/{PAPER_ID}.md`
 **Token**: ~3-8K
 **Composition**: If paper has relevant theorem → suggest `theory.formalize`
 
@@ -40,7 +40,7 @@
 **Trigger**: User compares two or more papers, or asks about differences between methods
 
 **Process**:
-1. Read relevant `papers/*.md` files
+1. Read relevant `resources/papers/*.md` files
 2. Generate comparison table:
    - Method / Architecture / Training data / Results / Limitations
 3. Highlight implications for current project
@@ -58,14 +58,14 @@
 **Trigger**: User asks about reading list, what papers exist, or "what have I read"
 
 **Process**:
-1. Read `papers/README.md` and scan `papers/*.md` files
+1. Read `resources/papers/README.md` and scan `resources/papers/*.md` files
 2. Output organized index:
    - By relevance (high/medium/low)
    - By topic tag
    - Unread vs. read status
 3. Suggest gaps in reading based on project methodology
 
-**Inputs**: `papers/*.md` directory
+**Inputs**: `resources/papers/*.md` directory
 **Outputs**: Index (inline)
 **Token**: ~1-2K
 **Composition**: May suggest `paper.read` for unread high-relevance papers

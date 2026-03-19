@@ -14,6 +14,7 @@
    - Deadline proximity (nearest milestone first)
    - Dependency chains (unblock other items first)
    - Blocking status (items others depend on)
+   - Cross-term priority: Short-term items rank above mid-term items of equal priority. Milestone proximity overrides term ordering — if a mid-term milestone is within 7 days, its items rank first.
 5. Generate 3-5 prioritized task suggestions with checklist references:
    ```
    1. [HIGH] {task} — {reason, milestone impact} (→ checklists/{path})
