@@ -13,14 +13,19 @@ When experiment execution is needed (after `experiment.plan` approval or user re
    - Ensure code is committed and pushed (`git push`)
    - Verify experiment config is in `experiments/{exp_name}/`
    - Note the conda environment name and entry command
-2. **Submit via MetaBot Agent Bus**:
+2. **Query available resources first**:
    ```
-   mb task manager <current_chat_id> "需要 {gpu_count}x {gpu_type}，
-     项目 {project_name}，conda {env}，运行 {command}，
-     工作目录 {working_dir}"
+   mb task manager <current_chat_id> "查看当前可用 GPU 资源"
    ```
-3. **MetaScheduler handles**:
-   - GPU availability check (`/check-status`)
+3. **Based on availability, submit experiment**:
+   ```
+   mb task manager <current_chat_id> "项目 {project_name}，
+     需要 {gpu_count}x {gpu_type}，conda {env}，
+     运行 {command}，工作目录 {working_dir}"
+   ```
+   - GPU type/count chosen based on Step 2 results and experiment requirements
+   - Do NOT hardcode defaults — let experiment needs and resource availability guide the choice
+4. **MetaScheduler handles**:
    - Resource allocation (`/request-gpu`)
    - Code sync to compute node (`/sync-code`)
    - Experiment launch and monitoring (`/run-experiment`, `/monitor-experiment`)
@@ -53,7 +58,5 @@ MetaScheduler settings are in `config.yaml § metascheduler`:
 ```yaml
 metascheduler:
   bot_name: "manager"
-  default_gpu_type: "RTX4090"
-  default_gpu_count: 1
   default_conda_env: "research"
 ```
