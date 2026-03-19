@@ -24,26 +24,26 @@ cd Self-Evolved-Research-Framework
 bash scripts/setup.sh
 ```
 
-The setup script creates `config.yaml`, initializes the memory system, and sets up all required directories. It includes a MetaScheduler mode option for automated agent workflows. Safe to run multiple times.
+The setup script creates `config.yaml`, initializes the memory system, TD-NL infrastructure, and all required directories. It includes a MetaScheduler mode option for automated agent workflows. Safe to run multiple times (idempotent).
 
-## Micro-Skills (50 skills across 16 spec files)
+## Micro-Skills (50 skills across 14 spec files)
 
 | Category | Spec File | Skills |
 |----------|-----------|--------|
 | **Session** | `session.md` | `session.open`, `.close` |
 | **Paper** | `paper.md` | `paper.read`, `.compare`, `.index`, `lit.search` |
 | **Theory** | `theory.md` | `theory.formalize`, `.decompose`, `.search`, `.counterexample`, `.generalize` |
-| **Proof** | `proof.md` | `proof.critique`, `.fix`, `.formalize`, `.verify` |
-| **Writing** | `writing.md` | `writing.outline`, `.draft`, `.review`, `.polish` |
+| **Proof** | `proof.md` | `proof.critique`, `.fix`, `.formalize`, `.verify`, `.write` |
+| **Writing** | `writing.md` | `writing.outline`, `.draft`, `.review`, `.polish`, `paper.figure`, `.compile` |
 | **Planning** | `planning.md` | `plan.suggest`, `.milestone`, `progress.capture`, `status.report`, `decision.analyze`, `experiment.analyze` |
-| **Experiment** | `experiment.*.md` | `experiment.run`, `.monitor` (base + local + MetaScheduler modes) |
+| **Experiment** | `experiment.*.md` | `experiment.plan`, `.run`, `.monitor`, `math.dse` (base + local/MetaScheduler modes) |
 | **Memory** | `memory.md` | `memory.write`, `.retrieve`, `.consolidate`, `.forget` |
-| **Meta** | `meta.md` | `evolve.suggest`, `.apply` |
-| **Idea** | `idea.md` | `idea.discover`, `.verify` |
+| **Meta** | `meta.md` | `evolve.suggest`, `.apply`, `general.research` |
+| **Idea** | `idea.md` | `idea.discover`, `.verify`, `.refine` |
 | **Research** | `research.md` | `research.explore`, `design.converge` |
-| **Checklist** | `checklist.md` | `checklist.generate`, `.verify`, `.update`, `.create`, `.status` |
-| **Visual** | `visual.md` | Visual artifact generation |
-| **Integrate** | `integrate.md` | Cross-skill integration |
+| **Checklist** | `checklist.md` | `checklist.create`, `.verify`, `.update`, `.status` |
+| **Visual** | `visual.md` | `pixel.create`, `paper.illustrate` |
+| **Integrate** | `integrate.md` | `project.integrate` |
 
 ## Skill Evolution (TD-NL)
 
@@ -57,20 +57,25 @@ The framework optimizes its own micro-skill specs through natural language TD le
 
 ```
 ├── CLAUDE.md              # Behavioral protocol (intent router + data contracts)
-├── Checklist.md           # Project progress root
 ├── config.template.yaml   # Copy to config.yaml and customize
+├── scripts/setup.sh       # Setup script (idempotent, supports --update)
 ├── skills/
-│   ├── micro/             # 16 micro-skill spec files (optimization target)
+│   ├── micro/             # 14 micro-skill spec files (optimization target)
 │   └── td-nl/             # TD-NL skill evolution infrastructure
-├── scripts/               # Utility scripts (setup, citation, notify, analyzer)
 ├── memory/                # Persistent three-tier memory (episodes/topics/procedures)
-├── checklists/            # Hierarchical task tracking (L1/L2)
+├── checklists/            # Hierarchical task tracking (L0/L1/L2)
+├── methodology/           # Research methods + ideas
+├── paper/                 # Paper artifacts (proofs/theory/figures/papers/reviews)
 ├── experiments/           # Experiment code + results
-├── outputs/               # Research deliverables
+├── logs/                  # Session, progress, and experiment logs
+├── outputs/               # Research deliverables (visuals/ + paper/)
 ├── resources/             # Reference materials (papers/ + repos/)
-├── logs/digest/           # Session logs
-└── docs/                  # Plans, reports
+└── docs/                  # Plans, reports, changelogs
 ```
+
+## Changelog
+
+See [docs/CHANGELOG-v5-to-dev.md](docs/CHANGELOG-v5-to-dev.md) for a detailed comparison between v5.0 and dev.
 
 ## Upstream
 
