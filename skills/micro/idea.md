@@ -17,7 +17,7 @@
    - Identify what existing papers in `resources/papers/` address
    - Identify what current methodology does NOT address
    - Cross-reference with research keywords to find under-explored intersections
-3. **Generate ideas** (8-12 candidates):
+3. **Generate ideas** (`config.yaml § workflows.idea_discovery.candidate_count` candidates, default 5):
    - For each idea, produce:
      ```
      ### Idea {N}: {title}

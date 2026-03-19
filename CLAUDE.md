@@ -66,30 +66,49 @@ Priority matches from top to bottom. Each micro-skill has a detailed spec in `sk
 | 2 | Conversation end | `session.close` | `skills/micro/session.md` |
 | 3 | User discusses/shares a paper | `paper.read` | `skills/micro/paper.md` |
 | 4 | Comparing multiple papers | `paper.compare` | `skills/micro/paper.md` |
-| 5 | User proposes a theorem/conjecture | `theory.formalize` | `skills/micro/theory.md` |
-| 6 | User presents a proof draft | `proof.critique` | `skills/micro/proof.md` |
-| 7 | User requests writing a specific paper section (e.g., "写 introduction") | `writing.draft` | `skills/micro/writing.md` |
-| 8 | User asks "what to do next" | `plan.suggest` | `skills/micro/planning.md` (reads from checklists) |
-| 9 | User asks "project status" | `status.report` / `checklist.status` | `skills/micro/planning.md` |
-| 10 | User reports completing something | `progress.capture` | `skills/micro/planning.md` |
-| 11 | Complex proof decomposition needed | `theory.decompose` | `skills/micro/theory.md` |
-| 12 | Stuck on a proof/seeking methods | `theory.search` | `skills/micro/theory.md` |
-| 13 | Weighing options/making a decision | `decision.analyze` | `skills/micro/planning.md` |
-| 14 | Sharing experiment results | `experiment.analyze` | `skills/micro/planning.md` |
-| 15 | User asks to run/launch experiment | `experiment.run` | `skills/micro/experiment.md` |
-| 16 | User asks to check experiment status | `experiment.monitor` | `skills/micro/experiment.md` |
-| 17 | User asks to brainstorm ideas | `idea.discover` | `skills/micro/idea.md` |
-| 18 | User asks "is this idea novel?" | `idea.verify` | `skills/micro/idea.md` |
-| 19 | User asks to create paper checklist | `checklist.generate` | `skills/micro/checklist.md` |
-| 20 | User asks to verify paper claims | `checklist.verify` | `skills/micro/checklist.md` |
-| 21 | Paper changed, checklist needs sync | `checklist.update` | `skills/micro/checklist.md` |
-| 22 | Open-ended research exploration | `research.explore` | `skills/micro/research.md` |
-| 23 | Architecture/design decision | `design.converge` | `skills/micro/research.md` |
-| 24 | Other research-related | `general.research` | `skills/micro/meta.md` |
-| 25 | User wants to add/track a task | `checklist.create` | `skills/micro/checklist.md` |
-| 26 | "找论文", "文献检索", "related work", "search arxiv" | `lit.search` | `skills/micro/paper.md` |
-| 27 | "写论文", "开始写", "paper writing" (full paper, not single section) | `checklist.create(category=paper-writing)` | `skills/micro/checklist.md` |
-| 28 | "完整流程", "end-to-end", "从头开始研究" | `checklist.create(category=research-pipeline)` | `skills/micro/checklist.md` |
+| 5 | "索引论文", "paper index", organize papers | `paper.index` | `skills/micro/paper.md` |
+| 6 | User proposes a theorem/conjecture | `theory.formalize` | `skills/micro/theory.md` |
+| 7 | Complex proof decomposition needed | `theory.decompose` | `skills/micro/theory.md` |
+| 8 | Stuck on a proof/seeking methods | `theory.search` | `skills/micro/theory.md` |
+| 9 | "is this true?", verify a claim, find counterexample | `theory.counterexample` | `skills/micro/theory.md` |
+| 10 | "can we generalize?", extend a proven result | `theory.generalize` | `skills/micro/theory.md` |
+| 11 | User presents a proof draft, "is this proof correct?" | `proof.critique` | `skills/micro/proof.md` |
+| 12 | "写证明", "prove this", prove a theorem | `proof.write` | `skills/micro/proof.md` |
+| 13 | Fix proof issues identified by critique | `proof.fix` | `skills/micro/proof.md` |
+| 14 | "make this publication-ready", formal LaTeX proof | `proof.formalize` | `skills/micro/proof.md` |
+| 15 | Verify a formula, check algebraic step | `proof.verify` | `skills/micro/proof.md` |
+| 16 | User requests writing a specific paper section (e.g., "写 introduction") | `writing.draft` | `skills/micro/writing.md` |
+| 17 | "写大纲", "paper outline", plan the paper structure | `writing.outline` | `skills/micro/writing.md` |
+| 18 | "review paper", "审阅论文", review a draft | `writing.review` | `skills/micro/writing.md` |
+| 19 | "polish", "润色", improve writing quality | `writing.polish` | `skills/micro/writing.md` |
+| 20 | "画图", "generate figures", paper figures from data | `paper.figure` | `skills/micro/writing.md` |
+| 21 | "编译论文", "compile paper", build PDF | `paper.compile` | `skills/micro/writing.md` |
+| 22 | User asks "what to do next" | `plan.suggest` | `skills/micro/planning.md` |
+| 23 | "when is the deadline?", "are we on track?" | `plan.milestone` | `skills/micro/planning.md` |
+| 24 | User asks "project status" | `status.report` | `skills/micro/planning.md` |
+| 25 | User reports completing something | `progress.capture` | `skills/micro/planning.md` |
+| 26 | Weighing options/making a decision | `decision.analyze` | `skills/micro/planning.md` |
+| 27 | Sharing experiment results, "what do these results mean?" | `experiment.analyze` | `skills/micro/planning.md` |
+| 28 | "plan experiment", "设计实验", experiment design | `experiment.plan` | `skills/micro/experiment.md` |
+| 29 | User asks to run/launch experiment | `experiment.run` | `skills/micro/experiment.md` |
+| 30 | User asks to check experiment status | `experiment.monitor` | `skills/micro/experiment.md` |
+| 31 | "design space exploration", "DSE", parameter sweep | `math.dse` | `skills/micro/experiment.md` |
+| 32 | User asks to brainstorm ideas | `idea.discover` | `skills/micro/idea.md` |
+| 33 | User asks "is this idea novel?" | `idea.verify` | `skills/micro/idea.md` |
+| 34 | "精炼想法", "refine idea", make idea more concrete | `idea.refine` | `skills/micro/idea.md` |
+| 35 | "画像素图", "pixel art", "SVG illustration" | `pixel.create` | `skills/micro/visual.md` |
+| 36 | "论文插图", "architecture diagram", "draw the pipeline" | `paper.illustrate` | `skills/micro/visual.md` |
+| 37 | User asks to create paper checklist | `checklist.create(category=paper-audit)` | `skills/micro/checklist.md` |
+| 38 | User asks to verify paper claims | `checklist.verify` | `skills/micro/checklist.md` |
+| 39 | Paper changed, checklist needs sync | `checklist.update` | `skills/micro/checklist.md` |
+| 40 | User asks for checklist completion stats | `checklist.status` | `skills/micro/checklist.md` |
+| 41 | Open-ended research exploration | `research.explore` | `skills/micro/research.md` |
+| 42 | Architecture/design decision | `design.converge` | `skills/micro/research.md` |
+| 43 | User wants to add/track a task | `checklist.create` | `skills/micro/checklist.md` |
+| 44 | "找论文", "文献检索", "related work", "search arxiv" | `lit.search` | `skills/micro/paper.md` |
+| 45 | "写论文", "开始写", "paper writing" (full paper, not single section) | `checklist.create(category=paper-writing)` | `skills/micro/checklist.md` |
+| 46 | "完整流程", "end-to-end", "从头开始研究" | `checklist.create(category=research-pipeline)` | `skills/micro/checklist.md` |
+| 47 | Other research-related | `general.research` | `skills/micro/meta.md` |
 
 ---
 
@@ -210,7 +229,7 @@ See `skills/micro/memory.md` for write/retrieve/consolidate/forget specs.
 ├── CLAUDE.md              # Behavioral protocol (this file)
 ├── Checklist.md           # Project progress root (L0)
 ├── checklists/            # Hierarchical task tracking
-│   ├── short-term.md      # L1 phase checklists
+│   ├── short-term.md      # L1 phase checklists (7 category headers)
 │   ├── mid-term.md
 │   ├── long-term.md
 │   └── {term}/{cat}-{slug}.md  # L2 specific tasks
@@ -218,11 +237,12 @@ See `skills/micro/memory.md` for write/retrieve/consolidate/forget specs.
 ├── README.md / LICENSE
 ├── skills/
 │   ├── CLAUDE.md          # Skill index
-│   ├── micro/             # 12 micro-skill spec files (the optimization target)
+│   ├── micro/             # 14 micro-skill spec files (the optimization target)
 │   └── td-nl/             # TD-NL skill evolution infrastructure
 │       ├── feedback-log.md
 │       ├── value-function.md
 │       ├── skill-values/   # Per-skill Q^L estimates
+│       │   └── _template.md
 │       └── history/        # Spec version archive for rollback
 ├── scripts/               # Utility scripts (citation, notify, analyzer)
 ├── memory/                # Persistent three-tier memory
@@ -231,9 +251,18 @@ See `skills/micro/memory.md` for write/retrieve/consolidate/forget specs.
 │   └── procedures/        # Permanent procedural memories
 ├── background/            # Research background materials
 ├── methodology/           # Research methods + ideas
+│   ├── approach.md        # Current research direction (stub created by setup)
+│   └── ideas/             # Idea discovery artifacts
 ├── experiments/           # Experiment code + results
+├── paper/                 # Paper artifacts
+│   ├── proofs/            # Proof files (proof.write output)
+│   ├── theory/            # Theorem statements
+│   ├── figures/           # Figures and scripts
+│   ├── papers/            # Draft papers
+│   └── reviews/           # Review artifacts
 ├── logs/digest/           # Session logs
 ├── outputs/               # Research deliverables (short/mid/long-term + paper/)
+│   └── visuals/           # SVG/pixel art (pixel.create output)
 ├── resources/             # Reference materials
 │   ├── papers/            # Paper reading notes
 │   └── repos/             # Cloned reference repositories

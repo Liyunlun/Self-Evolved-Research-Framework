@@ -63,3 +63,24 @@
 **Outputs**: Illustration file in `paper/figures/`
 **Token**: ~3-8K
 **Composition**: Illustration created → suggest `checklist.update` + integration into paper via `writing.draft`
+
+---
+
+## Composition Rules
+
+Both `pixel.create` and `paper.illustrate` produce artifacts. After execution:
+1. If the visual is part of a tracked checklist item → `checklist.update`
+2. If the visual is for a paper → suggest integration via `writing.draft`
+3. If `config.yaml § dual_review.enabled` and this skill is in `dual_review.when` → invoke dual review
+
+---
+
+## TD-NL Integration
+
+All skills track performance via `skills/td-nl/skill-values/`:
+- `pixel-create.md`
+- `paper-illustrate.md`
+
+Key metrics for TD assessment:
+- `pixel.create`: Was the SVG well-structured? Did the visual match the user's intent? File size reasonable?
+- `paper.illustrate`: Was the diagram type appropriate? Did it effectively communicate the concept? TikZ compilable without errors?

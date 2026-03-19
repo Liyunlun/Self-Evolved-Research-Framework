@@ -7,7 +7,7 @@
 **Trigger**: Every conversation start (automatic, before any other processing)
 
 **Process**:
-1. Silently read: `config.yaml` (project status, milestone), last `logs/digest/*.yaml`, `logs/digest/SUMMARY.md`
+1. Silently read: `config.yaml` (project status, milestone), last `logs/digest/*.yaml`, `logs/digest/SUMMARY.md`. If no prior digest logs exist (first session), use fallback: "First session — no history"
 2. Read: `memory/MEMORY.md` + execute `memory.retrieve` for active context
 3. Read: `skills/td-nl/value-function.md` (current V^L)
 4. Read: `Checklist.md` (project progress root — compute done/total item counts)
@@ -36,7 +36,7 @@
 **Trigger**: Conversation is ending (detected via: user says goodbye/done, or long session with substantial work completed)
 
 **Process**:
-1. Auto-summarize the current session from conversation history:
+1. Auto-summarize the current session from conversation history (record all user text input):
    - What was discussed/accomplished (1-3 bullet points)
    - Key decisions made
    - Files created/modified

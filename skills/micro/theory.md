@@ -12,7 +12,7 @@
 3. Output formal mathematical statement in LaTeX
 4. List required definitions and notation
 5. Identify proof strategy candidates (direct, contradiction, induction, construction)
-6. Save to `outputs/{topic}/theory/` if user confirms
+6. Save to `methodology/{topic}.md` (working) or `outputs/{topic}/theory/` (deliverable-ready). `{topic}` is derived from `config.yaml § project.name` in kebab-case, or from the user-specified topic name
 
 **Inputs**: Informal mathematical statement
 **Outputs**: Formalized theorem statement + proof strategy suggestions

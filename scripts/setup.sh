@@ -24,15 +24,14 @@ if [[ "$UPDATE_MODE" == false ]]; then
   read -p "Use MetaScheduler for experiment management? [y/N] " USE_MS
   if [[ "$USE_MS" =~ ^[Yy]$ ]]; then
     EXPERIMENT_MODE="metascheduler"
-    read -p "MetaScheduler chat_id: " MS_CHAT_ID
-    echo "[+] MetaScheduler mode selected (chat_id: $MS_CHAT_ID)"
+    echo "[+] MetaScheduler mode selected"
   else
     echo "[+] Local mode selected (direct GPU access)"
   fi
   echo
 fi
 
-# --- 2. Assemble experiment.md ---
+# --- 2. Assemble experiment.md (binary install — source files removed after) ---
 if [[ "$UPDATE_MODE" == false ]]; then
   if [[ "$EXPERIMENT_MODE" == "metascheduler" ]]; then
     cat skills/micro/experiment.base.md skills/micro/experiment.ms.md \
@@ -43,6 +42,9 @@ if [[ "$UPDATE_MODE" == false ]]; then
       > skills/micro/experiment.md
     echo "[+] Assembled experiment.md (Local mode)"
   fi
+  # Remove source files after assembly (binary install)
+  rm -f skills/micro/experiment.base.md skills/micro/experiment.local.md skills/micro/experiment.ms.md
+  echo "[+] Removed experiment source files (assembled binary)"
 else
   if [[ -f skills/micro/experiment.md ]]; then
     echo "[=] experiment.md preserved (update mode — install mode unchanged)"
@@ -58,13 +60,11 @@ if [[ "$UPDATE_MODE" == false ]]; then
 
     # If MetaScheduler mode, uncomment and fill metascheduler section
     if [[ "${EXPERIMENT_MODE:-local}" == "metascheduler" ]]; then
-      cat >> config.yaml << MSEOF
+      cat >> config.yaml << 'MSEOF'
 
 # MetaScheduler integration (auto-configured by setup.sh)
 metascheduler:
-  chat_id: "$MS_CHAT_ID"
-  default_gpu_type: "RTX4090"
-  default_gpu_count: 1
+  bot_name: "manager"
   default_conda_env: "research"
 MSEOF
       echo "[+] Created config.yaml with MetaScheduler settings"
@@ -84,12 +84,11 @@ dirs=(
   memory/episodes
   memory/topics
   memory/procedures
-  memory/td-nl
   logs/digest
   logs/progress
   logs/experiments
-  papers
   paper/proofs
+  paper/theory
   paper/figures
   paper/figures/scripts
   paper/papers
@@ -116,42 +115,112 @@ done
 echo "[+] Created all required directories"
 
 # --- 5. .gitkeep for empty directories ---
-gitkeep_dirs=(
-  memory/episodes
-  memory/topics
-  memory/procedures
-  memory/td-nl
-  logs/progress
-  logs/experiments
-  papers
-  paper/proofs
-  paper/figures
-  paper/figures/scripts
-  paper/papers
-  paper/reviews
-  background
-  methodology/ideas
-  experiments
-  outputs
-  outputs/visuals
-  outputs/paper
-  resources/repos
-  docs
-  skills/td-nl/history
-  skills/td-nl/skill-values
-  checklists/short-term
-  checklists/mid-term
-  checklists/long-term
-)
-
-for d in "${gitkeep_dirs[@]}"; do
+for d in "${dirs[@]}"; do
   if [ ! -f "$d/.gitkeep" ]; then
     touch "$d/.gitkeep"
   fi
 done
 echo "[+] Added .gitkeep files to empty directories"
 
-# --- 6. Memory index (preserve in update mode) ---
+# --- 6. TD-NL infrastructure files ---
+if [ ! -f skills/td-nl/value-function.md ]; then
+  cat > skills/td-nl/value-function.md << 'VFEOF'
+# V^L — System-Level Value Function
+
+> Tracks overall SER skill system effectiveness. Updated by `evolve.suggest` at session.close.
+
+## Current Value
+
+**V^L = 5.0 / 10** (initial default)
+
+## History
+
+| Session | V^L | Delta | Notes |
+|---------|-----|-------|-------|
+| (init)  | 5.0 | —     | System initialized |
+
+## Per-Category Summary
+
+| Category | Avg Q^L | Skills | Notes |
+|----------|---------|--------|-------|
+| Session  | 5.0     | session.open, session.close | — |
+| Paper    | 5.0     | paper.read, paper.compare, paper.index, lit.search | — |
+| Theory   | 5.0     | theory.formalize, theory.decompose, theory.search, theory.counterexample, theory.generalize | — |
+| Proof    | 5.0     | proof.critique, proof.fix, proof.formalize, proof.verify, proof.write | — |
+| Writing  | 5.0     | writing.outline, writing.draft, writing.review, writing.polish, paper.figure, paper.compile | — |
+| Planning | 5.0     | plan.suggest, plan.milestone, progress.capture, status.report, decision.analyze | — |
+| Experiment | 5.0   | experiment.plan, experiment.analyze, experiment.run, experiment.monitor, math.dse | — |
+| Idea     | 5.0     | idea.discover, idea.verify, idea.refine | — |
+| Visual   | 5.0     | pixel.create, paper.illustrate | — |
+| Checklist| 5.0     | checklist.create, checklist.verify, checklist.update, checklist.status | — |
+| Research | 5.0     | research.explore, design.converge | — |
+| Memory   | 5.0     | memory.write, memory.retrieve, memory.consolidate, memory.forget | — |
+| Meta     | 5.0     | evolve.suggest, evolve.apply, general.research | — |
+| Integrate| 5.0     | project.integrate | — |
+VFEOF
+  echo "[+] Created skills/td-nl/value-function.md (V^L=5.0)"
+else
+  echo "[=] skills/td-nl/value-function.md already exists, skipping"
+fi
+
+if [ ! -f skills/td-nl/feedback-log.md ]; then
+  cat > skills/td-nl/feedback-log.md << 'FLEOF'
+# TD-NL Feedback Log
+
+> G2 entries appended after every micro-skill firing.
+> Processed by `evolve.suggest` at session.close (G1 aggregation).
+
+## Pending Feedback
+
+<!-- G2 entries appended here during session -->
+
+## Processed Feedback
+
+<!-- Moved here after G1 aggregation at session.close -->
+
+## Pending Proposals
+
+<!-- Spec edit proposals from evolve.suggest, awaiting user approval -->
+FLEOF
+  echo "[+] Created skills/td-nl/feedback-log.md"
+else
+  echo "[=] skills/td-nl/feedback-log.md already exists, skipping"
+fi
+
+if [ ! -f skills/td-nl/skill-values/_template.md ]; then
+  cat > skills/td-nl/skill-values/_template.md << 'TMPLEOF'
+# Q^L — {skill-name}
+
+> Per-skill value estimate. Created on first firing, updated by G1 aggregation.
+
+## Current Value
+
+**Q^L = 5.0 / 10** (initial default)
+
+## Assessment History
+
+| Session | Q^L | Delta | G2 Summary |
+|---------|-----|-------|------------|
+
+## Strengths
+
+- (none yet)
+
+## Improvement Areas
+
+- (none yet)
+
+## Spec Edit History
+
+| Date | Edit | V^L Impact |
+|------|------|------------|
+TMPLEOF
+  echo "[+] Created skills/td-nl/skill-values/_template.md"
+else
+  echo "[=] skills/td-nl/skill-values/_template.md already exists, skipping"
+fi
+
+# --- 7. Memory index (preserve in update mode) ---
 if [ ! -f memory/MEMORY.md ]; then
   cat > memory/MEMORY.md << 'MEMEOF'
 # Memory Index
@@ -173,7 +242,7 @@ else
   echo "[=] memory/MEMORY.md already exists, skipping"
 fi
 
-# --- 7. Session log summary (preserve in update mode) ---
+# --- 8. Session log summary (preserve in update mode) ---
 if [ ! -f logs/digest/SUMMARY.md ]; then
   cat > logs/digest/SUMMARY.md << 'SUMEOF'
 # Session Log Summary
@@ -186,7 +255,36 @@ else
   echo "[=] logs/digest/SUMMARY.md already exists, skipping"
 fi
 
-# --- 8. Checklist system (preserve in update mode) ---
+# --- 9. Methodology stub ---
+if [ ! -f methodology/approach.md ]; then
+  cat > methodology/approach.md << 'APPEOF'
+# Research Approach
+
+> Current research direction and methodology. Updated as the project evolves.
+> Referenced by: idea.discover, experiment.plan, writing.outline, paper.illustrate
+
+## Research Direction
+
+<!-- Describe your high-level research direction here -->
+
+## Current Methodology
+
+<!-- Describe your current approach / algorithm / framework -->
+
+## Key Assumptions
+
+<!-- List assumptions your approach relies on -->
+
+## Open Questions
+
+<!-- Questions that need to be answered -->
+APPEOF
+  echo "[+] Created methodology/approach.md"
+else
+  echo "[=] methodology/approach.md already exists, skipping"
+fi
+
+# --- 10. Checklist system (preserve in update mode) ---
 
 PROJECT_NAME="My Project"
 if [ -f config.yaml ]; then
@@ -226,10 +324,23 @@ for term in short-term mid-term long-term; do
     cat > "checklists/${term}.md" << TERMEOF
 # ${term^} Checklist (L1)
 
-<!-- Add items as: - [ ] Task description -->
 <!-- Branch items link to L2: - [0/0] Category → checklists/${term}/category-slug.md -->
+
+## Ideas
+
+## Methods
+
+## Experiments
+
+## Paper-Audit
+
+## Review-Loop
+
+## Paper-Writing
+
+## Research-Pipeline
 TERMEOF
-    echo "[+] Created checklists/${term}.md"
+    echo "[+] Created checklists/${term}.md (with 7 category headers)"
   else
     echo "[=] checklists/${term}.md already exists, skipping"
   fi

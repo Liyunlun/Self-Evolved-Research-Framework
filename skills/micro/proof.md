@@ -59,7 +59,7 @@
    - Consistent notation (aligned with paper conventions)
    - All steps explicitly justified
    - References to standard results cited properly
-3. Save to `outputs/{topic}/proofs/{theorem_name}.tex`
+3. Save to `outputs/{topic}/proofs/{theorem_name}.tex` (publication-ready LaTeX)
 4. Output both the LaTeX source and a readable preview
 
 **Inputs**: Validated proof + notation conventions
@@ -120,7 +120,7 @@
    {Step-by-step proof with justifications}
    \end{proof}
    ```
-6. **Save**: Write to `paper/proofs/{theorem_name}.tex` or `outputs/{topic}/proofs/{theorem_name}.tex`
+6. **Save**: Write to `paper/proofs/{theorem_name}.md` (paper-bound proofs) or `outputs/{topic}/proofs/{theorem_name}.md` (exploratory proofs). Output is markdown with embedded LaTeX blocks
 
 **Inputs**: Proposition to prove + relevant definitions/lemmas
 **Outputs**: Complete proof in LaTeX
