@@ -30,11 +30,15 @@ git clone https://github.com/Shiien/Self-Evolved-Research-Framework.git
 cd Self-Evolved-Research-Framework
 ```
 
-### 2. Configure Your Project
+### 2. Run Setup
 
 ```bash
-cp config.template.yaml config.yaml
+bash scripts/setup.sh
 ```
+
+This creates `config.yaml`, initializes the memory system, and sets up all required directories. Safe to run multiple times.
+
+### 3. Configure Your Project
 
 Edit `config.yaml` with your project details:
 
@@ -48,28 +52,6 @@ research:
   domain: "Your Domain"
   sub_domain: "Your Sub-Domain"
   keywords: [...]
-```
-
-### 3. Initialize Memory
-
-Create the memory index file that SER reads at every session start:
-
-```bash
-cat > memory/MEMORY.md << 'EOF'
-# Memory Index
-
-## Active Context
-- Project initialized, no sessions yet
-
-## Topic Index
-(empty)
-
-## Recent Episodes
-(empty)
-
-## Procedure Index
-(empty)
-EOF
 ```
 
 ### 4. Start Working

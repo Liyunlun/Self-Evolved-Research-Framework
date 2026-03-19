@@ -17,8 +17,8 @@
    Next milestone: {milestone_goal} ({days_remaining}d)
    [MEM] {N} memories | [TD-NL] V^L={overall}/10
    ```
-3. If milestone <= 3 days away, append: `** MILESTONE APPROACHING **`
-4. Proceed immediately to user's request — no questions asked
+5. If milestone <= 3 days away, append: `** MILESTONE APPROACHING **`
+6. Proceed immediately to user's request — no questions asked
 
 **Inputs**: config.yaml, last digest log, SUMMARY.md
 **Outputs**: Status banner (inline, not saved)
