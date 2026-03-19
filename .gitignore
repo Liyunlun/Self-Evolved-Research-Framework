@@ -22,3 +22,4 @@ ser-v*.zip
 *.synctex.gz
 *.key
 _trash/
+.claude/worktrees/
