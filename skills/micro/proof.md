@@ -120,7 +120,7 @@
    {Step-by-step proof with justifications}
    \end{proof}
    ```
-6. **Save**: Write to `paper/proofs/{theorem_name}.md` (paper-bound proofs) or `outputs/{topic}/proofs/{theorem_name}.md` (exploratory proofs). Output is markdown with embedded LaTeX blocks
+6. **Save**: Write to `paper/proofs/{theorem_name}.md` if the proof is for a paper in progress (check Checklist.md for active paper tasks), otherwise `outputs/{topic}/proofs/{theorem_name}.md` for exploratory work. Output is markdown with embedded LaTeX blocks
 
 **Inputs**: Proposition to prove + relevant definitions/lemmas
 **Outputs**: Complete proof in LaTeX

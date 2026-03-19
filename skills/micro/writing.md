@@ -141,7 +141,7 @@ When cross-model feedback is desired, `writing.review` can operate in **cross-mo
    ```
 6. Save review to `paper/reviews/{section_name}-cross-review.md`
 
-**TD-NL tracking**: Performance tracked via `memory/td-nl/option-values/cross-review.md`
+**TD-NL tracking**: Performance tracked via `skills/td-nl/skill-values/cross-review.md`
 - Key metrics: rounds-to-accept, score improvement per round, agreement rate with internal review
 - Learns optimal stopping: if early rounds show little improvement, reduces max rounds
 

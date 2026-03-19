@@ -48,35 +48,7 @@
 
 ## experiment.analyze
 
-**Trigger**: User shares experiment results, training logs, metrics, or asks "what do these results mean?"
-
-**Process**:
-1. **Parse the results** (tables, metrics, logs, CSV, JSON, wandb exports)
-2. **Generate statistical summary table**:
-   ```
-   | Metric | Ours | Baseline A | Baseline B | Δ (vs best) |
-   |--------|------|-----------|-----------|-------------|
-   | {metric} | {val ± std} | {val ± std} | {val ± std} | {+/-X.X%} |
-   ```
-3. **Baseline comparison analysis**:
-   - Identify which baselines are beaten, by how much
-   - Identify metrics where our method underperforms
-   - Compute relative improvement percentages
-4. **Statistical significance assessment**:
-   - If multiple seeds/runs available: compute mean, std, confidence intervals
-   - If applicable: suggest paired t-test, Wilcoxon signed-rank, or bootstrap
-   - Report: `Significant (p < 0.05)` / `Marginal (p < 0.10)` / `Not significant`
-5. **Hypothesis implications**:
-   - Are results as expected? Better/worse?
-   - What do the results imply for the research hypothesis?
-   - Any surprising findings?
-6. **Suggest next steps**: next experiments, ablations, or adjustments
-7. If results are significant, suggest `progress.capture`
-
-**Inputs**: Experiment results (any format)
-**Outputs**: Analysis report with statistical tables (inline)
-**Token**: ~3-8K
-**Composition**: Good results → suggest `writing.draft` + `paper.figure`. Bad results → suggest `decision.analyze`
+> Defined in `skills/micro/planning.md`. See Intent Router #27.
 
 ---
 
