@@ -3,6 +3,10 @@
 > A behavior-driven research framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 > Skills trigger automatically. The framework improves its own skills through use.
 
+<p align="center">
+  <img src="ser_architecture_overview.svg" alt="SER Architecture Overview" width="700"/>
+</p>
+
 ## What It Does
 
 You talk naturally. SER detects your intent and routes to the right micro-skill:
