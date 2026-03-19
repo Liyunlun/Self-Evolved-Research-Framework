@@ -1,5 +1,8 @@
 # Self-Evolved Research (SER) — Dev Branch
 
+
+**[中文版 README](README_CN.md)**
+
 > Development fork of the [Self-Evolved Research Framework](https://github.com/Shiien/Self-Evolved-Research-Framework) v5.0.
 
 A behavior-driven research collaboration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). You talk naturally — SER detects intent and routes to the right micro-skill. The framework improves its own skills through use via natural language TD learning.
