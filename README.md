@@ -30,9 +30,14 @@ become better tomorrow.
 ### 1. Clone
 
 ```bash
-git clone https://github.com/Shiien/Self-Evolved-Research-Framework.git
+git clone --recurse-submodules https://github.com/Shiien/Self-Evolved-Research-Framework.git
 cd Self-Evolved-Research-Framework
 ```
+
+> **Already cloned without `--recurse-submodules`?** Run:
+> ```bash
+> git submodule update --init --recursive
+> ```
 
 ### 2. Run Setup
 
@@ -74,7 +79,7 @@ SER will automatically:
 | Category | Skills | Purpose |
 |----------|--------|---------|
 | **Session** | `session.open`, `.close` | Lifecycle: status banner, auto-save |
-| **Paper** | `paper.read`, `.compare`, `.index` | Reading & analysis |
+| **Paper** | `paper.read` (standard + deep/Fey-R), `.compare`, `.index` | Reading & analysis |
 | **Theory** | `theory.formalize`, `.decompose`, `.search`, `.counterexample`, `.generalize` | Formalization & proof strategy |
 | **Proof** | `proof.critique`, `.fix`, `.formalize`, `.verify` | Verification & correction |
 | **Writing** | `writing.outline`, `.draft`, `.review`, `.polish` | Paper authoring |
@@ -85,6 +90,15 @@ SER will automatically:
 | **Research** | `research.explore`, `design.converge` | Open-ended exploration |
 | **Memory** | `memory.write`, `.retrieve`, `.consolidate`, `.forget` | Persistent cross-session memory |
 | **Meta** | `evolve.suggest`, `.apply` | TD-NL skill self-improvement |
+
+## External Skills
+
+| Skill | Source | Purpose |
+|-------|--------|---------|
+| [Fey-R](https://github.com/xvirobotics/fey-r) | `skills/external/fey-r/` | Interactive Feynman-method paper reading — deeply understand papers by recreating the author's derivation |
+
+External skills are installed as git submodules and initialized automatically by `scripts/setup.sh`.
+To add your own, use `git submodule add <url> skills/external/<name>/`.
 
 ## Skill Evolution (TD-NL)
 
@@ -109,6 +123,8 @@ Version history in `skills/td-nl/history/` enables safe rollback.
 ├── README.md / LICENSE
 ├── skills/
 │   ├── micro/             # 12 micro-skill spec files (optimization target)
+│   ├── external/          # External skills (git submodules)
+│   │   └── fey-r/         # Feynman-method paper reading
 │   └── td-nl/             # Skill evolution infrastructure
 │       ├── feedback-log.md
 │       ├── value-function.md

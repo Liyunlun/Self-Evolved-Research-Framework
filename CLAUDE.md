@@ -65,6 +65,7 @@ Priority matches from top to bottom. Each micro-skill has a detailed spec in `sk
 | 1 | Conversation start | `session.open` | `skills/micro/session.md` |
 | 2 | Conversation end | `session.close` | `skills/micro/session.md` |
 | 3 | User discusses/shares a paper | `paper.read` | `skills/micro/paper.md` |
+| 3b | User wants to deeply study a paper ("understand", "study", "Fey-R") | `paper.read` (Deep/Fey-R mode) | `skills/micro/paper.md` + `skills/external/fey-r/SKILL.md` |
 | 4 | Comparing multiple papers | `paper.compare` | `skills/micro/paper.md` |
 | 5 | User proposes a theorem/conjecture | `theory.formalize` | `skills/micro/theory.md` |
 | 6 | User presents a proof draft | `proof.critique` | `skills/micro/proof.md` |
@@ -180,6 +181,8 @@ See `skills/micro/memory.md` for write/retrieve/consolidate/forget specs.
 ├── skills/
 │   ├── CLAUDE.md          # Skill index
 │   ├── micro/             # 12 micro-skill spec files (the optimization target)
+│   ├── external/          # External skills (git submodules)
+│   │   └── fey-r/         # Feynman-method paper reading
 │   └── td-nl/             # TD-NL skill evolution infrastructure
 │       ├── feedback-log.md
 │       ├── value-function.md

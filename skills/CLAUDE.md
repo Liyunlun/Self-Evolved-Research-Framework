@@ -25,6 +25,15 @@ based on accumulated usage feedback.
 | `micro/research.md` | research.explore, design.converge | Open-ended research |
 | `micro/memory.md` | memory.write, .retrieve, .consolidate, .forget | Memory operations |
 
+## External Skills
+
+| Directory | Skill | Purpose |
+|-----------|-------|---------|
+| `external/fey-r/` | Fey-R | Interactive Feynman-method paper reading (deep understanding via derivation) |
+
+External skills are installed as git submodules. Run `git submodule update --init --recursive`
+or `bash scripts/setup.sh` to initialize them.
+
 **Note**: Checklist is the core engine — all skills chain to `checklist.update` after completion.
 
 ## How Skills Work

@@ -6,6 +6,17 @@
 
 **Trigger**: User discusses, shares, or asks about a specific paper (arXiv link, paper title, PDF content)
 
+**Modes**:
+- **Standard** (default): Quick structured extraction — good for survey/triage
+- **Deep** (Fey-R): Interactive Feynman-method reading — guided derivation for true understanding
+
+**Mode selection**: If user says "read paper", "what's this paper about" → Standard.
+If user says "study this paper", "understand this paper deeply", "let's read this carefully",
+"Fey-R", or expresses intent to deeply learn the method → Deep (Fey-R).
+When in doubt, offer the choice after Phase 0 triage.
+
+### Standard Mode
+
 **Process**:
 1. If paper content is provided (PDF/text/link), extract key information:
    - Title, authors, venue, year
@@ -28,9 +39,18 @@
    ```
 4. If `resources/papers/README.md` exists, append to index
 
+### Deep Mode (Fey-R)
+
+**Process**: Read and follow `skills/external/fey-r/SKILL.md` for the full 6-phase workflow.
+Use `skills/external/fey-r/assets/note-template.md` as the output template.
+
+1. Execute Fey-R phases 0-5 (First Pass → Background → Pain Points → Derivation → Comparison → Verification)
+2. Save output to `resources/papers/{PAPER_ID}.md` using Fey-R's note template, with the same front-matter as Standard mode
+3. If `resources/papers/README.md` exists, append to index with `[deep]` tag
+
 **Inputs**: Paper content (any form: link, PDF, pasted text, title for lookup)
 **Outputs**: `resources/papers/{PAPER_ID}.md`
-**Token**: ~3-8K
+**Token**: Standard ~3-8K, Deep ~15-40K (interactive, multi-turn)
 **Composition**: If paper has relevant theorem → suggest `theory.formalize`
 
 ---

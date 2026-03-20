@@ -1,0 +1,3 @@
+[submodule "skills/external/fey-r"]
+	path = skills/external/fey-r
+	url = https://github.com/xvirobotics/fey-r.git

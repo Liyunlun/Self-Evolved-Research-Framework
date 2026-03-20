@@ -159,6 +159,16 @@ TERMEOF
   fi
 done
 
+# --- 7. External skills (git submodules) ---
+if [ -f .gitmodules ]; then
+  echo "[*] Initializing external skills (git submodules)..."
+  git submodule update --init --recursive 2>/dev/null && \
+    echo "[+] External skills initialized" || \
+    echo "[!] Warning: git submodule init failed — run 'git submodule update --init --recursive' manually"
+else
+  echo "[=] No external skills to initialize"
+fi
+
 echo
 echo "Setup complete! Next steps:"
 echo "  1. Edit config.yaml with your project details"
