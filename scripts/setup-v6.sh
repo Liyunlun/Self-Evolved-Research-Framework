@@ -115,13 +115,13 @@ echo "--- Part B: Project setup ---"
 
 # B1. Create directories
 dirs=(
-  .claude
+  .claude src
   memory/episodes memory/topics memory/procedures
   logs/digest logs/observations logs/progress logs/experiments
   paper/proofs paper/theory paper/figures paper/figures/scripts paper/papers paper/reviews
   background methodology/ideas experiments
-  outputs outputs/visuals outputs/paper
-  resources/papers resources/repos docs
+  outputs outputs/visuals outputs/paper outputs/short_term outputs/mid_term outputs/long_term
+  resources/papers resources/repos resources/docs
   checklists/short-term checklists/mid-term checklists/long-term
 )
 for d in "${dirs[@]}"; do
@@ -405,3 +405,14 @@ echo "Next steps:"
 echo "  1. Edit config.yaml with your project details"
 echo "  2. Run 'claude' to start your first session"
 echo "  3. SER will auto-detect your intent — just talk naturally"
+
+# --- B12: Copy subdirectory README.md documentation ---
+for subdir in background logs methodology outputs memory resources scripts checklists; do
+  src_readme="$SER_ROOT/$subdir/README.md"
+  dst_readme="$PROJECT_ROOT/$subdir/README.md"
+  if [ -f "$src_readme" ] && [ ! -f "$dst_readme" ]; then
+    cp "$src_readme" "$dst_readme"
+    echo "[+] Created $subdir/README.md"
+  fi
+done
+

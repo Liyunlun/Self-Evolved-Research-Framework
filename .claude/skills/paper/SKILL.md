@@ -28,6 +28,12 @@ When to use this skill:
 3. Body sections: Summary, Method, Key Results, Strengths, Weaknesses, Relevance to Our Work, Key Equations/Theorems, Open Questions
 4. Save to `resources/papers/{PAPER_ID}.md`
    - PAPER_ID format: `{FirstAuthorLastName}{Year}{KeyWord}` (e.g., `Vaswani2017Attention`)
+5. If the paper has a code release → clone to `resources/repos/{repo-name}/` with `--depth 1`
+
+### Reading & Reference Rules
+- When reading existing notes in `resources/papers/`: **read Quick Reference section first**; only read full notes if deeper understanding needed
+- Lookup order: `resources/papers/` → `resources/repos/` → fetch/clone and add
+- See `resources/README.md` for full conventions
 
 ### Suggested Next
 - If the paper contains a relevant theorem or conjecture worth formalizing -> `theory.formalize`

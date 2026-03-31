@@ -163,25 +163,44 @@ When code skills and research skills both apply:
 │       ├── code/SKILL.md         # code.implement, debug, review, verify, commit, branch
 │       ├── review/SKILL.md      # dual_review (external model)
 │       └── meta/SKILL.md        # session.open/close, G2, evolve, general.research
-├── checklists/                  # Hierarchical task tracking (L1 + L2)
-├── memory/                      # Three-tier persistent memory
-│   ├── MEMORY.md                # Always-loaded index
+├── src/                         # Project source code (unified location)
+├── experiments/                 # Per-experiment directories (→ see experiment/SKILL.md)
+│   └── {name}/plan.md          # Claims, configs, ablations, resources, commit ID
+│   └── {name}/run.sh           # Experiment launch script
+│   └── {name}/results/         # Raw output files
+├── resources/                   # External references — read-only (→ resources/README.md)
+│   ├── papers/                  # Paper notes (YAML frontmatter; Quick Ref first)
+│   ├── repos/                   # Cloned reference repos (--depth 1)
+│   └── docs/                    # Plans, reports, process documents
+├── paper/                       # Paper writing artifacts
+│   ├── figures/ + scripts/      # Figures and generation scripts
+│   ├── papers/                  # Draft versions (.tex)
+│   ├── proofs/                  # Mathematical proofs
+│   ├── reviews/                 # Reviewer feedback
+│   └── theory/                  # Theoretical analysis
+├── outputs/                     # Verified deliverables (→ outputs/README.md)
+│   ├── short_term/              # Notes, summaries, preliminary analyses
+│   ├── mid_term/                # Draft sections, experiment reports
+│   ├── long_term/               # Complete papers, dissertations
+│   ├── paper/                   # Compiled paper PDF
+│   └── visuals/                 # Visualizations
+├── background/                  # Survey and landscape analysis (→ background/README.md)
+├── methodology/                 # Research direction + ideas (→ methodology/README.md)
+│   ├── approach.md              # Current methodology
+│   └── ideas/                   # Idea discovery artifacts (YYYY-MM-DD-discovery.md)
+├── checklists/                  # Hierarchical task tracking L1+L2 (→ checklists/README.md)
+├── memory/                      # Three-tier persistent memory (→ memory/README.md)
+│   ├── MEMORY.md                # Always-loaded index (200-line limit)
 │   ├── episodes/                # Recent (20 max, 7d)
 │   ├── topics/                  # Consolidated (50 max, 90d)
 │   └── procedures/              # Permanent (100 max)
-├── logs/
-│   ├── digest/                  # Session logs (YAML + SUMMARY.md)
-│   ├── observations/            # JSONL observation data (per session)
-│   ├── progress/                # Progress capture logs
-│   └── experiments/             # Experiment logs
-├── methodology/                 # Research direction + ideas
-├── experiments/                 # Experiment code + results
-├── paper/                       # Paper artifacts (proofs, theory, figures, drafts, reviews)
-├── outputs/                     # Research deliverables
-├── resources/                   # Reference materials (papers, repos)
-├── background/                  # Background research
-├── scripts/                     # Utility scripts
-└── docs/                        # Supporting documentation
+├── logs/                        # Session infrastructure (→ logs/README.md)
+│   ├── digest/                  # Session YAML + SUMMARY.md
+│   ├── observations/            # Hook JSONL (observe.sh)
+│   ├── progress/                # Progress snapshots
+│   └── experiments/             # Experiment runtime logs (stdout/stderr)
+├── scripts/                     # Utility scripts (→ scripts/README.md)
+└── refine-logs/                 # Proposal iteration history (dual_review)
 ```
 
 ### Global Infrastructure (shared across all SER projects)

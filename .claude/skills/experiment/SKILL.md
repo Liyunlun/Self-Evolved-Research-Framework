@@ -49,8 +49,10 @@ When to use this skill:
 
 **Local mode** (CPU experiments or small-scale tests):
 1. Set up environment (verify dependencies, activate conda/venv).
-2. Run experiment with full logging enabled.
-3. Redirect stdout/stderr to `experiments/{exp_name}/logs/`.
+2. Before writing new baseline code, check `resources/repos/` for existing implementations.
+3. Generate `run.sh` with full experiment command (reproducible).
+4. Run experiment; save raw outputs to `experiments/{exp_name}/results/`.
+5. Redirect stdout/stderr to `logs/experiments/`.
 
 ### Suggested Next
 - Experiment launched → `experiment.monitor` to track progress.
@@ -66,7 +68,7 @@ When to use this skill:
 2. Report: running/completed/failed, current metrics if available, estimated time remaining.
 
 **Local mode**:
-1. Check log files in `experiments/{exp_name}/logs/`.
+1. Check result files in `experiments/{exp_name}/results/` and logs in `logs/experiments/`.
 2. Parse metrics from training logs (loss curves, validation metrics).
 3. Report current status: epoch/step progress, current metrics, anomalies detected.
 

@@ -44,3 +44,10 @@ When a micro-skill needs external reference:
 1. Check `resources/papers/` for existing reading notes
 2. Check `resources/repos/` for cloned codebases
 3. If not found, fetch/clone and add to the appropriate subdirectory
+
+## Docs (`docs/`)
+
+Supporting documentation generated during the research lifecycle.
+
+- `docs/plans/` — Experiment and implementation plans
+- `docs/reports/` — Progress reports and summaries
