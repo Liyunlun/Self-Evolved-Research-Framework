@@ -40,6 +40,7 @@ Read these when you need detailed procedures:
 | External model review process | `.claude/skills/review/SKILL.md` |
 | Skill evolution (evolve.suggest/apply) | `.claude/skills/meta/SKILL.md` § evolve |
 | Checklist engine full spec | `.claude/skills/checklist/SKILL.md` |
+| Code skills (TDD, review, commit, debug) | `.claude/skills/code/SKILL.md` |
 
 ## Checklist Engine
 
@@ -98,6 +99,47 @@ Three-tier: episodes/ (20 max, 7d) → topics/ (50 max, 90d) → procedures/ (10
 MEMORY.md: always-loaded index (200-line hard limit).
 See `.claude/skills/memory/SKILL.md`.
 
+## Git Discipline
+
+All code is held to the same standard. No distinction between experiment and framework code.
+
+### Commit Protocol
+- **Review before commit**: Run `code.review` (dual-layer) → fix issues → `code.commit`
+- **Prefix convention**: `feat:` `fix:` `exp:` `refactor:` `docs:` `chore:`
+- **Never commit**: `.claude/`, `logs/`, `memory/episodes/`, secrets (.env, credentials)
+- **Stage explicitly**: Name files, never `git add -A`
+
+### State Backup
+- `ser-state` orphan branch: daily cron backup of Checklist.md, checklists/, memory/MEMORY.md, memory/topics/, memory/procedures/
+- Uses `git worktree` — main working directory unaffected
+- Script: `scripts/ser-state-backup.sh`
+
+## Code Discipline (from ECC Philosophy)
+
+### Core Rules
+1. **Test-First (Rigid)**: Write tests before code. RED-GREEN-REFACTOR. No exceptions. (`superpowers:test-driven-development`)
+2. **Systematic Debugging**: 4-phase root cause analysis. 3+ fix failures → question architecture. (`superpowers:systematic-debugging`)
+3. **Evidence over Claims**: Verify before claiming completion. IDENTIFY→RUN→READ→VERIFY→CLAIM. (`superpowers:verification-before-completion`)
+4. **Simplicity / YAGNI**: Minimize complexity. Don't design for hypothetical requirements.
+5. **1% Rule**: If any code skill might be relevant, invoke it. Don't rationalize.
+
+### Skill Priority
+When code skills and research skills both apply:
+1. **Process skills first** (debug, TDD) — determine HOW to approach
+2. **Domain skills second** (experiment, paper) — determine WHAT to build
+3. If even 1% chance a skill applies, invoke it
+
+### Red Flags (STOP when you think these)
+
+| Thought | Reality |
+|---------|---------|
+| "This is just simple code" | Simple things become complex. Use TDD. |
+| "I'll test after" | Tests written after pass immediately, prove nothing. |
+| "Should work now" | Not verification. Run the command, read output. |
+| "Too simple for review" | All code gets reviewed. No exceptions. |
+| "Let me explore first" | Skills tell you HOW to explore. Invoke first. |
+| "3+ fixes failed, let me try once more" | Architecture problem. Stop and discuss. |
+
 ## Project Structure
 
 ```
@@ -118,6 +160,7 @@ See `.claude/skills/memory/SKILL.md`.
 │       ├── checklist/SKILL.md   # checklist.create, verify, update, status
 │       ├── research/SKILL.md    # research.explore, design.converge
 │       ├── memory/SKILL.md      # memory.write, retrieve, consolidate, forget
+│       ├── code/SKILL.md         # code.implement, debug, review, verify, commit, branch
 │       ├── review/SKILL.md      # dual_review (external model)
 │       └── meta/SKILL.md        # session.open/close, G2, evolve, general.research
 ├── checklists/                  # Hierarchical task tracking (L1 + L2)

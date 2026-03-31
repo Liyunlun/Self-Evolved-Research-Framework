@@ -71,29 +71,44 @@ fi
 # Copy new CLAUDE.md
 cp "$SER_ROOT/CLAUDE.md" "$STAGING_PROJECT/CLAUDE.md"
 
-# Generate settings.json with absolute paths
+# Generate settings.json with absolute paths (canonical SDK format)
 cat > "$STAGING_PROJECT/.claude/settings.json" << SETEOF
 {
   "hooks": {
     "UserPromptSubmit": [
       {
         "matcher": "",
-        "command": "$SER_GLOBAL/hooks/session-guard.sh",
-        "timeout": 3000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$SER_GLOBAL/hooks/session-guard.sh",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PreToolUse": [
       {
         "matcher": "*",
-        "command": "CLAUDE_HOOK_PHASE=pre $SER_GLOBAL/hooks/observe.sh",
-        "timeout": 5000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CLAUDE_HOOK_PHASE=pre $SER_GLOBAL/hooks/observe.sh",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "*",
-        "command": "CLAUDE_HOOK_PHASE=post $SER_GLOBAL/hooks/observe.sh",
-        "timeout": 5000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CLAUDE_HOOK_PHASE=post $SER_GLOBAL/hooks/observe.sh",
+            "timeout": 5
+          }
+        ]
       }
     ]
   }

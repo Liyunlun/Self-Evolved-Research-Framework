@@ -1,0 +1,61 @@
+# SER v6 — Skill Chain Templates
+# Global chain definitions shared across all SER projects.
+# All weights initialized to uniform priors — the system learns from user behavior.
+
+chains:
+  literature_survey:
+    trigger: "user wants literature survey, related work, or background research"
+    steps: [lit.search, paper.read, paper.compare, writing.draft]
+    selection_weight: {alpha: 1, beta: 1}
+    repeat: {}
+    checkpoints:
+      after_paper.read:
+        weight: {alpha: 1, beta: 1}
+
+  idea_pipeline:
+    trigger: "user has an idea to develop or wants brainstorming"
+    steps: [idea.discover, idea.verify, dual_review, idea.refine]
+    selection_weight: {alpha: 1, beta: 1}
+    repeat:
+      verify_review_refine:
+        rounds_dist: {alpha: 2, beta: 1}
+    checkpoints:
+      after_discover:
+        weight: {alpha: 1, beta: 1}
+
+  proof_cycle:
+    trigger: "user needs to write or verify a proof"
+    steps: [theory.formalize, proof.write, proof.critique, dual_review, proof.fix]
+    selection_weight: {alpha: 1, beta: 1}
+    repeat:
+      critique_review_fix:
+        rounds_dist: {alpha: 3, beta: 1}
+    checkpoints: {}
+
+  paper_writing:
+    trigger: "user is writing a paper or paper section"
+    steps: [writing.outline, writing.draft, writing.review, dual_review, writing.polish]
+    selection_weight: {alpha: 1, beta: 1}
+    repeat:
+      review_polish:
+        rounds_dist: {alpha: 2, beta: 1}
+    checkpoints:
+      after_outline:
+        weight: {alpha: 1, beta: 1}
+
+  experiment_loop:
+    trigger: "user wants to plan, run, and analyze an experiment"
+    steps: [experiment.plan, experiment.run, experiment.monitor, experiment.analyze, decision.analyze]
+    selection_weight: {alpha: 1, beta: 1}
+    repeat: {}
+    checkpoints:
+      after_plan:
+        weight: {alpha: 1, beta: 1}
+
+  code_review_commit:
+    trigger: "code changes need review and commit"
+    steps: [code.review, code.commit]
+    selection_weight: {alpha: 1, beta: 1}
+    repeat: {}
+    checkpoints: {}
+    # Deterministic chain — no Bayesian weight updates

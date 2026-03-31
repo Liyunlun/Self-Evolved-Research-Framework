@@ -39,7 +39,7 @@ When to use this skill:
 
 **MetaScheduler mode** (GPU experiments on cluster):
 1. Prepare submission:
-   - Commit all code changes (ensure reproducibility)
+   - Run code.review → code.commit workflow (ensure reproducibility with reviewed code)
    - Verify experiment config is complete and saved
    - Check data paths and dependencies are accessible
 2. Query available resources: `mb task manager <chatId> "describe need: model, GPU count, duration, purpose"`.

@@ -1,0 +1,65 @@
+# SER v6 — Bayesian Transition Weights
+# Single global file updated by all projects.
+# All weights start as uniform priors (maximally uncertain).
+
+meta:
+  total_observations: 0
+  last_update: "2026-03-30T00:00:00Z"
+
+transitions:
+  "paper.read → paper.compare": {alpha: 1, beta: 1}
+  "paper.read → lit.search": {alpha: 1, beta: 1}
+  "paper.read → theory.formalize": {alpha: 1, beta: 1}
+  "paper.compare → decision.analyze": {alpha: 1, beta: 1}
+  "paper.compare → writing.draft": {alpha: 1, beta: 1}
+  "idea.discover → idea.verify": {alpha: 1, beta: 1}
+  "idea.verify → idea.refine": {alpha: 1, beta: 1}
+  "idea.verify → decision.analyze": {alpha: 1, beta: 1}
+  "idea.refine → experiment.plan": {alpha: 1, beta: 1}
+  "theory.formalize → theory.decompose": {alpha: 1, beta: 1}
+  "theory.formalize → proof.write": {alpha: 1, beta: 1}
+  "theory.decompose → theory.search": {alpha: 1, beta: 1}
+  "proof.write → proof.critique": {alpha: 1, beta: 1}
+  "proof.critique → proof.fix": {alpha: 1, beta: 1}
+  "proof.fix → proof.critique": {alpha: 1, beta: 1}
+  "proof.critique → proof.formalize": {alpha: 1, beta: 1}
+  "writing.outline → writing.draft": {alpha: 1, beta: 1}
+  "writing.draft → writing.review": {alpha: 1, beta: 1}
+  "writing.review → writing.polish": {alpha: 1, beta: 1}
+  "experiment.plan → experiment.run": {alpha: 1, beta: 1}
+  "experiment.run → experiment.monitor": {alpha: 1, beta: 1}
+  "experiment.analyze → paper.figure": {alpha: 1, beta: 1}
+  "experiment.analyze → decision.analyze": {alpha: 1, beta: 1}
+  "research.explore → design.converge": {alpha: 1, beta: 1}
+  "design.converge → experiment.plan": {alpha: 1, beta: 1}
+  # Code transitions (deterministic — never updated by TD-NL)
+  "code.implement → code.review": {alpha: 1, beta: 1}
+  "code.review → code.commit": {alpha: 1, beta: 1}
+  "code.debug → code.implement": {alpha: 1, beta: 1}
+  "code.debug → code.review": {alpha: 1, beta: 1}
+  "experiment.plan → code.implement": {alpha: 1, beta: 1}
+  "code.commit → experiment.run": {alpha: 1, beta: 1}
+
+chain_selection:
+  literature_survey: {alpha: 1, beta: 1}
+  idea_pipeline: {alpha: 1, beta: 1}
+  proof_cycle: {alpha: 1, beta: 1}
+  paper_writing: {alpha: 1, beta: 1}
+  experiment_loop: {alpha: 1, beta: 1}
+  code_review_commit: {alpha: 1, beta: 1}  # deterministic, never updated
+
+checkpoints:
+  "literature_survey.after_paper.read": {alpha: 1, beta: 1}
+  "idea_pipeline.after_discover": {alpha: 1, beta: 1}
+  "paper_writing.after_outline": {alpha: 1, beta: 1}
+  "experiment_loop.after_plan": {alpha: 1, beta: 1}
+
+repeat_rounds:
+  "idea_pipeline.verify_review_refine": {alpha: 2, beta: 1}
+  "proof_cycle.critique_review_fix": {alpha: 3, beta: 1}
+  "paper_writing.review_polish": {alpha: 2, beta: 1}
+
+step_skip:
+  "proof_cycle.dual_review": {alpha: 1, beta: 1}
+  "paper_writing.dual_review": {alpha: 1, beta: 1}
+  "idea_pipeline.dual_review": {alpha: 1, beta: 1}
