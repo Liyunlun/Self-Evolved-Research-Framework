@@ -38,8 +38,7 @@ based on accumulated usage feedback.
 
 1. User message arrives → CLAUDE.md Skill Execution Loop routes to a skill via intent table
 2. Agent follows the skill's process (read `.claude/skills/{group}/SKILL.md` for complex cases)
-3. After execution, append observation to `logs/observations/YYYY-MM-DD.jsonl` (Step 3: Record)
-4. Follow → Next chain column until user's request is fully answered
+3. Follow → Next chain column until user's request is fully answered
 5. At session.close, `evolve.suggest` aggregates feedback and updates skill values
 6. On sufficient signal, spec edit proposals are generated for user approval
 

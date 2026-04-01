@@ -29,13 +29,16 @@
 **Trigger**: Conversation is ending (detected via: user says goodbye/done, or long session with substantial work completed)
 
 **Process**:
-1. Auto-summarize the current session from conversation history (record all user text input):
+1. Auto-summarize the current session from conversation history:
    - What was discussed/accomplished (1-3 bullet points)
    - Key decisions made
    - Files created/modified
-   - Token estimate for session
-2. Present summary and ask: "Save session log? [Y/edit]"
-3. On confirmation, write to `logs/digest/YYYY-MM-DD.yaml`:
+2. Record skill observations — for each skill used this session, append to `logs/observations/YYYY-MM-DD.jsonl`:
+   ```jsonl
+   {"type":"skill","skill":"{name}","chain":"{chain|null}","outcome":"{better|as_expected|worse}","ts":"{ISO8601}"}
+   ```
+3. Present summary and ask: "Save session log? [Y/edit]"
+4. On confirmation, write to `logs/digest/YYYY-MM-DD.yaml`:
    ```yaml
    date: "YYYY-MM-DD"
    type: "session"
@@ -48,7 +51,7 @@
    token_estimate: N
    milestone_phase: "{current phase}"
    ```
-4. Update `logs/digest/SUMMARY.md` index table with new entry
+5. Update `logs/digest/SUMMARY.md` index table with new entry
 
 **Inputs**: Conversation history, config.yaml
 **Outputs**: `logs/digest/YYYY-MM-DD.yaml`, updated SUMMARY.md

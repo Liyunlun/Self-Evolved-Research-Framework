@@ -41,19 +41,12 @@ Pick the most specific match. If ambiguous, ask user.
 
 Follow the skill's process. Full spec: `.claude/skills/{group}/SKILL.md` (read for complex cases).
 
-### Step 3: Record
-
-After each skill, append to `logs/observations/YYYY-MM-DD.jsonl`:
-````jsonl
-{"type":"skill","skill":"{name}","chain":"{active_chain|null}","outcome":"{better|as_expected|worse}","ts":"{ISO8601}"}
-````
-
-### Step 4: Chain
+### Step 3: Chain
 
 Follow → Next column. If active chain (from `~/.claude/ser/chains.yaml`), follow chain steps in order.
 Stop when user's request is fully answered.
 
-At session.close: execute `evolve.suggest` (G1 aggregation) + run `update_weights.py`.
+At session.close: batch-record all skill observations + `evolve.suggest` + `update_weights.py`.
 
 ## Reference Docs
 
