@@ -79,9 +79,12 @@ All skills update the checklist after producing artifacts. See `.claude/skills/c
 date: "YYYY-MM-DD"
 type: "session"
 summary: "{1-line}"
+skills_used:
+  - skill: "paper.read"
+    outcome: "as_expected"
+    chain: "literature_survey"
 accomplishments:
-  - type: "{paper_read|experiment|proof|code|decision}"
-    content: "{description}"
+  - "{item}"
 decisions: []
 files_changed: []
 milestone_phase: "{phase}"
@@ -91,7 +94,6 @@ milestone_phase: "{phase}"
 
 ````jsonl
 {"type":"tool","phase":"pre","tool":"Read","ts":"..."}
-{"type":"skill","skill":"paper.read","chain":"literature_survey","outcome":"as_expected","ts":"..."}
 ````
 
 ### Paper Notes: `resources/papers/{ID}.md`

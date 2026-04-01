@@ -108,28 +108,44 @@ def check_weight_explosion(weights, config):
 
 
 def load_session_observations():
-    """Load today's JSONL observations."""
+    """Load today's JSONL observations + skill data from digest YAML."""
     observations = []
-    if not exists(OBS_DIR):
-        return observations
 
-    today = datetime.now().strftime('%Y-%m-%d')
-    obs_file = os.path.join(OBS_DIR, f"{today}.jsonl")
+    # 1. Load tool observations from JSONL
+    if exists(OBS_DIR):
+        today = datetime.now().strftime('%Y-%m-%d')
+        obs_file = os.path.join(OBS_DIR, f"{today}.jsonl")
+        if exists(obs_file):
+            try:
+                with open(obs_file) as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                observations.append(json.loads(line))
+                            except json.JSONDecodeError:
+                                continue
+            except Exception:
+                pass
 
-    if not exists(obs_file):
-        return observations
-
-    try:
-        with open(obs_file) as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        observations.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        continue
-    except Exception:
-        pass
+    # 2. Load skill observations from digest YAML (skills_used field)
+    digest_dir = 'logs/digest'
+    if exists(digest_dir):
+        today = datetime.now().strftime('%Y-%m-%d')
+        digest_file = os.path.join(digest_dir, f"{today}.yaml")
+        if exists(digest_file):
+            try:
+                with open(digest_file) as f:
+                    digest = yaml.safe_load(f) or {}
+                for skill_entry in digest.get('skills_used', []):
+                    observations.append({
+                        'type': 'skill',
+                        'skill': skill_entry.get('skill', ''),
+                        'chain': skill_entry.get('chain', ''),
+                        'outcome': skill_entry.get('outcome', 'as_expected'),
+                    })
+            except Exception:
+                pass
 
     return observations
 

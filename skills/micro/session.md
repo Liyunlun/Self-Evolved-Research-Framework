@@ -33,25 +33,24 @@
    - What was discussed/accomplished (1-3 bullet points)
    - Key decisions made
    - Files created/modified
-2. Record skill observations — for each skill used this session, append to `logs/observations/YYYY-MM-DD.jsonl`:
-   ```jsonl
-   {"type":"skill","skill":"{name}","chain":"{chain|null}","outcome":"{better|as_expected|worse}","ts":"{ISO8601}"}
-   ```
-3. Present summary and ask: "Save session log? [Y/edit]"
-4. On confirmation, write to `logs/digest/YYYY-MM-DD.yaml`:
+   - Which skills from the Execution Loop were used (list skill names)
+2. Present summary and ask: "Save session log? [Y/edit]"
+3. On confirmation, write to `logs/digest/YYYY-MM-DD.yaml`:
    ```yaml
    date: "YYYY-MM-DD"
    type: "session"
-   auto_strategy: "conversation-summary"
    summary: "{auto-generated}"
+   skills_used:
+     - skill: "{name}"
+       outcome: "{better|as_expected|worse}"
+       chain: "{chain|null}"
    accomplishments:
      - "{item}"
    decisions: []
    files_changed: []
-   token_estimate: N
    milestone_phase: "{current phase}"
    ```
-5. Update `logs/digest/SUMMARY.md` index table with new entry
+4. Update `logs/digest/SUMMARY.md` index table with new entry
 
 **Inputs**: Conversation history, config.yaml
 **Outputs**: `logs/digest/YYYY-MM-DD.yaml`, updated SUMMARY.md
