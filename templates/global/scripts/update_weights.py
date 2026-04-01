@@ -135,27 +135,39 @@ def load_session_observations():
 
 
 def apply_observations(weights, observations):
-    """Apply observation updates to weights."""
+    """Apply observation updates to weights.
+
+    Transition data is inferred from consecutive type:"skill" records
+    within the same chain, rather than requiring explicit type:"transition" entries.
+    """
     obs_count = 0
+    skill_events = [o for o in observations if o.get('type') == 'skill']
 
-    for obs in observations:
-        obs_type = obs.get('type', '')
+    # Update chain_selection from skill events
+    for obs in skill_events:
+        chain = obs.get('chain', '')
+        if chain and chain in weights.get('chain_selection', {}):
+            weights['chain_selection'][chain]['alpha'] += 1
+            obs_count += 1
 
-        if obs_type == 'transition':
-            from_skill = obs.get('from', '')
-            to_skill = obs.get('to', '')
+    # Infer transitions from adjacent skill records in the same chain
+    for i in range(len(skill_events) - 1):
+        curr = skill_events[i]
+        next_evt = skill_events[i + 1]
+        if curr.get('chain') and curr['chain'] == next_evt.get('chain'):
+            from_skill = curr['skill']
+            to_skill = next_evt['skill']
             key = f"{from_skill} → {to_skill}"
             if key in weights.get('transitions', {}):
                 weights['transitions'][key]['alpha'] += 1
                 obs_count += 1
             else:
-                # New transition discovered
-                if 'transitions' not in weights:
-                    weights['transitions'] = {}
-                weights['transitions'][key] = {'alpha': 2, 'beta': 1}
+                weights.setdefault('transitions', {})[key] = {'alpha': 2, 'beta': 1}
                 obs_count += 1
 
-        elif obs_type == 'checkpoint':
+    # Process checkpoint observations (still explicit)
+    for obs in observations:
+        if obs.get('type') == 'checkpoint':
             chain = obs.get('chain', '')
             at = obs.get('at', '')
             key = f"{chain}.{at}"
@@ -166,14 +178,6 @@ def apply_observations(weights, observations):
                 else:
                     weights['checkpoints'][key]['beta'] += 1
                 obs_count += 1
-
-        elif obs_type == 'skill':
-            chain = obs.get('chain', '')
-            if chain:
-                key = chain
-                if key in weights.get('chain_selection', {}):
-                    weights['chain_selection'][key]['alpha'] += 1
-                    obs_count += 1
 
     return obs_count
 

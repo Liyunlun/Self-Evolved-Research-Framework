@@ -36,10 +36,10 @@ based on accumulated usage feedback.
 
 ## How Skills Work
 
-1. User message arrives → CLAUDE.md intent router matches a pattern
-2. Before executing, the agent MUST `Read` the relevant `micro/*.md` file
-3. The spec defines the exact process, not just a summary
-4. After execution, a G2 assessment is appended to `td-nl/feedback-log.md`
+1. User message arrives → CLAUDE.md Skill Execution Loop routes to a skill via intent table
+2. Agent follows the skill's process (read `.claude/skills/{group}/SKILL.md` for complex cases)
+3. After execution, append observation to `logs/observations/YYYY-MM-DD.jsonl` (Step 3: Record)
+4. Follow → Next chain column until user's request is fully answered
 5. At session.close, `evolve.suggest` aggregates feedback and updates skill values
 6. On sufficient signal, spec edit proposals are generated for user approval
 

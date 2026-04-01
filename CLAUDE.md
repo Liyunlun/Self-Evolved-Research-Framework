@@ -8,39 +8,61 @@
 **ABSOLUTE**: At conversation start, execute `session.open` (see `.claude/skills/meta/SKILL.md`)
 BEFORE any other processing. The session-guard hook enforces this.
 
-## Skill Chain Protocol
+## Skill Execution Loop
 
-session.open loads `~/.claude/ser/chains.yaml` and `.claude/.ser-recommendations.json`.
+**MANDATORY**: Every user request MUST be routed through this table.
+Identify the matching skill first, then execute through the skill process.
 
-Selecting next action:
-1. If active chain → follow chain steps in order
-2. If no active chain → match chains.yaml triggers to user intent
-3. Multiple chains match → use recommendation scores (if ambiguous flag is set, ask user)
-4. No chain matches → read SKILL.md "Suggested Next" for single-step transitions
-5. No match at all → use general.research
+### Step 1: Route — match user intent to skill
 
-After every skill execution:
-- Record G2 observation (see meta/SKILL.md § G2)
-- Update checklist if artifact produced
+| User Intent | Skill | Required Output | → Next |
+|-------------|-------|----------------|--------|
+| Read/understand paper or code | paper.read | `papers/{ID}.md` (full) or key findings (quick) | paper.compare |
+| Compare methods/systems | paper.compare | comparison table (inline) | decision.analyze |
+| Search literature | lit.search | search results | paper.read |
+| Explore research directions | research.explore | ranked directions (inline) | design.converge |
+| New idea to develop | idea.discover | idea card (inline) | idea.verify |
+| Decision between options | decision.analyze | criteria matrix + recommendation | progress.capture |
+| Plan next steps | plan.suggest | prioritized task list | → route |
+| Define theory/formalize | theory.formalize | formalized statement | proof.critique |
+| Design experiment | experiment.plan | `experiments/{name}/plan.md` | experiment.run |
+| Analyze results | experiment.analyze | result summary + figures | decision.analyze |
+| Implement code | code.implement | tests + code | code.review |
+| Debug a problem | code.debug | root cause + fix | code.review |
+| Review code | code.review | issue list with severity | code.commit |
+| Commit code | code.commit | clean commit | — |
+| Write paper section | writing.draft | draft section in `paper/` | writing.review |
+| Review draft | writing.review | revision notes | writing.polish |
+| No match | general.research | context-aware response | — |
 
-At session.close:
-- Execute evolve.suggest (G1 aggregation)
-- Run update_weights.py to persist learning
+Pick the most specific match. If ambiguous, ask user.
+
+### Step 2: Execute
+
+Follow the skill's process. Full spec: `.claude/skills/{group}/SKILL.md` (read for complex cases).
+
+### Step 3: Record
+
+After each skill, append to `logs/observations/YYYY-MM-DD.jsonl`:
+````jsonl
+{"type":"skill","skill":"{name}","chain":"{active_chain|null}","outcome":"{better|as_expected|worse}","ts":"{ISO8601}"}
+````
+
+### Step 4: Chain
+
+Follow → Next column. If active chain (from `~/.claude/ser/chains.yaml`), follow chain steps in order.
+Stop when user's request is fully answered.
+
+At session.close: execute `evolve.suggest` (G1 aggregation) + run `update_weights.py`.
 
 ## Reference Docs
 
-Read these when you need detailed procedures:
-
 | Need to know | Read |
 |-------------|------|
-| session.open/close full steps | `.claude/skills/meta/SKILL.md` |
+| session.open/close steps | `.claude/skills/meta/SKILL.md` |
+| Skill full process specs | `.claude/skills/{group}/SKILL.md` |
 | Chain templates and triggers | `~/.claude/ser/chains.yaml` |
-| Weight update and learning mechanics | `~/.claude/ser/td-nl/README.md` |
-| G2 observation recording format | `.claude/skills/meta/SKILL.md` § G2 |
-| External model review process | `.claude/skills/review/SKILL.md` |
-| Skill evolution (evolve.suggest/apply) | `.claude/skills/meta/SKILL.md` § evolve |
-| Checklist engine full spec | `.claude/skills/checklist/SKILL.md` |
-| Code skills (TDD, review, commit, debug) | `.claude/skills/code/SKILL.md` |
+| Skill evolution | `.claude/skills/meta/SKILL.md` § evolve |
 
 ## Checklist Engine
 
@@ -72,13 +94,11 @@ files_changed: []
 milestone_phase: "{phase}"
 ````
 
-### Observation Format: `logs/observations/{session}.jsonl`
+### Observation Format: `logs/observations/YYYY-MM-DD.jsonl`
 
 ````jsonl
-{"type":"tool","tool":"Read","file":"paper/intro.md","duration_ms":120,"ts":"..."}
-{"type":"skill","skill":"paper.read","chain":"literature_survey","step":2,"ts":"..."}
-{"type":"transition","from":"paper.read","to":"paper.compare","suggested":true,"ts":"..."}
-{"type":"checkpoint","chain":"literature_survey","at":"after_paper.read","user_interrupted":false,"ts":"..."}
+{"type":"tool","phase":"pre","tool":"Read","ts":"..."}
+{"type":"skill","skill":"paper.read","chain":"literature_survey","outcome":"as_expected","ts":"..."}
 ````
 
 ### Paper Notes: `resources/papers/{ID}.md`
