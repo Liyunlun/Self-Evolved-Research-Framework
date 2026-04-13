@@ -37,9 +37,13 @@ Identify the matching skill first, then execute through the skill process.
 
 Pick the most specific match. If ambiguous, ask user.
 
+> Skill names in the table (e.g. `paper.read`) map to skill groups (e.g. `/paper`).
+> The SKILL.md router dispatches to the correct sub-workflow via `references/`.
+> Chain transitions are handled by the chain system, not by individual skills.
+
 ### Step 2: Execute
 
-Follow the skill's process. Full spec: `.claude/skills/{group}/SKILL.md` (read for complex cases).
+Follow the skill's process. Read `.claude/skills/{group}/SKILL.md` which routes to the appropriate `references/*.md` file.
 
 ### Step 3: Chain
 
@@ -164,20 +168,20 @@ When code skills and research skills both apply:
 ├── .claude/
 │   ├── settings.json            # Hook configuration
 │   └── skills/                  # Grouped skill specs (v6)
-│       ├── paper/SKILL.md       # paper.read, compare, index, lit.search
-│       ├── theory/SKILL.md      # theory.formalize, decompose, search, counterexample, generalize
-│       ├── proof/SKILL.md       # proof.critique, write, fix, formalize, verify
-│       ├── writing/SKILL.md     # writing.outline, draft, review, polish, figure, compile
-│       ├── planning/SKILL.md    # plan.suggest, milestone, progress, status, decision, experiment.analyze
-│       ├── experiment/SKILL.md  # experiment.plan, run, monitor, math.dse
-│       ├── idea/SKILL.md        # idea.discover, verify, refine
-│       ├── visual/SKILL.md      # pixel.create, paper.illustrate
-│       ├── checklist/SKILL.md   # checklist.create, verify, update, status
-│       ├── research/SKILL.md    # research.explore, design.converge
-│       ├── memory/SKILL.md      # memory.write, retrieve, consolidate, forget
-│       ├── code/SKILL.md         # code.implement, debug, review, verify, commit, branch
-│       ├── review/SKILL.md      # dual_review (external model)
-│       └── meta/SKILL.md        # session.open/close, G2, evolve, general.research
+│       ├── paper/SKILL.md       # Router → references/read.md, compare.md, index.md, lit-search.md
+│       ├── theory/SKILL.md      # Router → references/formalize.md, decompose.md, search.md, counterexample.md, generalize.md
+│       ├── proof/SKILL.md       # Router → references/critique.md, write.md, fix.md, formalize.md, verify.md
+│       ├── writing/SKILL.md     # Router → references/outline.md, draft.md, review.md, polish.md, figure.md, compile.md
+│       ├── planning/SKILL.md    # Router → references/suggest.md, milestone.md, progress.md, status.md, decision.md, experiment-analyze.md
+│       ├── experiment/SKILL.md  # Router → references/plan.md, run.md, monitor.md, dse.md
+│       ├── idea/SKILL.md        # Router → references/discover.md, verify.md, refine.md
+│       ├── visual/SKILL.md      # Router → references/pixel-create.md, paper-illustrate.md
+│       ├── checklist/SKILL.md   # Router → references/create.md, verify.md, update.md, status.md
+│       ├── research/SKILL.md    # Router → references/explore.md, converge.md
+│       ├── memory/SKILL.md      # Router → references/write.md, retrieve.md, consolidate.md, forget.md
+│       ├── code/SKILL.md        # Router → references/implement.md, debug.md, review.md, commit.md, branch.md + internal: plan.md, execute.md, synthesize.md
+│       ├── review/SKILL.md      # Router → references/dual-review.md
+│       └── meta/SKILL.md        # Router → references/session-open.md, session-close.md, evolve-suggest.md, evolve-apply.md, general-research.md
 ├── src/                         # Project source code (unified location)
 ├── experiments/                 # Per-experiment directories (→ see experiment/SKILL.md)
 │   └── {name}/plan.md          # Claims, configs, ablations, resources, commit ID

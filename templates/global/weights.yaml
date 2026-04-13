@@ -33,8 +33,14 @@ transitions:
   "research.explore → design.converge": {alpha: 1, beta: 1}
   "design.converge → experiment.plan": {alpha: 1, beta: 1}
   # Code transitions (deterministic — never updated by TD-NL)
-  "code.implement → code.review": {alpha: 1, beta: 1}
-  "code.review → code.commit": {alpha: 1, beta: 1}
+  "code.implement → code.review": {alpha: 1, beta: 1}      # small task path
+  "code.implement → code.plan": {alpha: 1, beta: 1}         # medium/large task path
+  "code.plan → code.execute": {alpha: 1, beta: 1}
+  "code.execute → code.review": {alpha: 1, beta: 1}
+  "code.review → code.synthesize": {alpha: 1, beta: 1}      # after full dual review
+  "code.review → code.commit": {alpha: 1, beta: 1}          # after lightweight review
+  "code.synthesize → code.execute": {alpha: 1, beta: 1}     # fix loop
+  "code.synthesize → code.commit": {alpha: 1, beta: 1}      # pass
   "code.debug → code.implement": {alpha: 1, beta: 1}
   "code.debug → code.review": {alpha: 1, beta: 1}
   "experiment.plan → code.implement": {alpha: 1, beta: 1}
@@ -47,17 +53,20 @@ chain_selection:
   paper_writing: {alpha: 1, beta: 1}
   experiment_loop: {alpha: 1, beta: 1}
   code_review_commit: {alpha: 1, beta: 1}  # deterministic, never updated
+  code_plan_execute: {alpha: 1, beta: 1}   # deterministic, never updated
 
 checkpoints:
   "literature_survey.after_paper.read": {alpha: 1, beta: 1}
   "idea_pipeline.after_discover": {alpha: 1, beta: 1}
   "paper_writing.after_outline": {alpha: 1, beta: 1}
   "experiment_loop.after_plan": {alpha: 1, beta: 1}
+  "code_plan_execute.after_plan": {alpha: 1, beta: 1}
 
 repeat_rounds:
   "idea_pipeline.verify_review_refine": {alpha: 2, beta: 1}
   "proof_cycle.critique_review_fix": {alpha: 3, beta: 1}
   "paper_writing.review_polish": {alpha: 2, beta: 1}
+  "code_plan_execute.review_fix": {alpha: 3, beta: 1}
 
 step_skip:
   "proof_cycle.dual_review": {alpha: 1, beta: 1}

@@ -59,3 +59,15 @@ chains:
     repeat: {}
     checkpoints: {}
     # Deterministic chain — no Bayesian weight updates
+
+  code_plan_execute:
+    trigger: "medium/large code task requiring plan-based implementation with Codex"
+    steps: [code.implement, code.plan, code.execute, code.review, code.synthesize, code.commit]
+    selection_weight: {alpha: 1, beta: 1}
+    repeat:
+      review_fix:
+        rounds_dist: {alpha: 3, beta: 1}  # max 3 auto rounds, then ask user
+    checkpoints:
+      after_plan:
+        weight: {alpha: 1, beta: 1}
+    # Deterministic chain — no Bayesian weight updates

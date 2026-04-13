@@ -44,7 +44,7 @@ if [ ! -f "$SER_GLOBAL/hooks/session-guard.sh" ]; then
 MARKER=".claude/.ser-session-active"
 if [ ! -f "$MARKER" ]; then
     touch "$MARKER"
-    echo "[SER] Execute session.open before responding. Read .claude/skills/meta/SKILL.md."
+    echo "[SER] Execute session.open before responding. Read .claude/skills/meta/SKILL.md, then read references/session-open.md."
 fi
 HOOKEOF
   echo "[+] Created session-guard.sh"
@@ -70,6 +70,17 @@ OBSEOF
   echo "[+] Created observe.sh"
 else
   echo "[=] observe.sh already exists"
+fi
+if [ ! -f "$SER_GLOBAL/hooks/post-compact.sh" ]; then
+  cat > "$SER_GLOBAL/hooks/post-compact.sh" << 'PCHOOKEOF'
+#!/usr/bin/env bash
+# SER v6 — Post-Compact Hook
+# Re-injects SER routing reminder after context compaction.
+echo "[SER] Context was compacted. The SER skill routing table is defined in CLAUDE.md. Route user requests through the skill table — read the matching skill's SKILL.md → references/*.md before acting."
+PCHOOKEOF
+  echo "[+] Created post-compact.sh"
+else
+  echo "[=] post-compact.sh already exists"
 fi
 chmod +x "$SER_GLOBAL/hooks/"*.sh
 
@@ -122,6 +133,7 @@ dirs=(
   background methodology/ideas experiments
   outputs outputs/visuals outputs/paper outputs/short_term outputs/mid_term outputs/long_term
   resources/papers resources/repos resources/docs
+  implementation_plans
   checklists/short-term checklists/mid-term checklists/long-term
 )
 for d in "${dirs[@]}"; do
@@ -136,15 +148,21 @@ for d in "${dirs[@]}"; do
 done
 echo "[+] Project directories ready"
 
-# B2. Copy grouped SKILL.md files (always refresh)
+# B2. Copy grouped SKILL.md files and references/ (always refresh)
 if [ -d "$SER_ROOT/.claude/skills" ]; then
   for skill_dir in "$SER_ROOT/.claude/skills/"*/; do
     skill_name="$(basename "$skill_dir")"
     mkdir -p "$PROJECT_ROOT/.claude/skills/$skill_name"
     cp "$skill_dir/SKILL.md" "$PROJECT_ROOT/.claude/skills/$skill_name/SKILL.md" 2>/dev/null || true
+    # Copy references/ sub-directory if it exists
+    if [ -d "$skill_dir/references" ]; then
+      mkdir -p "$PROJECT_ROOT/.claude/skills/$skill_name/references"
+      cp "$skill_dir/references/"*.md "$PROJECT_ROOT/.claude/skills/$skill_name/references/" 2>/dev/null || true
+    fi
   done
   SKILL_COUNT=$(ls -1d "$PROJECT_ROOT/.claude/skills/"*/SKILL.md 2>/dev/null | wc -l)
-  echo "[+] Installed $SKILL_COUNT grouped SKILL.md files"
+  REF_COUNT=$(find "$PROJECT_ROOT/.claude/skills" -path "*/references/*.md" 2>/dev/null | wc -l)
+  echo "[+] Installed $SKILL_COUNT skill groups ($REF_COUNT reference files)"
 fi
 
 # B3. CLAUDE.md
@@ -192,6 +210,18 @@ cat > "$PROJECT_ROOT/.claude/settings.json" << SETEOF
             "type": "command",
             "command": "CLAUDE_HOOK_PHASE=post $SER_GLOBAL/hooks/observe.sh",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$SER_GLOBAL/hooks/post-compact.sh",
+            "timeout": 3
           }
         ]
       }
