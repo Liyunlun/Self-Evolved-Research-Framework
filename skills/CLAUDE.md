@@ -1,51 +1,76 @@
-# Skills — Micro-Skill Specifications + TD-NL Evolution
+# Skills — Standard Claude Code Skills + TD-NL Evolution
 
-`micro/` contains the behavioral specs for all SER micro-skills.
-These are NOT code — they are structured natural language specifications
-that define trigger conditions, processes, inputs/outputs, and composition rules.
+This directory holds the SER framework's skills in **standard Claude Code format**:
+one directory per skill, each with a `SKILL.md` that has YAML frontmatter
+(`name`, `description`) and a markdown body. Claude Code auto-loads the body
+when a skill's description matches the current conversation intent.
 
-`td-nl/` contains the skill evolution infrastructure. The micro-skill specs
-in `micro/` are the **optimization target** — TD-NL improves them over time
-based on accumulated usage feedback.
+## How skills are organized
 
-## Skill Index
+```
+skills/
+  {skill-name}/SKILL.md      # 42 SER skills
+  _shared/*.md               # Cross-cutting reference docs (not skills themselves)
+  external/{name}/SKILL.md   # External skills (git submodules)
+  td-nl/                     # Skill evolution infrastructure
+```
 
-| File | Skills | Purpose |
-|------|--------|---------|
-| `micro/session.md` | session.open, session.close | Conversation lifecycle |
-| `micro/paper.md` | paper.read, paper.compare, paper.index | Paper reading & analysis |
-| `micro/theory.md` | theory.formalize, .decompose, .search, .counterexample, .generalize | Theory development |
-| `micro/proof.md` | proof.critique, .fix, .formalize, .verify | Proof management |
-| `micro/writing.md` | writing.outline, .draft, .review, .polish | Paper writing |
-| `micro/planning.md` | plan.suggest, .milestone, progress.capture, status.report, decision.analyze, experiment.analyze | Project planning |
-| `micro/experiment.md` | experiment.run, experiment.monitor | Experiment lifecycle |
-| `micro/idea.md` | idea.discover, idea.verify | Idea generation & novelty check |
-| `micro/checklist.md` | checklist.create, .verify, .update, .status | Hierarchical checklist engine (core) |
-| `micro/meta.md` | evolve.suggest, evolve.apply, general.research | TD-NL skill evolution |
-| `micro/research.md` | research.explore, design.converge | Open-ended research |
-| `micro/memory.md` | memory.write, .retrieve, .consolidate, .forget | Memory operations |
+`_shared/` holds large cross-cutting documents that multiple skills depend on:
+`checklist-engine.md`, `memory-tiers.md`, `evolve-cycle.md`. The skills that
+need them instruct Claude to Read them on demand. `_shared/` has no `SKILL.md`
+so it's ignored by `scripts/install-skills.sh`.
 
-## External Skills
+## Skill index (42 SER + 1 external)
 
-| Directory | Skill | Purpose |
-|-----------|-------|---------|
-| `external/fey-r/` | Fey-R | Interactive Feynman-method paper reading (deep understanding via derivation) |
+### Session lifecycle
+- `session-open`, `session-close`
 
-External skills are installed as git submodules. Run `git submodule update --init --recursive`
-or `bash scripts/setup.sh` to initialize them.
+### Paper reading
+- `paper-read`, `paper-compare`, `paper-index`
+- `external/fey-r` — deep Feynman-method paper reading
 
-**Note**: Checklist is the core engine — all skills chain to `checklist.update` after completion.
+### Theory & proofs
+- `theory-formalize`, `theory-decompose`, `theory-search`, `theory-counterexample`, `theory-generalize`
+- `proof-critique`, `proof-fix`, `proof-formalize`, `proof-verify`
 
-## How Skills Work
+### Writing
+- `writing-outline`, `writing-draft`, `writing-review`, `writing-polish`
 
-1. User message arrives → CLAUDE.md intent router matches a pattern
-2. Before executing, the agent MUST `Read` the relevant `micro/*.md` file
-3. The spec defines the exact process, not just a summary
-4. After execution, a G2 assessment is appended to `td-nl/feedback-log.md`
-5. At session.close, `evolve.suggest` aggregates feedback and updates skill values
-6. On sufficient signal, spec edit proposals are generated for user approval
+### Planning & progress
+- `plan-suggest`, `plan-milestone`, `progress-capture`, `status-report`, `decision-analyze`, `experiment-analyze`
 
-## TD-NL Evolution Infrastructure
+### Experiments
+- `experiment-run`, `experiment-monitor`
+
+### Ideas
+- `idea-discover`, `idea-verify`
+
+### Checklist engine
+- `checklist-create`, `checklist-verify`, `checklist-update`, `checklist-status`
+- Shared vocabulary: `_shared/checklist-engine.md`
+
+### Memory
+- `memory-write`, `memory-retrieve`, `memory-consolidate`, `memory-forget`
+- Shared vocabulary: `_shared/memory-tiers.md`
+
+### Research exploration
+- `research-explore`, `design-converge`
+
+### Meta (TD-NL skill evolution)
+- `evolve-suggest`, `evolve-apply`, `general-research`
+- Shared vocabulary: `_shared/evolve-cycle.md`
+
+### Integration (one-off)
+- `project-integrate` — merge an unpacked SER distribution into an existing project
+
+## Install into `.claude/skills/`
+
+Run `bash scripts/install-skills.sh --list` to list everything discovered,
+`bash scripts/install-skills.sh` to copy into `./.claude/skills/`, or
+`bash scripts/install-skills.sh --link --force` for a developer-friendly
+symlinked install.
+
+## TD-NL evolution infrastructure
 
 ```
 td-nl/
@@ -56,4 +81,12 @@ td-nl/
   history/              # Spec version archive (pre-edit snapshots for rollback)
 ```
 
-See `micro/meta.md` for the full G2 → G1 → evolve.suggest → evolve.apply process.
+See `_shared/evolve-cycle.md` for the full G2 → G1 → `evolve-suggest` → `evolve-apply` process.
+
+## External skills (git submodules)
+
+| Directory | Skill | Purpose |
+|-----------|-------|---------|
+| `external/fey-r/` | `fey-r` | Feynman-method paper reading (deep understanding via derivation) |
+
+Run `git submodule update --init --recursive` or `bash scripts/setup.sh` to initialize.

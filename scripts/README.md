@@ -4,6 +4,28 @@ This directory contains Python scripts that support the SER framework, mainly to
 
 ## Script List
 
+### `install-skills.sh` - Install Bundled Skills into `.claude/skills`
+
+**Purpose**: Auto-discover every skill under `./skills/` (any directory containing
+a `SKILL.md`) and install it into a `.claude/skills` directory so Claude Code can
+load it. Non-skill directories like `skills/_shared/` and `skills/td-nl/` are
+skipped (they have no `SKILL.md`).
+
+**Usage**:
+```bash
+bash scripts/install-skills.sh                 # copy into ./.claude/skills
+bash scripts/install-skills.sh --link          # symlink (dev workflow)
+bash scripts/install-skills.sh --user          # install to ~/.claude/skills
+bash scripts/install-skills.sh --dry-run       # preview without writing
+bash scripts/install-skills.sh --list          # list discovered skills
+bash scripts/install-skills.sh --force         # overwrite existing installs
+bash scripts/install-skills.sh --help          # full option reference
+```
+
+Safe to re-run; existing installs are skipped unless `--force` is passed.
+
+---
+
 ### `skill_analyzer.py` - Skill Usage Statistics Analyzer
 
 **Purpose**: Incrementally scan Skill invocation logs and generate a structured statistics report
