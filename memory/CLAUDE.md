@@ -22,8 +22,9 @@ procedures/      -> Procedures + permanent decisions (max 100 files)
 ## Memory Type Emergence
 
 Types emerge naturally from usage:
-- **Episodes** -> created by `memory.write` after any insight-producing skill
-- **Topics** -> emerge via `memory.consolidate` when 3+ episodes cluster
+- **Episodes** -> created by `memory-write` after any insight-producing skill
+- **Topics** -> emerge via `memory-consolidate` when 3+ episodes cluster
 - **Procedures** -> emerge when 2+ episodes describe same multi-step process
 
-See `skills/micro/memory.md` for the full write/retrieve/consolidate/forget specs.
+See `skills/_shared/memory-tiers.md` for the detailed tier definitions and file formats.
+The 4 operation skills live at `skills/memory-{write,retrieve,consolidate,forget}/SKILL.md`.

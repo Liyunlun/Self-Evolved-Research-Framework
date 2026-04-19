@@ -19,7 +19,7 @@
 - improvement_direction: "awaiting live usage data"
 
 ### Spec Linkage
-- spec_file: "skills/micro/{file}.md"
+- spec_file: "skills/{skill-name}/SKILL.md"
 - last_spec_edit: "none"
 - edit_reason: ""
 

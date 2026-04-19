@@ -1,6 +1,6 @@
 # Skill System Value Function V^L(skill_state)
 <!-- Global assessment of how well the micro-skill system is serving the research project -->
-<!-- Updated by evolve.suggest at session.close -->
+<!-- Updated by evolve-suggest at session-close -->
 
 ## Current Value (v1)
 <!-- Updated: YYYY-MM-DD | Method: bootstrap -->

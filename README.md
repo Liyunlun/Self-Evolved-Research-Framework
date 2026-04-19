@@ -13,13 +13,13 @@ You talk naturally. SER detects your intent and routes to the right micro-skill:
 
 | You say | SER triggers |
 |---------|-------------|
-| "I'm reading this paper..." | `paper.read` — structured notes |
-| "Is this proof correct?" | `proof.critique` — step-by-step check |
-| "What should I do next?" | `plan.suggest` — prioritized tasks |
-| "Run the experiment" | `experiment.run` — launch + monitoring |
-| "Any novel ideas for X?" | `idea.discover` → `idea.verify` |
-| "Write the introduction" | `writing.draft` — section draft |
-| (end conversation) | `session.close` — auto-saves summary |
+| "I'm reading this paper..." | `paper-read` — structured notes |
+| "Is this proof correct?" | `proof-critique` — step-by-step check |
+| "What should I do next?" | `plan-suggest` — prioritized tasks |
+| "Run the experiment" | `experiment-run` — launch + monitoring |
+| "Any novel ideas for X?" | `idea-discover` → `idea-verify` |
+| "Write the introduction" | `writing-draft` — section draft |
+| (end conversation) | `session-close` — auto-saves summary |
 
 Every skill execution generates feedback. Over sessions, SER proposes improvements
 to its own skill specs via natural language TD learning — the skills you use today
@@ -70,26 +70,42 @@ claude
 ```
 
 SER will automatically:
-1. Read your config and memory (`session.open`)
+1. Read your config and memory (`session-open`)
 2. Show a status banner
 3. Wait for your research request — no commands needed
 
-## Micro-Skills (24)
+### 5. Install the skills into `.claude/skills/`
+
+```bash
+bash scripts/install-skills.sh            # copy into ./.claude/skills
+bash scripts/install-skills.sh --link     # symlink (dev workflow)
+bash scripts/install-skills.sh --user     # install into ~/.claude/skills
+bash scripts/install-skills.sh --list     # list discovered skills
+```
+
+Each SER skill lives in its own directory under `skills/` with a standard
+`SKILL.md` (YAML frontmatter + body), so Claude Code auto-discovers and
+auto-triggers them once installed.
+
+## Skills (42 SER + 1 external)
+
+Each skill lives in `skills/{skill-name}/SKILL.md` with standard YAML frontmatter.
 
 | Category | Skills | Purpose |
 |----------|--------|---------|
-| **Session** | `session.open`, `.close` | Lifecycle: status banner, auto-save |
-| **Paper** | `paper.read` (standard + deep/Fey-R), `.compare`, `.index` | Reading & analysis |
-| **Theory** | `theory.formalize`, `.decompose`, `.search`, `.counterexample`, `.generalize` | Formalization & proof strategy |
-| **Proof** | `proof.critique`, `.fix`, `.formalize`, `.verify` | Verification & correction |
-| **Writing** | `writing.outline`, `.draft`, `.review`, `.polish` | Paper authoring |
-| **Planning** | `plan.suggest`, `.milestone`, `progress.capture`, `status.report`, `decision.analyze`, `experiment.analyze` | Project management |
-| **Experiment** | `experiment.run`, `.monitor` | Experiment dispatch |
-| **Idea** | `idea.discover`, `.verify` | Gap analysis + novelty check |
-| **Checklist** | `checklist.generate`, `.verify`, `.update` | Paper audit & claim tracking |
-| **Research** | `research.explore`, `design.converge` | Open-ended exploration |
-| **Memory** | `memory.write`, `.retrieve`, `.consolidate`, `.forget` | Persistent cross-session memory |
-| **Meta** | `evolve.suggest`, `.apply` | TD-NL skill self-improvement |
+| **Session** | `session-open`, `session-close` | Lifecycle: status banner, auto-save |
+| **Paper** | `paper-read` (standard + deep/Fey-R), `paper-compare`, `paper-index` | Reading & analysis |
+| **Theory** | `theory-formalize`, `theory-decompose`, `theory-search`, `theory-counterexample`, `theory-generalize` | Formalization & proof strategy |
+| **Proof** | `proof-critique`, `proof-fix`, `proof-formalize`, `proof-verify` | Verification & correction |
+| **Writing** | `writing-outline`, `writing-draft`, `writing-review`, `writing-polish` | Paper authoring |
+| **Planning** | `plan-suggest`, `plan-milestone`, `progress-capture`, `status-report`, `decision-analyze`, `experiment-analyze` | Project management |
+| **Experiment** | `experiment-run`, `experiment-monitor` | Experiment dispatch |
+| **Idea** | `idea-discover`, `idea-verify` | Gap analysis + novelty check |
+| **Checklist** | `checklist-create`, `checklist-verify`, `checklist-update`, `checklist-status` | Paper audit & claim tracking |
+| **Research** | `research-explore`, `design-converge` | Open-ended exploration |
+| **Memory** | `memory-write`, `memory-retrieve`, `memory-consolidate`, `memory-forget` | Persistent cross-session memory |
+| **Meta** | `evolve-suggest`, `evolve-apply`, `general-research` | TD-NL skill self-improvement + fallback |
+| **Integration** | `project-integrate` | Merge SER into an existing project |
 
 ## External Skills
 
@@ -112,7 +128,7 @@ session.close → G1 aggregation → per-skill value update → spec edit propos
                                     user approves → evolve.apply → rollback if quality drops
 ```
 
-The optimization target is the skill specs themselves (`skills/micro/*.md`).
+The optimization target is the skill specs themselves (`skills/{skill-name}/SKILL.md`).
 Version history in `skills/td-nl/history/` enables safe rollback.
 
 ## Project Structure
@@ -122,7 +138,11 @@ Version history in `skills/td-nl/history/` enables safe rollback.
 ├── config.template.yaml   # Copy to config.yaml and customize
 ├── README.md / LICENSE
 ├── skills/
-│   ├── micro/             # 12 micro-skill spec files (optimization target)
+│   ├── {skill-name}/      # 42 SER skills, each with SKILL.md + YAML frontmatter
+│   ├── _shared/           # Shared infra read by related skills
+│   │   ├── checklist-engine.md
+│   │   ├── memory-tiers.md
+│   │   └── evolve-cycle.md
 │   ├── external/          # External skills (git submodules)
 │   │   └── fey-r/         # Feynman-method paper reading
 │   └── td-nl/             # Skill evolution infrastructure
@@ -130,7 +150,7 @@ Version history in `skills/td-nl/history/` enables safe rollback.
 │       ├── value-function.md
 │       ├── skill-values/   # Per-skill Q^L estimates
 │       └── history/        # Spec version archive for rollback
-├── scripts/               # Utility scripts (citation, notify, analyzer)
+├── scripts/               # Utility scripts (citation, notify, analyzer, install-skills)
 ├── memory/                # Persistent three-tier memory
 │   ├── episodes/          # Recent observations (7-day retention)
 │   ├── topics/            # Consolidated knowledge (90-day)
@@ -149,7 +169,7 @@ Version history in `skills/td-nl/history/` enables safe rollback.
 SER is driven by `CLAUDE.md` — a behavioral protocol that Claude Code reads automatically.
 It defines:
 
-- **Intent router**: 24 patterns that map your messages to micro-skills
+- **Intent router**: 25 patterns that map your messages to SER skills
 - **Session lifecycle**: auto-open/close with memory persistence
 - **Data contracts**: standardized formats for logs, paper notes, memory files
 - **Evolution loop**: G2/G1 feedback cycle for skill improvement
@@ -163,42 +183,42 @@ The root `CLAUDE.md` is the bootloader; subdirectory files are namespace guides.
 
 ```
 (open claude)
-→ session.open shows status banner
+→ session-open shows status banner
 
 "I want to continue reading the LAPA paper"
-→ paper.read generates structured notes
+→ paper-read generates structured notes
 
 "Is this derivation step correct? [paste]"
-→ proof.critique checks it
+→ proof-critique checks it
 
 "That's it for today"
-→ session.close saves summary + evolve.suggest updates skill values
+→ session-close saves summary + evolve-suggest updates skill values
 ```
 
 ### Idea Exploration
 
 ```
 "What are the open problems in agent memory?"
-→ idea.discover generates candidates
+→ idea-discover generates candidates
 
 "Is the second idea novel?"
-→ idea.verify checks against existing literature
+→ idea-verify checks against existing literature
 
 "Let's go with that direction"
-→ decision.analyze records the choice
+→ decision-analyze records the choice
 ```
 
 ### Paper Writing
 
 ```
 "Time to start writing"
-→ writing.outline generates structure
+→ writing-outline generates structure
 
 "Write the introduction"
-→ writing.draft produces a draft
+→ writing-draft produces a draft
 
 "Review this version"
-→ writing.review simulates peer review
+→ writing-review simulates peer review
 ```
 
 ## License

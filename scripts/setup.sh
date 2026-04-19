@@ -139,7 +139,7 @@ else
 fi
 
 if [ ! -f checklists/CLAUDE.md ]; then
-  echo "# Checklist system — see skills/micro/checklist.md" > checklists/CLAUDE.md
+  echo "# Checklist system — see skills/_shared/checklist-engine.md and skills/checklist-*/SKILL.md" > checklists/CLAUDE.md
   echo "[+] Created checklists/CLAUDE.md"
 else
   echo "[=] checklists/CLAUDE.md already exists, skipping"
