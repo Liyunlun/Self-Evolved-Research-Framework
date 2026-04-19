@@ -2,8 +2,9 @@
 # SER v6 — Session Guard Hook
 # Fires on UserPromptSubmit. Ensures session.open runs on first message.
 # Also checks for uncommitted code changes from previous sessions.
-MARKER=".claude/.ser-session-active"
+MARKER=".ser/session-active"
 if [ ! -f "$MARKER" ]; then
+    mkdir -p "$(dirname "$MARKER")" 2>/dev/null
     touch "$MARKER"
     echo "[SER] Execute session.open before responding. Read .claude/skills/meta/SKILL.md."
 

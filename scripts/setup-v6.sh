@@ -41,8 +41,9 @@ mkdir -p "$SER_GLOBAL"/{hooks,scripts,td-nl}
 if [ ! -f "$SER_GLOBAL/hooks/session-guard.sh" ]; then
   cat > "$SER_GLOBAL/hooks/session-guard.sh" << 'HOOKEOF'
 #!/usr/bin/env bash
-MARKER=".claude/.ser-session-active"
+MARKER=".ser/session-active"
 if [ ! -f "$MARKER" ]; then
+    mkdir -p "$(dirname "$MARKER")" 2>/dev/null
     touch "$MARKER"
     echo "[SER] Execute session.open before responding. Read .claude/skills/meta/SKILL.md, then read references/session-open.md."
 fi
