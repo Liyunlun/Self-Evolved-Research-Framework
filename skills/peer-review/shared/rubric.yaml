@@ -1,0 +1,62 @@
+# Per-stage rubric: what each stage MUST check.
+# The orchestrator reads this to build stage prompts; the static test verifies stage SKILL.md references these checks.
+
+story:
+  tools: []
+  must_check:
+    - problem_statement_clarity
+    - claimed_gap_supported_by_related_work
+    - contribution_list_matches_content
+    - narrative_coherence
+
+presentation:
+  tools: []
+  must_check:
+    - section_organization
+    - heading_consistency
+    - figure_caption_quality
+    - notation_consistency
+    - readability_and_flow
+
+evaluations:
+  tools: [bash]   # code interpreter
+  must_check:
+    - baselines_adequate
+    - datasets_appropriate
+    - metrics_appropriate
+    - statistical_support_seeds_errorbars
+    - reproducibility_of_reported_numbers
+    - sanity_of_reported_values  # e.g., accuracy in [0,1]
+
+correctness:
+  tools: [bash]
+  must_check:
+    - equation_dimensional_consistency
+    - proof_step_validity
+    - algorithm_matches_description
+    - figure_axis_labels_match_claims
+    - table_numbers_consistent_across_text_and_table
+
+significance:
+  tools: [websearch, webfetch]
+  must_check:
+    - novelty_vs_recent_work
+    - positioning_in_literature
+    - cited_work_accuracy  # authors, year, venue
+    - missing_key_related_work
+
+critique:
+  tools: []
+  must_check:
+    - all_stage_findings_integrated
+    - no_unsupported_claims
+    - all_aaai_sections_present
+    - severity_tags_on_every_weakness
+
+qa:
+  tools: [webfetch]
+  must_check:
+    - author_identity_not_disclosed
+    - no_offensive_or_biased_language
+    - structural_completeness
+    - citation_hallucination_spot_check  # sample up to 5 refs
