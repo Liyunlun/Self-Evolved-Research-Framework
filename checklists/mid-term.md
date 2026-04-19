@@ -1,6 +1,6 @@
-# Mid-term Checklist
+# Mid-term Checklist (L1)
 
-Updated: YYYY-MM-DD | Status: [0/0]
+<!-- Branch items link to L2: - [0/0] Category → checklists/mid-term/category-slug.md -->
 
 ## Ideas
 
@@ -8,4 +8,10 @@ Updated: YYYY-MM-DD | Status: [0/0]
 
 ## Experiments
 
-## Papers
+## Paper-Audit
+
+## Review-Loop
+
+## Paper-Writing
+
+## Research-Pipeline

@@ -13,26 +13,32 @@ based on accumulated usage feedback.
 | File | Skills | Purpose |
 |------|--------|---------|
 | `micro/session.md` | session.open, session.close | Conversation lifecycle |
-| `micro/paper.md` | paper.read, paper.compare, paper.index | Paper reading & analysis |
+| `micro/paper.md` | paper.read, paper.compare, paper.index, **lit.search** | Paper reading, analysis & literature search |
 | `micro/theory.md` | theory.formalize, .decompose, .search, .counterexample, .generalize | Theory development |
-| `micro/proof.md` | proof.critique, .fix, .formalize, .verify | Proof management |
-| `micro/writing.md` | writing.outline, .draft, .review, .polish | Paper writing |
-| `micro/planning.md` | plan.suggest, .milestone, progress.capture, status.report, decision.analyze, experiment.analyze | Project planning |
-| `micro/experiment.md` | experiment.run, experiment.monitor | Experiment lifecycle |
-| `micro/idea.md` | idea.discover, idea.verify | Idea generation & novelty check |
-| `micro/checklist.md` | checklist.create, .verify, .update, .status | Hierarchical checklist engine (core) |
+| `micro/proof.md` | proof.critique, .fix, .formalize, .verify, **proof.write** | Proof management & writing |
+| `micro/writing.md` | writing.outline†, .draft†, .review, .polish, **paper.figure**, **paper.compile** | Paper writing, figures & compilation |
+| `micro/planning.md` | plan.suggest, .milestone, progress.capture, status.report, decision.analyze, experiment.analyze† | Project planning |
+| `micro/experiment.md`* | experiment.plan, experiment.analyze†, **math.dse**, [experiment.run, experiment.monitor]‡ | Experiment lifecycle |
+| `micro/idea.md` | idea.discover†, idea.verify†, **idea.refine** | Idea generation, refinement & novelty check |
+| `micro/visual.md` | **pixel.create**, **paper.illustrate** | Visual creation (pixel art, diagrams) |
+| `micro/checklist.md` | checklist.create†, .verify†, .update, .status† | Hierarchical checklist engine (core) |
 | `micro/meta.md` | evolve.suggest, evolve.apply, general.research | TD-NL skill evolution |
 | `micro/research.md` | research.explore, design.converge | Open-ended research |
-| `micro/memory.md` | memory.write, .retrieve, .consolidate, .forget | Memory operations |
+| `micro/memory.md` | memory.write†, .retrieve†, .consolidate†, .forget† | Memory operations (config.yaml parameterized) |
+| `micro/integrate.md` | project.integrate | Framework onboarding |
+
+**Bold** = SER dev new skill | † = SER dev enhanced | * = assembled from base+local/ms at setup
+
+‡ `experiment.run` and `experiment.monitor` only available in Local mode.
+  MetaScheduler mode replaces them with MetaScheduler interaction protocol.
 
 **Note**: Checklist is the core engine — all skills chain to `checklist.update` after completion.
 
 ## How Skills Work
 
-1. User message arrives → CLAUDE.md intent router matches a pattern
-2. Before executing, the agent MUST `Read` the relevant `micro/*.md` file
-3. The spec defines the exact process, not just a summary
-4. After execution, a G2 assessment is appended to `td-nl/feedback-log.md`
+1. User message arrives → CLAUDE.md Skill Execution Loop routes to a skill via intent table
+2. Agent follows the skill's process (read `.claude/skills/{group}/SKILL.md` for complex cases)
+3. Follow → Next chain column until user's request is fully answered
 5. At session.close, `evolve.suggest` aggregates feedback and updates skill values
 6. On sufficient signal, spec edit proposals are generated for user approval
 

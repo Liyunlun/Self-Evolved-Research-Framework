@@ -17,7 +17,7 @@
    - Identify what existing papers in `resources/papers/` address
    - Identify what current methodology does NOT address
    - Cross-reference with research keywords to find under-explored intersections
-3. **Generate ideas** (8-12 candidates):
+3. **Generate ideas** (`config.yaml § workflows.idea_discovery.candidate_count` candidates, default 5):
    - For each idea, produce:
      ```
      ### Idea {N}: {title}
@@ -118,12 +118,65 @@ top_idea: "{title of highest-ranked idea}"
 {Which ideas were chosen and why — filled in after decision.analyze}
 ```
 
+---
+
+## idea.refine
+
+**Trigger**: User says "精炼想法", "refine idea", "让这个想法更具体", "完善方案", or after `idea.verify` confirms novelty
+
+**Process**:
+1. **Read target idea**: From `methodology/ideas/*.md` or user-provided description
+2. **Problem anchoring**:
+   - What exactly does this solve? (1-2 sentences)
+   - What is the evaluation metric?
+   - What would "success" look like concretely?
+3. **Frontier alignment**:
+   - How does this relate to SOTA? (cite specific papers from `resources/papers/`)
+   - What is the key differentiation?
+   - What assumptions does it make vs. existing work?
+4. **Implementation orientation**:
+   - What are the concrete algorithmic steps?
+   - What data/compute is required?
+   - What is the minimal experiment to validate the core claim?
+5. **Output structured proposal** to `methodology/ideas/{slug}.md`:
+   ```markdown
+   ---
+   title: "{title}"
+   status: "refined"
+   refined_from: "{source idea reference}"
+   date: "YYYY-MM-DD"
+   ---
+   ## Problem Statement
+   {precise problem definition}
+
+   ## Proposed Approach
+   {concrete algorithmic/methodological steps}
+
+   ## Key Differentiation
+   {what makes this different from existing work}
+
+   ## Minimal Validation
+   {smallest experiment that tests the core claim}
+
+   ## Resource Requirements
+   {data, compute, dependencies}
+   ```
+
+**Inputs**: Rough idea + related literature
+**Outputs**: Structured proposal in `methodology/ideas/{slug}.md`
+**Token**: ~5-15K
+**Composition**: Refined idea → suggest `checklist.create(category=method)` to track implementation, or `experiment.plan` for experiment design
+
+---
+
 ## TD-NL Integration
 
-Both options track performance via:
-- `memory/td-nl/option-values/idea-discover.md`
-- `memory/td-nl/option-values/idea-verify.md`
+All skills track performance via `skills/td-nl/skill-values/`:
+- `idea-discover.md`
+- `idea-verify.md`
+- `idea-refine.md`
 
 Key metrics for TD assessment:
 - `idea.discover`: Were generated ideas relevant to project? Did ranking match user preferences? Diversity of ideas?
 - `idea.verify`: Were novelty assessments accurate? Did search find relevant prior work? Cross-model agreement level?
+- `idea.refine`: Was the refined proposal actionable? Did problem anchoring clarify the idea? Was frontier alignment accurate?

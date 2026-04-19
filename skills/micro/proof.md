@@ -59,7 +59,7 @@
    - Consistent notation (aligned with paper conventions)
    - All steps explicitly justified
    - References to standard results cited properly
-3. Save to `outputs/{topic}/proofs/{theorem_name}.tex`
+3. Save to `outputs/{topic}/proofs/{theorem_name}.tex` (publication-ready LaTeX)
 4. Output both the LaTeX source and a readable preview
 
 **Inputs**: Validated proof + notation conventions
@@ -89,3 +89,42 @@
 **Outputs**: Verification report (inline)
 **Token**: ~2-5K
 **Composition**: If refuted → leads to `proof.fix`
+
+---
+
+## proof.write
+
+**Trigger**: User says "写证明", "prove this", "证明这个定理", "prove that X", or when a theorem statement exists but no proof
+
+**Process**:
+1. **Analyze the proposition**:
+   - Extract the statement to prove (from tex, conversation, or `paper/theory/`)
+   - Identify type: theorem, lemma, proposition, corollary
+   - List known premises, definitions, and available lemmas
+2. **Select proof strategy**:
+   - Direct proof / Proof by contradiction / Proof by induction
+   - Construction / Reduction to known result
+   - Consider multiple strategies, choose most elegant
+3. **Build proof step by step**:
+   - Each step must be explicitly justified (axiom, definition, previous step, known result)
+   - Flag any steps that rely on unproven claims → suggest proving those first
+   - Maintain notation consistency with project conventions
+4. **Verify logical completeness**:
+   - Check: every variable is introduced before use
+   - Check: no circular reasoning
+   - Check: edge cases and boundary conditions addressed
+   - Check: all assumptions are stated
+5. **Output** complete proof in LaTeX:
+   ```latex
+   \begin{proof}
+   {Step-by-step proof with justifications}
+   \end{proof}
+   ```
+6. **Save**: Write to `paper/proofs/{theorem_name}.md` if the proof is for a paper in progress (check Checklist.md for active paper tasks), otherwise `outputs/{topic}/proofs/{theorem_name}.md` for exploratory work. Output is markdown with embedded LaTeX blocks
+
+**Inputs**: Proposition to prove + relevant definitions/lemmas
+**Outputs**: Complete proof in LaTeX
+**Token**: ~3-10K
+**Composition**: Proof written → suggest `proof.critique` for verification, then `proof.formalize` for publication-ready formatting + `checklist.update`
+
+Note: `proof.write` creates proofs from scratch. `proof.formalize` converts informal → formal LaTeX. They are complementary.

@@ -24,17 +24,18 @@ Contains: Topic Index, Recent Episodes, Procedure Index, Active Context.
 
 **Initiation** (chain from other skills):
 - After `paper.read`, `decision.analyze`, `progress.capture`, `theory.formalize`
-- After `proof.critique`, `experiment.analyze`, `idea.discover`, `idea.verify`
+- After `proof.critique`, `experiment.analyze`, `idea.discover`, `idea.verify`, `idea.refine`
+- After `lit.search`, `proof.write`, `math.dse`
 - Agent self-detects novel insight during any skill execution
 
 **Process**:
 1. Read `memory/MEMORY.md` (should be in context from session.open)
-2. Assess importance (1-10):
+2. Assess importance (1-10) using thresholds from `config.yaml § memory.write`:
    - Novelty to project
    - Decision significance
    - Error/failure severity
    - Cross-topic relevance
-3. If importance < 5 → skip (not worth persisting)
+3. If importance < `config.yaml § memory.write.importance_threshold` (default 5) → skip
 4. Check for duplicates: scan MEMORY.md index for similar content
 5. If duplicate → update existing memory instead of creating new
 6. Write episode file to `memory/episodes/YYYY-MM-DD-NNN.md`:
@@ -77,9 +78,10 @@ Contains: Topic Index, Recent Episodes, Procedure Index, Active Context.
 **Process**:
 1. Determine query: what does the agent need to know right now?
 2. Read `memory/MEMORY.md`
-3. Score index entries by: tag overlap, keyword match, recency, importance
-4. Select top 5 candidates from index
-5. Read full files for top 3 candidates
+3. Score index entries using weights from `config.yaml § memory.retrieve.weights`:
+   - tag_overlap (default 0.4), keyword_match (0.3), recency (0.15), importance (0.15)
+4. Select top `config.yaml § memory.retrieve.top_candidates` (default 5) candidates from index
+5. Read full files for top `config.yaml § memory.retrieve.top_read` (default 3) candidates
 6. Surface relevant content into conversation context
 
 **Artifact**: Inline context (not a file)
@@ -94,9 +96,9 @@ Contains: Topic Index, Recent Episodes, Procedure Index, Active Context.
 
 **Initiation**:
 - `session.close` (always check conditions)
-- MEMORY.md > 180 lines
-- 15+ unconsolidated episodes
-- 3+ episodes sharing the same primary tag
+- MEMORY.md > `config.yaml § memory.consolidate.memory_md_pressure_line` (default 180) lines
+- `config.yaml § memory.consolidate.episode_threshold` (default 15)+ unconsolidated episodes
+- `config.yaml § memory.consolidate.cluster_min` (default 3)+ episodes sharing the same primary tag
 
 **Process**:
 1. Read all unconsolidated episodes (`consolidated: false`)
@@ -154,11 +156,12 @@ Contains: Topic Index, Recent Episodes, Procedure Index, Active Context.
 - MEMORY.md > 200 lines
 
 **Process**:
-1. Identify candidates:
-   - Episodes with no retrievals and importance < 5
+1. Identify candidates using `config.yaml § memory.forget`:
+   - Episodes older than `stale_episode_days` (default 7) with no retrievals
+   - Topics older than `stale_topic_days` (default 90) with no recent access
    - Consolidated episodes with importance < 7
    - Superseded decisions
-2. **Never forget**: architectural decisions, key findings, active hypotheses
+2. **Never forget** types listed in `config.yaml § memory.forget.protected_types` (default: architectural_decision, key_finding, active_hypothesis)
 3. Delete or archive candidates
 4. Update MEMORY.md: remove entries from index
 

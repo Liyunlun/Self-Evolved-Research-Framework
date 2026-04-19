@@ -143,16 +143,29 @@
 **Trigger**: User shares experiment results, training logs, metrics, or asks "what do these results mean?"
 
 **Process**:
-1. Parse the results (tables, metrics, logs)
-2. Analyze:
+1. **Parse the results** (tables, metrics, logs, CSV, JSON, wandb exports)
+2. **Generate statistical summary table**:
+   ```
+   | Metric | Ours | Baseline A | Baseline B | Δ (vs best) |
+   |--------|------|-----------|-----------|-------------|
+   | {metric} | {val ± std} | {val ± std} | {val ± std} | {+/-X.X%} |
+   ```
+3. **Baseline comparison analysis**:
+   - Identify which baselines are beaten, by how much
+   - Identify metrics where our method underperforms
+   - Compute relative improvement percentages
+4. **Statistical significance assessment**:
+   - If multiple seeds/runs available: compute mean, std, confidence intervals
+   - If applicable: suggest paired t-test, Wilcoxon signed-rank, or bootstrap
+   - Report: `Significant (p < 0.05)` / `Marginal (p < 0.10)` / `Not significant`
+5. **Hypothesis implications**:
    - Are results as expected? Better/worse?
-   - Statistical significance (if applicable)
-   - Comparison to baselines
-   - What the results imply for the research hypothesis
-3. Suggest next experiments or adjustments
-4. If results are significant, suggest `progress.capture`
+   - What do the results imply for the research hypothesis?
+   - Any surprising findings?
+6. **Suggest next steps**: next experiments, ablations, or adjustments
+7. If results are significant, suggest `progress.capture`
 
 **Inputs**: Experiment results (any format)
-**Outputs**: Analysis report (inline)
+**Outputs**: Analysis report with statistical tables (inline)
 **Token**: ~3-8K
-**Composition**: Good results → suggest `writing.draft` for results section. Bad results → suggest `decision.analyze` for next direction
+**Composition**: Good results → suggest `writing.draft` for results section + `paper.figure` for visualization. Bad results → suggest `decision.analyze` for next direction

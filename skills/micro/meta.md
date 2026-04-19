@@ -18,31 +18,6 @@ skills/td-nl/
     {skill}-v{N}.md        # Snapshot before edit
 ```
 
-## G2: Inline Skill Assessment
-
-**Trigger**: After EVERY micro-skill execution (automatic, silent).
-
-This is the raw feedback signal. Appended to `skills/td-nl/feedback-log.md § Pending`.
-
-**Process**:
-1. After a micro-skill completes, assess its performance:
-   - Did the skill trigger correctly? (right intent detected)
-   - Was the output useful to the user? (did they use it, reject it, modify it?)
-   - Was the token cost proportional to the value delivered?
-2. Score as: `better` (exceeded expectations), `as_expected`, `worse` (missed or unhelpful)
-3. Append to feedback-log.md:
-   ```
-   - [YYYY-MM-DD] skill:{skill_name} | outcome:{better|as_expected|worse} | delta:{+1|0|-1} | "{1-sentence evidence}"
-   ```
-4. If skill-values/{skill-name}.md doesn't exist yet, create from `_template.md`
-
-**Token**: ~100-200 (just a log append)
-
-**Important**: G2 is cheap and frequent. Do NOT skip it. The quality of evolution
-depends entirely on honest, granular feedback. Even "as_expected" is valuable signal.
-
----
-
 ## evolve.suggest (G1 Aggregation + Proposal)
 
 **Trigger**: Runs at `session.close`, after `memory.write` and `memory.consolidate`.

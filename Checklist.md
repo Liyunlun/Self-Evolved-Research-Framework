@@ -1,15 +1,10 @@
-# {Project Name} — Master Checklist
+# Your Research Project — Project Checklist (L0)
 
-> Single source of truth for project progress. Read at every session.open.
-> Checklists track status; actual artifacts live in `outputs/`.
+## Short-Term
+- [0/0] Short-term tasks → checklists/short-term.md
 
-Updated: YYYY-MM-DD | Status: [0/3 phases]
+## Mid-Term
+- [0/0] Mid-term tasks → checklists/mid-term.md
 
-## Short-term [0/0] → checklists/short-term.md
-No items yet. Use `checklist.create` to add tasks.
-
-## Mid-term [0/0] → checklists/mid-term.md
-No items yet.
-
-## Long-term [0/0] → checklists/long-term.md
-No items yet.
+## Long-Term
+- [0/0] Long-term tasks → checklists/long-term.md

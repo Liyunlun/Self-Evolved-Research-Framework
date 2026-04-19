@@ -1,191 +1,88 @@
-# SER — Self-Evolved Research
+# Self-Evolved Research (SER) — Dev Branch
 
-> **Note**: Active development has moved to the [`dev`](https://github.com/Liyunlun/Self-Evolved-Research-Framework/tree/dev) branch — 50 micro-skills, dual review, MetaScheduler integration, and more. See the [dev changelog](https://github.com/Liyunlun/Self-Evolved-Research-Framework/blob/dev/docs/CHANGELOG-v5-to-dev.md) for details.
 
-> A behavior-driven research framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
-> Skills trigger automatically. The framework improves its own skills through use.
+**[中文版 README](README_CN.md)**
 
-<p align="center">
-  <img src="ser_architecture_overview.svg" alt="SER Architecture Overview" width="700"/>
-</p>
+> Development fork of the [Self-Evolved Research Framework](https://github.com/Shiien/Self-Evolved-Research-Framework) v5.0.
 
-## What It Does
+A behavior-driven research collaboration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). You talk naturally — SER detects intent and routes to the right micro-skill. The framework improves its own skills through use via natural language TD learning.
 
-You talk naturally. SER detects your intent and routes to the right micro-skill:
+**Key capabilities**: 50 micro-skills, hierarchical checklist engine, TD-NL self-evolution, and dual review (cross-model verification via external LLM).
 
-| You say | SER triggers |
-|---------|-------------|
-| "I'm reading this paper..." | `paper.read` — structured notes |
-| "Is this proof correct?" | `proof.critique` — step-by-step check |
-| "What should I do next?" | `plan.suggest` — prioritized tasks |
-| "Run the experiment" | `experiment.run` — launch + monitoring |
-| "Any novel ideas for X?" | `idea.discover` → `idea.verify` |
-| "Write the introduction" | `writing.draft` — section draft |
-| (end conversation) | `session.close` — auto-saves summary |
+## Architecture
 
-Every skill execution generates feedback. Over sessions, SER proposes improvements
-to its own skill specs via natural language TD learning — the skills you use today
-become better tomorrow.
+SER uses a 3-layer behavioral protocol:
 
-## Getting Started
+| Layer | Scope | File |
+|-------|-------|------|
+| **Layer 0** | Global defaults (git, GPU policy, tools) | `~/.claude/CLAUDE.md` |
+| **Layer 1** | SER dev framework (intent router, skills, data contracts) | `CLAUDE.md` |
+| **Layer 2** | Project-specific config and memory | `config.yaml` + `memory/` |
 
-### 1. Clone
+## Installation
 
 ```bash
-git clone https://github.com/Shiien/Self-Evolved-Research-Framework.git
+git clone git@github.com:Liyunlun/Self-Evolved-Research-Framework.git
 cd Self-Evolved-Research-Framework
-```
-
-### 2. Run Setup
-
-```bash
 bash scripts/setup.sh
 ```
 
-This creates `config.yaml`, initializes the memory system, and sets up all required directories. Safe to run multiple times.
+The setup script creates `config.yaml`, initializes the memory system, TD-NL infrastructure, and all required directories. It includes a MetaScheduler mode option for automated agent workflows. Safe to run multiple times (idempotent).
 
-### 3. Configure Your Project
+## Micro-Skills (50 skills across 14 spec files)
 
-Edit `config.yaml` with your project details:
-
-```yaml
-project:
-  name: "Your Research Project"
-  status: "phase-0-exploration"
-  created_at: "2026-03-19"
-
-research:
-  domain: "Your Domain"
-  sub_domain: "Your Sub-Domain"
-  keywords: [...]
-```
-
-### 4. Start Working
-
-```bash
-claude
-```
-
-SER will automatically:
-1. Read your config and memory (`session.open`)
-2. Show a status banner
-3. Wait for your research request — no commands needed
-
-## Micro-Skills (24)
-
-| Category | Skills | Purpose |
-|----------|--------|---------|
-| **Session** | `session.open`, `.close` | Lifecycle: status banner, auto-save |
-| **Paper** | `paper.read`, `.compare`, `.index` | Reading & analysis |
-| **Theory** | `theory.formalize`, `.decompose`, `.search`, `.counterexample`, `.generalize` | Formalization & proof strategy |
-| **Proof** | `proof.critique`, `.fix`, `.formalize`, `.verify` | Verification & correction |
-| **Writing** | `writing.outline`, `.draft`, `.review`, `.polish` | Paper authoring |
-| **Planning** | `plan.suggest`, `.milestone`, `progress.capture`, `status.report`, `decision.analyze`, `experiment.analyze` | Project management |
-| **Experiment** | `experiment.run`, `.monitor` | Experiment dispatch |
-| **Idea** | `idea.discover`, `.verify` | Gap analysis + novelty check |
-| **Checklist** | `checklist.generate`, `.verify`, `.update` | Paper audit & claim tracking |
-| **Research** | `research.explore`, `design.converge` | Open-ended exploration |
-| **Memory** | `memory.write`, `.retrieve`, `.consolidate`, `.forget` | Persistent cross-session memory |
-| **Meta** | `evolve.suggest`, `.apply` | TD-NL skill self-improvement |
+| Category | Spec File | Skills |
+|----------|-----------|--------|
+| **Session** | `session.md` | `session.open`, `.close` |
+| **Paper** | `paper.md` | `paper.read`, `.compare`, `.index`, `lit.search` |
+| **Theory** | `theory.md` | `theory.formalize`, `.decompose`, `.search`, `.counterexample`, `.generalize` |
+| **Proof** | `proof.md` | `proof.critique`, `.fix`, `.formalize`, `.verify`, `.write` |
+| **Writing** | `writing.md` | `writing.outline`, `.draft`, `.review`, `.polish`, `paper.figure`, `.compile` |
+| **Planning** | `planning.md` | `plan.suggest`, `.milestone`, `progress.capture`, `status.report`, `decision.analyze`, `experiment.analyze` |
+| **Experiment** | `experiment.*.md` | `experiment.plan`, `.run`, `.monitor`, `math.dse` (base + local/MetaScheduler modes) |
+| **Memory** | `memory.md` | `memory.write`, `.retrieve`, `.consolidate`, `.forget` |
+| **Meta** | `meta.md` | `evolve.suggest`, `.apply`, `general.research` |
+| **Idea** | `idea.md` | `idea.discover`, `.verify`, `.refine` |
+| **Research** | `research.md` | `research.explore`, `design.converge` |
+| **Checklist** | `checklist.md` | `checklist.create`, `.verify`, `.update`, `.status` |
+| **Visual** | `visual.md` | `pixel.create`, `paper.illustrate` |
+| **Integrate** | `integrate.md` | `project.integrate` |
 
 ## Skill Evolution (TD-NL)
 
 The framework optimizes its own micro-skill specs through natural language TD learning:
 
-```
-skill fires → G2 assessment (was it useful?) → accumulate over sessions
-                                                        ↓
-session.close → G1 aggregation → per-skill value update → spec edit proposal
-                                                        ↓
-                                    user approves → evolve.apply → rollback if quality drops
-```
-
-The optimization target is the skill specs themselves (`skills/micro/*.md`).
-Version history in `skills/td-nl/history/` enables safe rollback.
+1. **G2** (inline): After every skill fires, append outcome assessment to feedback log
+2. **G1** (session.close): Aggregate G2 feedback, update per-skill value estimates, propose spec edits
+3. **Apply** (user-triggered): Edit skill specs with version archive and rollback safety
 
 ## Project Structure
 
 ```
 ├── CLAUDE.md              # Behavioral protocol (intent router + data contracts)
 ├── config.template.yaml   # Copy to config.yaml and customize
-├── README.md / LICENSE
+├── scripts/setup.sh       # Setup script (idempotent, supports --update)
 ├── skills/
-│   ├── micro/             # 12 micro-skill spec files (optimization target)
-│   └── td-nl/             # Skill evolution infrastructure
-│       ├── feedback-log.md
-│       ├── value-function.md
-│       ├── skill-values/   # Per-skill Q^L estimates
-│       └── history/        # Spec version archive for rollback
-├── scripts/               # Utility scripts (citation, notify, analyzer)
-├── memory/                # Persistent three-tier memory
-│   ├── episodes/          # Recent observations (7-day retention)
-│   ├── topics/            # Consolidated knowledge (90-day)
-│   └── procedures/        # Permanent processes
-├── background/            # Research background materials
+│   ├── micro/             # 14 micro-skill spec files (optimization target)
+│   └── td-nl/             # TD-NL skill evolution infrastructure
+├── memory/                # Persistent three-tier memory (episodes/topics/procedures)
+├── checklists/            # Hierarchical task tracking (L0/L1/L2)
 ├── methodology/           # Research methods + ideas
+├── paper/                 # Paper artifacts (proofs/theory/figures/papers/reviews)
 ├── experiments/           # Experiment code + results
-├── outputs/               # Deliverables (short/mid/long-term + paper/)
+├── logs/                  # Session, progress, and experiment logs
+├── outputs/               # Research deliverables (visuals/ + paper/)
 ├── resources/             # Reference materials (papers/ + repos/)
-├── logs/digest/           # Session logs
-└── docs/                  # Plans, reports
+└── docs/                  # Plans, reports, changelogs
 ```
 
-## How CLAUDE.md Works
+## Changelog
 
-SER is driven by `CLAUDE.md` — a behavioral protocol that Claude Code reads automatically.
-It defines:
+See [docs/CHANGELOG-v5-to-dev.md](docs/CHANGELOG-v5-to-dev.md) for a detailed comparison between v5.0 and dev.
 
-- **Intent router**: 24 patterns that map your messages to micro-skills
-- **Session lifecycle**: auto-open/close with memory persistence
-- **Data contracts**: standardized formats for logs, paper notes, memory files
-- **Evolution loop**: G2/G1 feedback cycle for skill improvement
+## Upstream
 
-Each subdirectory has its own `CLAUDE.md` with scoped context for that area.
-The root `CLAUDE.md` is the bootloader; subdirectory files are namespace guides.
-
-## Typical Workflows
-
-### Daily Research
-
-```
-(open claude)
-→ session.open shows status banner
-
-"I want to continue reading the LAPA paper"
-→ paper.read generates structured notes
-
-"Is this derivation step correct? [paste]"
-→ proof.critique checks it
-
-"That's it for today"
-→ session.close saves summary + evolve.suggest updates skill values
-```
-
-### Idea Exploration
-
-```
-"What are the open problems in agent memory?"
-→ idea.discover generates candidates
-
-"Is the second idea novel?"
-→ idea.verify checks against existing literature
-
-"Let's go with that direction"
-→ decision.analyze records the choice
-```
-
-### Paper Writing
-
-```
-"Time to start writing"
-→ writing.outline generates structure
-
-"Write the introduction"
-→ writing.draft produces a draft
-
-"Review this version"
-→ writing.review simulates peer review
-```
+This is a development fork. Upstream: [Shiien/Self-Evolved-Research-Framework](https://github.com/Shiien/Self-Evolved-Research-Framework)
 
 ## License
 

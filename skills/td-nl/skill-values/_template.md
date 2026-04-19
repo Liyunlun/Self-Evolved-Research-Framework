@@ -1,28 +1,25 @@
-# Skill Value: {skill_name} — Q^L(s, ω_{skill})
-<!-- Per-skill value estimate. Updated by G2 inline after each firing, aggregated by G1. -->
+# Q^L — {skill-name}
 
-## Current Value (v1)
-<!-- Updated: YYYY-MM-DD -->
+> Per-skill value estimate. Created on first firing, updated by G1 aggregation.
 
-### Scores (1-10)
-- trigger_accuracy: 5       # Does the skill fire when it should (and not when it shouldn't)?
-- output_usefulness: 5       # Does the output help the user?
-- token_efficiency: 5        # Is the token cost justified by the value?
-- overall: 5
+## Current Value
 
-### Assessment
-- total_firings: 0
-- success_rate: "0/0"
-- common_failure_mode: "none observed"
-- best_performing_context: "unknown"
-- worst_performing_context: "unknown"
-- improvement_direction: "awaiting live usage data"
+**Q^L = 5.0 / 10** (initial default)
 
-### Spec Linkage
-- spec_file: "skills/micro/{file}.md"
-- last_spec_edit: "none"
-- edit_reason: ""
+## Assessment History
 
-### Session History (last 10)
-| Date | Context | Outcome | Delta | Evidence |
-|------|---------|---------|-------|----------|
+| Session | Q^L | Delta | G2 Summary |
+|---------|-----|-------|------------|
+
+## Strengths
+
+- (none yet)
+
+## Improvement Areas
+
+- (none yet)
+
+## Spec Edit History
+
+| Date | Edit | V^L Impact |
+|------|------|------------|

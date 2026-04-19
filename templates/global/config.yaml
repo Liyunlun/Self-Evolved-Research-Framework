@@ -1,0 +1,24 @@
+# SER v6 — Global Learning Parameters
+# Shared across all SER projects.
+
+learning:
+  time_decay_lambda: 0.95          # per-day decay factor
+  decay_floor: 1.0                 # min(α, β) >= 1.0 after decay
+  burn_in_min_observations: 30     # observations before leaving burn-in
+  ambiguity_threshold_normal: 0.1  # top1 - top2 < threshold → ask user
+  ambiguity_threshold_burnin: 0.3  # higher during burn-in → more queries
+  weight_explosion_max: 1000       # auto-normalize if max(α,β) > this
+  weight_explosion_divisor: 100    # divide both by max/this
+
+signals:
+  follow_suggested_next: 0.35
+  artifact_survival_rate: 0.25
+  user_corrected_routing: 0.20
+  continuation_pattern: 0.20
+
+update:
+  lock_timeout_seconds: 10
+  backup_count: 3                  # keep last 3 backups
+
+recommend:
+  default_samples: 10              # N samples per weight

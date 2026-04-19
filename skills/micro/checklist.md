@@ -4,8 +4,9 @@
 > It manages a 3-layer tree (L0 root, L1 term checklists, L2 task checklists)
 > and provides create/verify/update/status operations over that tree.
 >
-> The engine is generic: it tracks ideas, methods, experiments, and papers.
-> Paper-specific tasks get an L2 checklist using the 8-part audit template
+> The engine is generic: it tracks ideas, methods, experiments, paper-audits,
+> review-loops, paper-writing pipelines, and end-to-end research pipelines.
+> Paper-audit tasks get an L2 checklist using the 8-part audit template
 > defined at the bottom of this file.
 
 ---
@@ -18,7 +19,10 @@ Checklist.md                          ← L0 root (project root)
 │   ├── checklists/short-term/idea-{slug}.md    ← L2 (on demand)
 │   ├── checklists/short-term/method-{slug}.md
 │   ├── checklists/short-term/experiment-{slug}.md
-│   └── checklists/short-term/paper-{slug}.md   ← uses 8-part audit template
+│   ├── checklists/short-term/paper-audit-{slug}.md  ← uses 8-part audit template
+│   ├── checklists/short-term/review-loop-{slug}.md  ← multi-round review
+│   ├── checklists/short-term/paper-writing-{slug}.md ← writing pipeline
+│   └── checklists/short-term/research-pipeline-{slug}.md ← end-to-end
 ├── checklists/mid-term.md
 │   └── checklists/mid-term/{category}-{slug}.md
 └── checklists/long-term.md
@@ -52,14 +56,17 @@ Checklist.md                          ← L0 root (project root)
 
 ### Categories
 
-Each L1 checklist has four sections:
+Each L1 checklist has seven category sections:
 
 | Category | Typical L2 template | Examples |
 |----------|-------------------|----------|
 | **Ideas** | Simple checklist | Literature check, novelty assessment, feasibility |
 | **Methods** | Design checklist | Formalization, implementation, validation |
 | **Experiments** | Pipeline checklist | Setup, run, analyze, verify |
-| **Papers** | 8-part audit (see template below) | Full paper submission audit |
+| **Paper-Audit** | 8-part audit (see template below) | Full paper submission audit |
+| **Review-Loop** | Multi-round review | Iterative dual-review cycles with convergence gate |
+| **Paper-Writing** | Writing pipeline | Outline → figures → draft → compile → improve |
+| **Research-Pipeline** | End-to-end pipeline | Idea → experiment → review → paper (sub-templates) |
 
 ---
 
@@ -73,13 +80,16 @@ Each L1 checklist has four sections:
 
 Determine two properties:
 1. **Term**: `short-term` (days–1 week), `mid-term` (weeks–1 month), `long-term` (months+)
-2. **Category**: `idea`, `method`, `experiment`, `paper`
+2. **Category**: `idea`, `method`, `experiment`, `paper-audit`, `review-loop`, `paper-writing`, `research-pipeline`
 
 If the user does not specify, infer from context:
 - "run this experiment" → short-term / experiment
-- "write the NeurIPS paper" → mid-term / paper
+- "审计论文", "check paper", "paper audit" → mid-term / paper-audit
 - "explore whether X is feasible" → short-term / idea
 - "develop a new algorithm for Y" → mid-term / method
+- "写论文", "开始写", "paper writing" → long-term / paper-writing
+- "评审循环", "多轮review", "review loop" → mid-term / review-loop
+- "完整流程", "end-to-end", "从头开始研究" → long-term / research-pipeline
 
 ### Step 2 — LEAF or BRANCH fast-path decision
 
@@ -197,7 +207,74 @@ Parent: checklists/{term}.md § Experiments | Created: {YYYY-MM-DD}
 {Populated after experiment completes}
 ```
 
-**paper template**: Use the **Paper Audit Template (L2)** defined at the bottom of this file. This produces the full 8-part structure.
+**paper-audit template**: Use the **Paper Audit Template (L2)** defined at the bottom of this file. This produces the full 8-part structure.
+
+**review-loop template**:
+```markdown
+# Review Loop: {Title}
+
+Parent: checklists/{term}.md § Review-Loop | Created: {YYYY-MM-DD}
+Config: config.yaml § workflows.review_loop
+Max rounds: {config.workflows.review_loop.max_rounds}
+Convergence: {config.workflows.review_loop.convergence_threshold}
+
+## Checklist
+
+<!-- checklist.create expands rounds based on config.max_rounds -->
+- [ ] Round 1: Evaluate current state
+- [ ] Round 1: Implement improvements based on evaluation
+- [ ] Round 2: Re-evaluate (gate: score >= convergence_threshold → skip to Output)
+- [ ] Round 2: Implement improvements
+- [ ] Round 3: Final evaluation (gate: score >= convergence_threshold → Output)
+- [ ] Round 3: Final improvements (if needed)
+- [ ] Output: Produce reviewed artifact
+
+## Review History
+
+| Round | Score | Key Issues | Changes Made |
+|-------|-------|------------|-------------|
+```
+
+**paper-writing template**:
+```markdown
+# Paper Writing: {Title}
+
+Parent: checklists/{term}.md § Paper-Writing | Created: {YYYY-MM-DD}
+
+## Pipeline
+
+- [ ] **Outline**: Structure the paper, generate Claims-Evidence Matrix | gate: user confirms
+- [ ] **Figures**: Generate key figures and tables | gate: critical figures produced
+- [ ] **Draft**: Write sections following outline | gate: all sections complete
+- [ ] **Compile**: Build PDF, fix errors | gate: PDF compiles without errors
+- [ ] **Improve**: Review loop (dual review + revisions) | gate: review score meets threshold
+- [ ] **Output**: Final PDF — `outputs/paper/{slug}.pdf`
+
+## Artifacts
+
+| Section | Status | File |
+|---------|--------|------|
+```
+
+**research-pipeline template**:
+```markdown
+# Research Pipeline: {Title}
+
+Parent: checklists/{term}.md § Research-Pipeline | Created: {YYYY-MM-DD}
+
+## Pipeline
+
+<!-- Each sub-item instantiates its own L2 checklist from the corresponding template -->
+- [0/5] Idea Exploration → checklists/{term}/idea-{slug}.md
+- [0/5] Experiment Validation → checklists/{term}/experiment-{slug}.md
+- [0/N] Review Loop → checklists/{term}/review-loop-{slug}.md
+- [0/6] Paper Writing → checklists/{term}/paper-writing-{slug}.md
+
+## Decision Log
+
+| Phase | Decision | Rationale | Date |
+|-------|----------|-----------|------|
+```
 
 ##### Step 4B — Update L1 completion count
 
@@ -378,7 +455,7 @@ This step ensures all counts are authoritative before reporting.
 
 ### Step 2 — Compute summary statistics
 
-For each term (short/mid/long) and each category (idea/method/experiment/paper):
+For each term (short/mid/long) and each category (idea/method/experiment/paper-audit/review-loop/paper-writing/research-pipeline):
 
 | Metric | How |
 |--------|-----|
@@ -405,12 +482,15 @@ From the checklist tree:
   Long-term:  [{done}/{total}] — {1-line summary}
 
   By category:
-  | Category    | [ ] | [x] | [v] | [U] | Total |
-  |-------------|-----|-----|-----|-----|-------|
-  | Ideas       |     |     |     |     |       |
-  | Methods     |     |     |     |     |       |
-  | Experiments |     |     |     |     |       |
-  | Papers      |     |     |     |     |       |
+  | Category          | [ ] | [x] | [v] | [U] | Total |
+  |-------------------|-----|-----|-----|-----|-------|
+  | Ideas             |     |     |     |     |       |
+  | Methods           |     |     |     |     |       |
+  | Experiments       |     |     |     |     |       |
+  | Paper-Audit       |     |     |     |     |       |
+  | Review-Loop       |     |     |     |     |       |
+  | Paper-Writing     |     |     |     |     |       |
+  | Research-Pipeline |     |     |     |     |       |
 
   Priorities:
   1. {highest priority item}
@@ -437,7 +517,7 @@ For session.open banner integration, output a condensed single line:
 4. **Four-stage verification**: `[ ]` → `[x]` (author marks done) → `[v]` (Claude/script verifies) → `[U]` (blocked/unable). This prevents "checked my own homework" blindness.
 5. **Separation of concerns**: Checklists track status only. Actual artifacts (drafts, results, proofs, code) live in their own directories. Checklists point to artifacts via paths, never duplicate content.
 6. **Branch completion propagates**: Completing a child item automatically updates the parent branch count, all the way to the root. No manual count maintenance.
-7. **Category-specific templates**: Each category (idea/method/experiment/paper) has a purpose-built L2 template. Paper tasks get the full 8-part audit. Experiments get a pipeline checklist. This ensures nothing is missed for the task type.
+7. **Category-specific templates**: Each category has a purpose-built L2 template. Paper-audit tasks get the full 8-part audit. Experiments get a pipeline checklist. Review-loop gets dynamic rounds. Research-pipeline instantiates sub-checklists. This ensures nothing is missed for the task type.
 8. **Comment-driven discovery**: `<!-- TODO: ... -->` and `<!-- MISSING: ... -->` comments in checklist files surface issues without breaking the checklist format.
 
 ---
@@ -465,7 +545,10 @@ For session.open banner integration, output a condensed single line:
 | `proof.critique` | Critique complete | → `checklist.update` |
 | `idea.discover` | Ideas generated | → `checklist.create` (add to short-term/ideas) |
 | `idea.verify` | Novelty confirmed | → `checklist.update` (mark verification `[x]`) |
-| `checklist.create` | Paper category | → use 8-part paper audit template for L2 |
+| `checklist.create` | paper-audit category | → use 8-part paper audit template for L2 |
+| `checklist.create` | review-loop category | → use review-loop template, expand rounds from config |
+| `checklist.create` | paper-writing category | → use paper-writing pipeline template |
+| `checklist.create` | research-pipeline category | → instantiate sub-checklists for each phase |
 | `checklist.create` | Always | → `memory.write` (log creation) |
 | `checklist.verify` | Issues found | → surface issues, suggest fixes |
 | `checklist.verify` | Always | → `memory.write` (record verification) |
@@ -475,16 +558,16 @@ For session.open banner integration, output a condensed single line:
 
 ## Paper Audit Template (L2)
 
-> This is the template used when `checklist.create` is called with `category=paper`.
+> This is the template used when `checklist.create` is called with `category=paper-audit`.
 > It produces a comprehensive 8-part audit checklist for paper submission readiness.
-> The L2 file is created at `checklists/{term}/paper-{slug}.md`.
+> The L2 file is created at `checklists/{term}/paper-audit-{slug}.md`.
 
 ### Template Header
 
 ```markdown
 # Paper Audit: {Title}
 
-Parent: checklists/{term}.md § Papers | Created: {YYYY-MM-DD}
+Parent: checklists/{term}.md § Paper-Audit | Created: {YYYY-MM-DD}
 Source: `{tex_file_path}` | Last updated: {YYYY-MM-DD}
 Phase: {prospective|active|pre-submission|post-review}
 Status: [{done}/{total}]
