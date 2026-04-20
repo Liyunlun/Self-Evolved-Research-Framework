@@ -32,3 +32,20 @@ The final review (produced by `peer-review-critique` after revision) MUST have e
 3. References in APA style: `Author, A. B. (Year). Title. Venue.`
 4. No markdown footnotes, no HTML.
 5. Total length 400–1500 words.
+
+## Optional Verdict section (triggered by `--verdict` / "with verdict")
+
+When the orchestrator is invoked with the verdict option, append a seventh section AFTER `## References`, formatted exactly as below:
+
+```markdown
+## Verdict
+- Rate: <one of: strong accept | accept | weak accept | weak reject | reject | strong reject>
+- Confidence: <integer 1-5>
+- Rationale: <1-2 sentences mapping the Strengths/Weaknesses balance to the chosen rate; and justifying the confidence level.>
+```
+
+Verdict rules:
+- `Rate` must be exactly one of the six strings above (lowercase, spaces as shown).
+- `Confidence` is an integer 1–5 where 1 = low (reviewer has limited expertise or reviewed lightly) and 5 = high (reviewer is confident in every claim).
+- The rationale must be grounded in the review body; do NOT introduce new findings here.
+- When `--verdict` is NOT set, the `## Verdict` section MUST be absent (do not emit a placeholder).

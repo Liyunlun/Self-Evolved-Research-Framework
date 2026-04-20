@@ -6,20 +6,32 @@ Required: exactly one '# <title>' (h1), and five '## <heading>' sections in orde
 Synopsis, Summary, Strengths, Weaknesses, References.
 Each Weakness bullet must carry [critical]/[major]/[minor] severity.
 
+Optional: a `## Verdict` section (enabled by `--verdict` on the orchestrator).
+When present, it must follow `## References` and contain:
+  - Rate: <one of: strong accept | accept | weak accept | weak reject | reject | strong reject>
+  - Confidence: <integer 1-5>
+  - Rationale: <one or more sentences>
+
 Usage:
-    python test_output_format.py <final_review.md>
+    python test_output_format.py <final_review.md> [--verdict]
 """
 from __future__ import annotations
 
+import argparse
 import pathlib
 import re
 import sys
 
 REQUIRED_ORDER = ["## Synopsis", "## Summary", "## Strengths", "## Weaknesses", "## References"]
 WEAK_BULLET = re.compile(r"^-\s*\[(critical|major|minor)\]")
+VALID_RATES = {"strong accept", "accept", "weak accept",
+               "weak reject", "reject", "strong reject"}
+RATE_RE = re.compile(r"^-\s*Rate:\s*(.+?)\s*$")
+CONF_RE = re.compile(r"^-\s*Confidence:\s*([0-9]+)\s*$")
+RATIONALE_RE = re.compile(r"^-\s*Rationale:\s*(.+)$")
 
 
-def validate(path: pathlib.Path) -> list[str]:
+def validate(path: pathlib.Path, require_verdict: bool = False) -> list[str]:
     errs: list[str] = []
     text = path.read_text()
     lines = text.splitlines()
@@ -64,18 +76,54 @@ def validate(path: pathlib.Path) -> list[str]:
     if wc < 400 or wc > 1500:
         errs.append(f"word count {wc} outside required range [400, 1500]")
 
+    # Optional Verdict section
+    has_verdict = "## Verdict" in text
+    if require_verdict and not has_verdict:
+        errs.append("missing required section: ## Verdict (required when --verdict is set)")
+    if not require_verdict and has_verdict:
+        errs.append("## Verdict present but --verdict was not requested")
+    if has_verdict:
+        # Must come after ## References
+        refs_idx = text.find("## References")
+        verdict_idx = text.find("## Verdict")
+        if refs_idx != -1 and verdict_idx < refs_idx:
+            errs.append("## Verdict must come AFTER ## References")
+        verdict_tail = text.split("## Verdict", 1)[1]
+        next_idx = verdict_tail.find("\n## ")
+        verdict_block = verdict_tail if next_idx == -1 else verdict_tail[:next_idx]
+        v_lines = [l.strip() for l in verdict_block.splitlines() if l.strip()]
+        rate_match = next((RATE_RE.match(l) for l in v_lines if RATE_RE.match(l)), None)
+        conf_match = next((CONF_RE.match(l) for l in v_lines if CONF_RE.match(l)), None)
+        rationale_match = next((RATIONALE_RE.match(l) for l in v_lines if RATIONALE_RE.match(l)), None)
+        if not rate_match:
+            errs.append("Verdict section missing '- Rate: ...' line")
+        else:
+            rate_val = rate_match.group(1).strip().lower()
+            if rate_val not in VALID_RATES:
+                errs.append(f"invalid Rate {rate_val!r} (must be one of {sorted(VALID_RATES)})")
+        if not conf_match:
+            errs.append("Verdict section missing '- Confidence: <int>' line")
+        else:
+            conf_val = int(conf_match.group(1))
+            if conf_val < 1 or conf_val > 5:
+                errs.append(f"Confidence {conf_val} out of range [1, 5]")
+        if not rationale_match:
+            errs.append("Verdict section missing '- Rationale: ...' line")
+
     return errs
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print("usage: test_output_format.py <final_review.md>", file=sys.stderr)
-        return 2
-    path = pathlib.Path(sys.argv[1])
+    ap = argparse.ArgumentParser()
+    ap.add_argument("path")
+    ap.add_argument("--verdict", action="store_true",
+                    help="require a ## Verdict section (Rate + Confidence + Rationale)")
+    args = ap.parse_args()
+    path = pathlib.Path(args.path)
     if not path.exists():
         print(f"FAIL: file not found: {path}", file=sys.stderr)
         return 1
-    errs = validate(path)
+    errs = validate(path, require_verdict=args.verdict)
     if errs:
         print(f"FAIL: {path}", file=sys.stderr)
         for e in errs:

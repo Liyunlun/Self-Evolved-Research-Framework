@@ -1,6 +1,6 @@
 ---
 name: peer-review
-description: Run a multi-stage AI peer review on a research paper (AAAI-26-style pipeline). Triggers on "review this paper", "peer-review <arxiv URL or PDF>", "generate a reviewer report", "write a review for this paper". Orchestrates 5 specialized review stages (story, presentation, evaluations, correctness, significance) plus self-critique and QA, and produces a final AAAI-format review.
+description: Run a multi-stage AI peer review on a research paper (AAAI-26-style pipeline). Triggers on "review this paper", "peer-review <arxiv URL or PDF>", "generate a reviewer report", "write a review for this paper". Orchestrates 5 specialized review stages (story, presentation, evaluations, correctness, significance) plus self-critique and QA, and produces a final AAAI-format review. Supports an optional `--verdict` flag that additionally emits a conference-style Rate (strong accept / accept / weak accept / weak reject / reject / strong reject) and Confidence (1-5).
 ---
 
 # peer-review (orchestrator)
@@ -14,6 +14,7 @@ Implements the AAAI-26 AI-assisted peer review pipeline (arxiv.org/abs/2604.1394
   - local PDF path, OR
   - local markdown path (skip preprocessing)
 - Optional: a paper_id slug (auto-generated from filename/URL if missing).
+- Optional: `--verdict` flag (or "with verdict" / "给出评分" in the user request) — when set, the final review also includes a `## Verdict` section with a conference-style Rate + Confidence. See `shared/output_format.md § Optional Verdict section` for the exact format.
 
 ## Pipeline (strict order)
 
@@ -49,8 +50,8 @@ outputs/peer-review/<paper_id>/
    - list of prior stage output files (accumulates)
    - `shared/base_instruction.md`, `shared/review_schema.md`, relevant rubric entry from `shared/rubric.yaml`
    Each stage writes its own `NN_<stage>.md` conforming to `shared/review_schema.md`.
-4. **Stage 06 — Critique**: invoke `peer-review-critique` with all prior stage files + `shared/output_format.md`. Produces `06_final.md` (compiled + self-critiqued + revised in one skill).
-5. **Stage 07 — QA**: invoke `peer-review-qa` on `06_final.md`. Writes `07_qa.md`. If QA reports `critical > 0`, report to the user and offer to loop back through stage 06.
+4. **Stage 06 — Critique**: invoke `peer-review-critique` with all prior stage files + `shared/output_format.md`. Pass `verdict=true` when `--verdict` was set on the orchestrator. Produces `06_final.md` (compiled + self-critiqued + revised, optionally with a `## Verdict` section).
+5. **Stage 07 — QA**: invoke `peer-review-qa` on `06_final.md`. Writes `07_qa.md`. If QA reports `critical > 0`, report to the user and offer to loop back through stage 06. If `--verdict` was set, QA also sanity-checks that Rate is one of the six allowed strings and Confidence is an integer 1-5.
 
 ## Guardrails
 
