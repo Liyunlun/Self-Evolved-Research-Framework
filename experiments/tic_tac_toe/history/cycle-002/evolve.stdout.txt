@@ -1,0 +1,44 @@
+[evolve-textgrad] proposal written:
+- [2026-04-20] PROPOSAL target:play-tic-tac-toe (Q^L: 5.00->6.11, td:+1.11, strength:hard)
+    problem: aggregated G2 evidence indicates sub-optimal behavior.
+    gradient: |
+      (see updated spec text)
+    diff: |
+      <<EVOLVE NOTE (shim+engine) - textual gradient summary>>
+      Add a "Strategy" section after "Move format" that prioritizes moves: (1) take a winning cell if available this turn; (2) block opponent's winning cell if they can win next turn; (3) prefer center (5), then corners (1,3,7,9), then edges. Current spec only requires "legal" moves with no strategic guidance. Explicit strategy guidance will amplify success by enabling wins instead of defaulting to draws.
+      <<END EVOLVE NOTE>>
+      ---
+      name: play-tic-tac-toe
+      description: Pick the next move in a Tic-Tac-Toe game. Triggered when the caller provides a board state and the player's symbol (X or O) and asks for the next move.
+      ---
+      
+      # Play Tic-Tac-Toe
+      
+      Tic-Tac-Toe is a two-player game played on a 3x3 grid. Players
+      alternate placing their symbol (X or O) on empty cells. The first
+      player to place three of their symbols in a horizontal, vertical,
+      or diagonal line wins. If the grid fills with no winner, the game
+      is a draw.
+      
+      ## Move format
+      
+      Cells are numbered 1-9 using the numeric-keypad layout:
+      
+          1 | 2 | 3
+         -----------
+          4 | 5 | 6
+         -----------
+          7 | 8 | 9
+      
+      ## What to output
+      
+      When asked for a move, output ONLY the cell number of a legal
+      (empty) cell. No explanation, no punctuation, no whitespace — just
+      a single digit from 1 to 9.
+      
+    evidence: "result=draw; moves=[X5 O1 X3 O7 X4 O6 X2 O8 X9]; total_mistakes=0"; "result=draw; moves=[X5 O1 X3 O7 X4 O6 X8 O2 X9]; total_mistakes=0"; "result=draw; moves=[X5 O1 X9 O3 X2 O8 X4 O6 X7]; total_mistakes=0" (+7 more)
+    risk: Edit affects trigger description or process steps; rollback snapshot will be stored in td-nl/history/.
+
+[evolve-textgrad] backend=shim engine=claude-code-cli
+  session=ttt-c002 V^L 5.00->6.11 skills=1 proposals=1
+    play-tic-tac-toe         td=+1.11 strength=hard conf=high

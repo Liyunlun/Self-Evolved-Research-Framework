@@ -1,0 +1,23 @@
+{
+  "cycle": 1,
+  "games_per_side": 1,
+  "model": "haiku",
+  "before": {
+    "draw": 2,
+    "win": 0,
+    "loss": 0,
+    "forfeit": 0,
+    "total": 2,
+    "draw_rate": 1.0,
+    "forfeit_rate": 0.0
+  },
+  "after": {
+    "draw": 2,
+    "win": 0,
+    "loss": 0,
+    "forfeit": 0,
+    "total": 2,
+    "draw_rate": 1.0,
+    "forfeit_rate": 0.0
+  }
+}

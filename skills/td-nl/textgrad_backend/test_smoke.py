@@ -355,6 +355,61 @@ def test_engine_wiring():
     print("  ok engine_wiring (fake engine injected + failure fallback)")
 
 
+def test_experience_buffer_and_crl():
+    """Exercise the per-skill experience buffer + CRL TD contribution."""
+    from textgrad_backend import experience_buffer  # noqa: E402
+    from textgrad_backend.td_layer import TDLayer, SkillAggregate, STRATEGY_PENALTY
+
+    td_dir = Path(tempfile.mkdtemp(prefix="tdnl_buffer_"))
+    sv = td_dir / "skill-values"
+
+    # empty buffer: avg_reward = 0
+    assert experience_buffer.read_recent(sv, "ttt") == []
+    assert experience_buffer.mean_reward([]) == 0.0
+
+    # append and truncate
+    for r in [1, 1, 1, -1, 1]:
+        experience_buffer.append(sv, "ttt", reward=r, session_id="s", k=3)
+    recent = experience_buffer.read_recent(sv, "ttt", k=3)
+    assert len(recent) == 3, len(recent)
+    # last 3 of [1,1,1,-1,1]
+    assert [e["reward"] for e in recent] == [1.0, -1.0, 1.0]
+    assert abs(experience_buffer.mean_reward(recent) - (1 - 1 + 1) / 3) < 1e-9
+
+    # CRL TD: clean-draw reward=+1 with non-empty buffer should NOT be zero
+    agg = SkillAggregate(
+        skill="ttt", n_better=1, n_expected=0, n_worse=0, net_delta=1,
+        evidences=[], predicted_Vs=[], inline_tds=[],
+    )
+    layer = TDLayer()
+    reader = lambda s: experience_buffer.mean_reward(
+        experience_buffer.read_recent(sv, s)
+    )
+    layer.score({"ttt": agg}, current_values={"ttt": 5.0}, buffer_reader=reader)
+    # With r=+1, avg_buffer_r=1/3, V=5:
+    #   V_next = clip(5 + 0.5*1 + 0.5*(1/3), 1, 10) = 5.667
+    #   td = 1 + 0.9*5.667 - 5 = 1.1
+    assert agg.td_error > 0.8, f"expected positive TD near +1.1, got {agg.td_error}"
+    assert agg.strength == "hard", agg.strength
+    print(f"  ok experience_buffer_and_crl (td={agg.td_error:+.3f} strength={agg.strength})")
+
+    # P4 strategy penalty: refine vote should drop V_next and push td lower
+    agg2 = SkillAggregate(
+        skill="ttt", n_better=1, n_expected=0, n_worse=0, net_delta=1,
+        evidences=[], predicted_Vs=[], inline_tds=[],
+        strategy_votes={"refine": 1},
+    )
+    layer.score({"ttt": agg2}, current_values={"ttt": 5.0}, buffer_reader=reader)
+    # refine penalty = 0.5 => V_next drops by 0.5
+    assert agg2.V_next < agg.V_next - 0.4, (
+        f"expected refine-penalty drop; agg={agg.V_next} agg2={agg2.V_next}"
+    )
+    assert agg2.td_error < agg.td_error, "refine should lower td vs keep"
+    print(f"  ok p4_strategy_penalty (refine td={agg2.td_error:+.3f} < keep td={agg.td_error:+.3f})")
+
+    shutil.rmtree(td_dir)
+
+
 def main():
     print(f"[smoke] backend={'textgrad' if USING_REAL_TEXTGRAD else 'shim'}")
     test_parse_and_dag()
@@ -363,6 +418,7 @@ def main():
     test_v3_parse_and_fields()
     test_live_fixture_regression()
     test_engine_wiring()
+    test_experience_buffer_and_crl()
     print("[smoke] all tests passed")
 
 

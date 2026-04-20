@@ -1,0 +1,42 @@
+[evolve-textgrad] proposal written:
+- [2026-04-20] PROPOSAL target:general-research (Q^L: 5.00->7.30, td:+2.30, strength:hard)
+    problem: aggregated G2 evidence indicates sub-optimal behavior.
+    gradient: |
+      (see updated spec text)
+    diff: |
+      <<EVOLVE NOTE (shim) - textual gradient summary>>
+        [g1] Identify concrete edits to the parent skill specs that would have prevented the observed failures and amplified the observed successes. Keep YAML frontmatter intact. Preserve public trigger semantics. Be specific - cite section names when possible. Session critique: [design-converge] net_delta=1 td=+1.30 strength=hard evidence="locked dual-layer DAG (spec_var + firing_var)" || [general-research] net_delta=1 td=+2.30 strength=hard evidence="located ProTeGi / Trace / REVOLVE / Reflexion" || [session-close] net_delta=0 td=+0.65 strength=soft evidence="PDF 84KB, episode + digest + SUMMARY written" || [writing-draft] net_delta=2 td=+2.02 strength=hard evidence="td=-2.925 matches hand-calc; strength=hard"; "user followed up with example request"; "user requested the explanation be fixed into a PDF"
+      <<END EVOLVE NOTE>>
+      ---
+      name: general-research
+      description: Context-aware fallback for research-adjacent requests that don't fit a more specific skill. Leverages config.yaml, methodology/, logs/, and resources/papers/ to respond with project awareness and, where appropriate, suggest the right specialized skill.
+      ---
+      
+      # general-research
+      
+      **Trigger**: Fallback — anything research-related not caught by other micro-skills.
+      
+      **Process**:
+      1. Respond to user's request with full project context awareness
+      2. Leverage knowledge of:
+         - Current project state (config.yaml)
+         - Research direction (methodology/)
+         - Recent progress (logs/)
+         - Paper reading history (resources/papers/)
+      3. If the response involves research artifacts, suggest the appropriate specialized micro-skill
+      4. This is NOT a dumb fallback — it's a context-aware general assistant
+      
+      **Inputs**: User's request + project context
+      **Outputs**: Context-aware response
+      **Token**: varies
+      **Composition**: May suggest specialized micro-skills when relevant
+      
+    evidence: "located ProTeGi / Trace / REVOLVE / Reflexion"
+    risk: Edit affects trigger description or process steps; rollback snapshot will be stored in td-nl/history/.
+
+[evolve-textgrad] backend=shim engine=none
+  session=s8 V^L 5.00->6.57 skills=4 proposals=3
+    design-converge          td=+1.30 strength=hard conf=high
+    general-research         td=+2.30 strength=hard conf=high
+    session-close            td=+0.65 strength=soft conf=high
+    writing-draft            td=+2.02 strength=hard conf=high

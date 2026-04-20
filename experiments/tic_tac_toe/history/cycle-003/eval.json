@@ -1,0 +1,17 @@
+{
+  "cycle": 3,
+  "mode": "online-evolve",
+  "games": 10,
+  "edits_applied": 0,
+  "model": "haiku",
+  "summary": {
+    "games": 10,
+    "forfeits": 2,
+    "decisive_wins": 0,
+    "draws": 8,
+    "total_moves": 79,
+    "total_mistakes": 0,
+    "clean_games": 8,
+    "mistake_rate": 0.0
+  }
+}

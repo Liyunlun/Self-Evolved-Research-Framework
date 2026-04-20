@@ -1,0 +1,22 @@
+{
+  "backend": "shim",
+  "engine": "claude-code-cli",
+  "sessions": [
+    {
+      "session": "ttt-c004-g01",
+      "v_l_old": 5.0,
+      "v_l_new": 5.0,
+      "skills": {
+        "play-tic-tac-toe": {
+          "net_delta": 1,
+          "td_error": 0.0,
+          "strength": "drop",
+          "V": 5.0,
+          "V_next": 5.0,
+          "confidence": "medium"
+        }
+      },
+      "proposals": []
+    }
+  ]
+}

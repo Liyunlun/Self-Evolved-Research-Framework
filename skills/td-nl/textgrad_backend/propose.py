@@ -119,16 +119,39 @@ def write_proposal(
         sec["sections"][proposals_key].append("")
         sec["sections"][proposals_key].extend(block.rstrip().splitlines())
 
-    # 2) move pending G2 lines -> processed, stamp with cycle summary
+    # 2) move pending G2 lines -> processed, stamp with cycle summary.
+    #    v3 entries span multiple lines (header + indented P1..P5 body). We
+    #    must move the WHOLE block, not just the header line, otherwise the
+    #    body lines accumulate as orphans that poison later parses.
     if pending_key and processed_key:
         pending_lines = sec["sections"][pending_key]
         keep: List[str] = []
         moved: List[str] = []
-        for line in pending_lines:
+        i = 0
+        while i < len(pending_lines):
+            line = pending_lines[i]
             if line.strip().startswith("- [") and "skill:" in line:
+                # start of a G2 entry: attach indented body + trailing blank
                 moved.append(line)
-            else:
+                i += 1
+                while i < len(pending_lines):
+                    nxt = pending_lines[i]
+                    if nxt.startswith("    ") or nxt.startswith("\t"):
+                        moved.append(nxt)
+                        i += 1
+                    else:
+                        break
+                # consume a single trailing blank for readability
+                if i < len(pending_lines) and pending_lines[i].strip() == "":
+                    i += 1
+            elif line.strip() == "" or line.lstrip().startswith("<!--"):
+                # preserve blanks and comment blocks in pending
                 keep.append(line)
+                i += 1
+            else:
+                # orphan body line left over from the pre-fix era: DROP rather
+                # than keep. (A live entry always has a header above its body.)
+                i += 1
         sec["sections"][pending_key] = keep
         if moved:
             sec["sections"][processed_key].append("")

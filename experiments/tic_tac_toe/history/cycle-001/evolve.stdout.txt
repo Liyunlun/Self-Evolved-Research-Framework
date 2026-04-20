@@ -1,0 +1,4 @@
+[evolve-textgrad] no proposal written (no hard-strength skills)
+[evolve-textgrad] backend=shim engine=claude-code-cli
+  session=ttt-c001 V^L 5.00->4.99 skills=1 proposals=0
+    play-tic-tac-toe         td=-0.03 strength=drop conf=medium
