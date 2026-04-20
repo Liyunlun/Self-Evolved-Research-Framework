@@ -37,6 +37,7 @@ from .variables import (
 from .trace import SessionGraph, TraceNode, parse_feedback_log
 from .td_layer import SkillAggregate, TDLayer, aggregate
 from .engines import make_default_engine
+from . import experience_buffer
 
 
 OVERALL_RE = re.compile(r"-\s*overall:\s*([\d.]+)")
@@ -56,6 +57,29 @@ def read_skill_value(skill_values_dir: Path, skill: str) -> float:
         return float(m.group(1))
     except ValueError:
         return 5.0
+
+
+def write_skill_value(skill_values_dir: Path, skill: str, value: float) -> None:
+    """Persist the updated Q^L to skill-values/{skill}.md. Creates the file
+    on first write; on update, rewrites only the 'overall' line in-place."""
+    import datetime as _dt
+
+    skill_values_dir.mkdir(parents=True, exist_ok=True)
+    path = skill_values_dir / f"{skill}.md"
+    new_line = f"- overall: {value:.3f}"
+    if path.exists():
+        text = path.read_text(encoding="utf-8")
+        new_text, n = OVERALL_RE.subn(new_line, text, count=1)
+        if n == 0:
+            new_text = text.rstrip() + f"\n{new_line}\n"
+    else:
+        new_text = (
+            f"# Skill Value Q^L({skill})\n"
+            f"<!-- Created/updated by td-nl backward on {_dt.date.today()} -->\n\n"
+            f"### Scores (1-10)\n"
+            f"{new_line}\n"
+        )
+    path.write_text(new_text, encoding="utf-8")
 
 
 @dataclass
@@ -167,12 +191,16 @@ def run_backward(
             except ValueError:
                 pass
 
+    def _buffer_reader(skill: str) -> float:
+        entries = experience_buffer.read_recent(skill_values_dir, skill)
+        return experience_buffer.mean_reward(entries)
+
     for g in graphs:
         aggs = aggregate(g)
         if not aggs:
             continue
         current_vals = {s: read_skill_value(skill_values_dir, s) for s in aggs}
-        td.score(aggs, current_vals)
+        td.score(aggs, current_vals, buffer_reader=_buffer_reader)
 
         spec_vars, firing_vars = _build_graph_for_session(g, skills_root)
 
@@ -241,6 +269,21 @@ def run_backward(
             s: TDLayer.apply_value_update(current_vals[s], aggs[s]) for s in aggs
         }
         vl_new = sum(updated_vals.values()) / max(1, len(updated_vals))
+        # Persist per-skill Q^L and append this firing's transition to the
+        # experience buffer so continual learning has the rolling history on
+        # the next firing.
+        for skill, new_val in updated_vals.items():
+            write_skill_value(skill_values_dir, skill, new_val)
+            a = aggs[skill]
+            pV = (sum(a.predicted_Vs) / len(a.predicted_Vs)) if a.predicted_Vs else None
+            experience_buffer.append(
+                skill_values_dir,
+                skill,
+                reward=float(a.net_delta),
+                session_id=g.session,
+                predicted_V=pV,
+                strategy=a.dominant_strategy,
+            )
         results.append(
             BackwardResult(
                 session=g.session,

@@ -15,10 +15,11 @@ the pipeline (TD layer, proposal writer, smoke test) can run end-to-end.
 """
 from .variables import Variable, TextLoss, TextualGradientDescent, USING_REAL_TEXTGRAD
 from .trace import SessionGraph, TraceNode, parse_feedback_log
-from .td_layer import TDLayer, td0_error
-from .backward import run_backward
+from .td_layer import TDLayer, td0_error, STRATEGY_PENALTY
+from .backward import run_backward, read_skill_value, write_skill_value
 from .propose import write_proposal
 from .engines import ClaudeCodeCLIEngine, make_default_engine
+from . import experience_buffer
 
 __all__ = [
     "Variable",
@@ -31,7 +32,11 @@ __all__ = [
     "TDLayer",
     "td0_error",
     "run_backward",
+    "read_skill_value",
+    "write_skill_value",
     "write_proposal",
     "ClaudeCodeCLIEngine",
     "make_default_engine",
+    "STRATEGY_PENALTY",
+    "experience_buffer",
 ]

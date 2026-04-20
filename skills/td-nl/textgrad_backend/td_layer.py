@@ -1,28 +1,43 @@
-"""TD(0) layer sitting on top of TextGrad.
+"""Continual-RL TD(0) layer sitting on top of TextGrad.
 
-For each skill that fired in the session we compute a TD error:
+For each skill that fired in the session we compute a classical Bellman
+TD(0) error:
     delta_TD = r + gamma * V(s') - V(s)
 where:
-    r      = sum of G2 per-firing deltas for this skill this session (clamped)
-    V(s)   = current Q^L 'overall' score for this skill (from skill-values/)
-    V(s')  = predicted next-state value. Bootstrap:
-             we approximate V(s') by V(s) + clipped(r) - a one-step Bellman
-             guess in the absence of an explicit world model. (This matches
-             how TD(0) is used as a bootstrap over a single transition.)
+    r      = net delta for this skill this session (clamped to +-2; no lr
+             pre-scaling - lr is applied exactly once, in apply_value_update)
+    V(s)   = current Q^L 'overall' score for the skill (from skill-values/)
+    V(s')  = bootstrap target blending the current firing's reward with a
+             rolling-buffer estimate of recent reward (continual-RL style).
+             When the skill also self-reported a dominant P4 strategy of
+             'refine' or 'reset', V(s') is penalized so the td signal reflects
+             the agent's own negative evaluation.
     gamma  = 0.9 default (configurable).
 
 The magnitude of delta_TD scales the textual gradient selection:
     - |delta_TD| >= 1.0  -> keep the full textual gradient, propose spec edit
-    - 0.25 <= |delta_TD| < 1.0 -> keep but mark as 'soft' (no proposal unless
-                                   direction was consistent across 3 sessions)
+    - 0.25 <= |delta_TD| < 1.0 -> keep but mark as 'soft' (no proposal)
     - |delta_TD| < 0.25  -> drop (ignore gradient; just bump value slightly)
+
+Plasticity-stability knobs:
+  * bootstrap_step (β):     weight on current-firing reward in V(s')
+  * replay_step (β2):       weight on buffered-average reward in V(s')
+  * buffer_k:               buffer depth (older firings forgotten)
+  * STRATEGY_PENALTY:       P4 vote modulation
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from .trace import SessionGraph, TraceNode
+
+
+STRATEGY_PENALTY = {
+    "keep": 0.0,
+    "refine": 0.5,
+    "reset": 1.5,
+}
 
 
 @dataclass
@@ -134,34 +149,70 @@ class TDLayer:
     gamma: float = 0.9
     hard_threshold: float = 1.0
     soft_threshold: float = 0.25
-    # scaling: reward bootstrap step for V_next estimate
+    # weight on THIS firing's reward in the V(s') bootstrap
     bootstrap_step: float = 0.5
+    # weight on the REPLAY BUFFER average reward in the V(s') bootstrap
+    replay_step: float = 0.5
 
     def score(
         self,
         aggregates: Dict[str, SkillAggregate],
         current_values: Dict[str, float],
+        buffer_reader: Optional[Callable[[str], float]] = None,
     ) -> None:
         """Populate V, V_next, td_error, strength on every aggregate in-place.
 
-        If v3 blocks supplied `predicted_V` we use the mean of those as V(s')
-        (self-report), overriding the bootstrap estimate. If v3 blocks also
-        supplied an `inline_td`, we blend it 50/50 with the batch TD error to
-        reconcile per-firing and per-session views."""
+        CRL-flavored TD(0):
+          r         = clipped net_delta (NOT scaled by lr here)
+          V(s')     = clip( V + β·r + β2·avg_r_buffer  -  strategy_penalty ,
+                            1, 10 )
+                      where avg_r_buffer comes from `buffer_reader(skill)`
+                      and strategy_penalty is from the dominant P4 vote.
+                      If v3 provided predicted_V, we blend the self-report
+                      with the bootstrap target 50/50 for stability.
+          td        = r + γ·V(s') - V
+          strength  = thresholded |td|
+
+        buffer_reader: callable returning the mean reward over the per-skill
+                       experience buffer, or 0.0 when empty. If None, the
+                       replay term is treated as zero (matches single-firing
+                       bootstrap).
+        """
         for skill, agg in aggregates.items():
             V = current_values.get(skill, 5.0)
-            r_clipped = _clip(agg.net_delta * agg.learning_rate, -2.0, 2.0)
+            r = _clip(float(agg.net_delta), -2.0, 2.0)
 
-            # V(s'): prefer self-report, else bootstrap
+            avg_r_buffer = 0.0
+            if buffer_reader is not None:
+                try:
+                    avg_r_buffer = float(buffer_reader(skill))
+                except Exception:
+                    avg_r_buffer = 0.0
+
+            bootstrap_target = _clip(
+                V
+                + self.bootstrap_step * r
+                + self.replay_step * avg_r_buffer,
+                1.0,
+                10.0,
+            )
+
+            # blend with v3 self-report when available (50/50)
             if agg.predicted_Vs:
-                V_next_est = _clip(
+                self_report = _clip(
                     sum(agg.predicted_Vs) / len(agg.predicted_Vs), 1.0, 10.0
                 )
+                V_next_target = 0.5 * bootstrap_target + 0.5 * self_report
             else:
-                V_next_est = _clip(V + self.bootstrap_step * r_clipped, 1.0, 10.0)
+                V_next_target = bootstrap_target
+
+            # P4 strategy penalty: agent's own refine/reset vote drops V(s')
+            dom = agg.dominant_strategy
+            penalty = STRATEGY_PENALTY.get(dom or "", 0.0)
+            V_next_est = _clip(V_next_target - penalty, 1.0, 10.0)
 
             td_batch = td0_error(
-                reward=r_clipped, V=V, V_next=V_next_est, gamma=self.gamma
+                reward=r, V=V, V_next=V_next_est, gamma=self.gamma
             )
             # blend with inline TDs if we have them
             if agg.inline_tds:
@@ -185,8 +236,7 @@ class TDLayer:
     def apply_value_update(
         old_value: float, aggregate: SkillAggregate
     ) -> float:
-        """Bellman-style scalar update.
-        new = old + lr * (r + gamma*V_next - V)
-        clamped to [1, 10]. Uses the same td_error computed in score()."""
+        """Single-lr value update: new = old + lr · td.
+        This is the ONLY place the confidence-based learning rate is applied."""
         new = old_value + aggregate.learning_rate * aggregate.td_error
         return _clip(new, 1.0, 10.0)

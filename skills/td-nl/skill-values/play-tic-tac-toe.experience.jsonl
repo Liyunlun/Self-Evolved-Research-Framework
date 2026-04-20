@@ -1,0 +1,10 @@
+{"session_id": "ttt-c005-g01", "reward": 0.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:00:21"}
+{"session_id": "ttt-c005-g02", "reward": 1.0, "predicted_V": 5.0, "strategy": "keep", "timestamp": "2026-04-20T21:04:10"}
+{"session_id": "ttt-c005-g03", "reward": -1.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:07:28"}
+{"session_id": "ttt-c005-g04", "reward": -1.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:07:45"}
+{"session_id": "ttt-c005-g05", "reward": -1.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:08:03"}
+{"session_id": "ttt-c005-g06", "reward": -1.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:08:14"}
+{"session_id": "ttt-c005-g07", "reward": -1.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:08:25"}
+{"session_id": "ttt-c005-g08", "reward": -1.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:08:36"}
+{"session_id": "ttt-c005-g09", "reward": -1.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:08:51"}
+{"session_id": "ttt-c005-g10", "reward": -1.0, "predicted_V": 5.0, "strategy": "refine", "timestamp": "2026-04-20T21:09:02"}
