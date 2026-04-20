@@ -29,13 +29,19 @@ sys.path.insert(0, str(TD_NL))
 
 from textgrad_backend import (  # noqa: E402
     USING_REAL_TEXTGRAD,
+    ClaudeCodeCLIEngine,
+    make_default_engine,
     run_backward,
     write_proposal,
 )
 
 
-def _summarize(results) -> dict:
-    summary = {"backend": "textgrad" if USING_REAL_TEXTGRAD else "shim", "sessions": []}
+def _summarize(results, engine_name: str = "none") -> dict:
+    summary = {
+        "backend": "textgrad" if USING_REAL_TEXTGRAD else "shim",
+        "engine": engine_name,
+        "sessions": [],
+    }
     for r in results:
         s = {
             "session": r.session,
@@ -81,11 +87,34 @@ def main(argv=None) -> int:
     )
     ap.add_argument("--gamma", type=float, default=0.9)
     ap.add_argument("--json", action="store_true", help="Print JSON summary")
+    ap.add_argument(
+        "--no-engine",
+        action="store_true",
+        help="Disable the LLM engine; use deterministic shim (faster, offline).",
+    )
+    ap.add_argument(
+        "--engine-model",
+        default="haiku",
+        help="Claude model for the Claude Code CLI engine (default: haiku).",
+    )
+    ap.add_argument(
+        "--engine-timeout",
+        type=float,
+        default=120.0,
+        help="Per-call timeout (sec) for the Claude Code CLI engine.",
+    )
     args = ap.parse_args(argv)
 
     if not FEEDBACK_LOG.exists():
         print(f"[evolve-textgrad] missing {FEEDBACK_LOG}", file=sys.stderr)
         return 2
+
+    if args.no_engine:
+        engine = None
+    else:
+        engine = make_default_engine(
+            model=args.engine_model, timeout=args.engine_timeout
+        )
 
     try:
         results = run_backward(
@@ -94,6 +123,7 @@ def main(argv=None) -> int:
             skill_values_dir=SKILL_VALUES_DIR,
             value_function_file=VALUE_FUNCTION,
             gamma=args.gamma,
+            engine=engine,
         )
     except Exception as e:  # pragma: no cover
         print(f"[evolve-textgrad] backward failed: {e}", file=sys.stderr)
@@ -111,11 +141,20 @@ def main(argv=None) -> int:
             print("[evolve-textgrad] proposal written:")
             print(block)
 
-    summary = _summarize(results)
+    engine_name = "none"
+    if engine is not None:
+        engine_name = (
+            "claude-code-cli"
+            if isinstance(engine, ClaudeCodeCLIEngine)
+            else type(engine).__name__
+        )
+    summary = _summarize(results, engine_name=engine_name)
     if args.json:
         print(json.dumps(summary, indent=2, ensure_ascii=False))
     else:
-        print(f"[evolve-textgrad] backend={summary['backend']}")
+        print(
+            f"[evolve-textgrad] backend={summary['backend']} engine={summary['engine']}"
+        )
         for s in summary["sessions"]:
             print(
                 f"  session={s['session']} V^L {s['v_l_old']:.2f}->{s['v_l_new']:.2f} "

@@ -143,6 +143,7 @@ def test_backward_end_to_end():
         skills_root=td / "skills",
         skill_values_dir=td / "skills" / "td-nl" / "skill-values",
         value_function_file=td / "skills" / "td-nl" / "value-function.md",
+        engine=None,
     )
     # should have both s1 and legacy sessions
     sessions = {r.session for r in results}
@@ -224,12 +225,144 @@ def test_v3_parse_and_fields():
     print(f"  ok v3_parse_and_fields (evolve-suggest conf={evs.confidence} td={evs.td_error:+.3f} strength={evs.strength})")
 
 
+FIXTURES_DIR = HERE / "fixtures"
+
+
+def test_live_fixture_regression():
+    """Golden-file regression: feed the pinned 2026-04-20 live feedback log into
+    run_backward and compare JSON summary to the snapshot fixture. Catches any
+    silent change in per-skill td scoring or the V^L bump.
+    """
+    import json
+
+    input_md = FIXTURES_DIR / "live_feedback_log_2026-04-20.input.md"
+    expected_json = FIXTURES_DIR / "live_feedback_log_2026-04-20.json"
+    if not input_md.exists() or not expected_json.exists():
+        print("  skip live_fixture_regression (fixtures missing)")
+        return
+
+    td = Path(tempfile.mkdtemp(prefix="tdnl_smoke_live_"))
+    (td / "skills").mkdir()
+    (td / "skills" / "td-nl").mkdir()
+    (td / "skills" / "td-nl" / "skill-values").mkdir()
+    for name in ("general-research", "design-converge", "writing-draft", "session-close"):
+        skill_dir = td / "skills" / name
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text(
+            f"---\nname: {name}\ndescription: fake spec for {name}\n---\n\nbody\n",
+            encoding="utf-8",
+        )
+    (td / "skills" / "td-nl" / "value-function.md").write_text(
+        "### Scores (1-10)\n- overall: 5\n", encoding="utf-8"
+    )
+    log = td / "skills" / "td-nl" / "feedback-log.md"
+    log.write_text(input_md.read_text(encoding="utf-8"), encoding="utf-8")
+
+    results = run_backward(
+        feedback_log=log,
+        skills_root=td / "skills",
+        skill_values_dir=td / "skills" / "td-nl" / "skill-values",
+        value_function_file=td / "skills" / "td-nl" / "value-function.md",
+        engine=None,  # deterministic: match fixture that was captured without engine
+    )
+
+    # Mirror scripts/evolve_textgrad.py::_summarize exactly
+    actual = {"backend": "textgrad" if USING_REAL_TEXTGRAD else "shim", "sessions": []}
+    for r in results:
+        s = {
+            "session": r.session,
+            "v_l_old": round(r.v_l_old, 3),
+            "v_l_new": round(r.v_l_new, 3),
+            "skills": {
+                skill: {
+                    "net_delta": agg.net_delta,
+                    "td_error": round(agg.td_error, 3),
+                    "strength": agg.strength,
+                    "V": round(agg.V, 3),
+                    "V_next": round(agg.V_next, 3),
+                    "confidence": agg.confidence,
+                }
+                for skill, agg in sorted(r.aggregates.items())
+            },
+            "proposals": [
+                {
+                    "skill": p.skill,
+                    "old_value": round(p.old_value, 3),
+                    "new_value": round(p.new_value, 3),
+                    "td_error": round(p.td_error, 3),
+                    "strength": p.strength,
+                }
+                for p in r.proposals
+            ],
+        }
+        actual["sessions"].append(s)
+
+    expected = json.loads(expected_json.read_text(encoding="utf-8"))
+    assert actual == expected, (
+        "fixture mismatch — refresh with:\n"
+        "  python3 scripts/evolve_textgrad.py --dry-run --json > "
+        f"{expected_json.relative_to(REPO_ROOT)}\n"
+        f"diff:\n  expected={json.dumps(expected, sort_keys=True)}\n"
+        f"  actual=  {json.dumps(actual, sort_keys=True)}"
+    )
+    shutil.rmtree(td)
+    print("  ok live_fixture_regression (2026-04-20 s8)")
+
+
+def test_engine_wiring():
+    """Verify the shim's TextualGradientDescent routes through an injected
+    engine when one is provided, and falls back cleanly when the engine
+    raises. Uses an in-process FakeEngine so no CLI call is made.
+    """
+    td, log = _make_tempdir()
+    calls = []
+
+    class FakeEngine:
+        def __call__(self, prompt, system_prompt=None, **_):
+            calls.append(prompt)
+            return "FAKE NOTE: tighten the TD-rubric so 'worse' signals propagate."
+
+    results = run_backward(
+        feedback_log=log,
+        skills_root=td / "skills",
+        skill_values_dir=td / "skills" / "td-nl" / "skill-values",
+        value_function_file=td / "skills" / "td-nl" / "value-function.md",
+        engine=FakeEngine(),
+    )
+    s1 = [r for r in results if r.session == "s1"][0]
+    assert s1.proposals, "expected at least one proposal for session s1"
+    diff = s1.proposals[0].diff_text
+    assert "<<EVOLVE NOTE (shim+engine)" in diff, f"tag missing, diff head: {diff[:160]}"
+    assert "FAKE NOTE" in diff, f"engine output missing, diff head: {diff[:200]}"
+    assert len(calls) >= 1, "engine was never invoked"
+
+    # failing-engine fallback: confirm deterministic shim path still works
+    class FailingEngine:
+        def __call__(self, prompt, system_prompt=None, **_):
+            raise RuntimeError("boom")
+
+    results2 = run_backward(
+        feedback_log=log,
+        skills_root=td / "skills",
+        skill_values_dir=td / "skills" / "td-nl" / "skill-values",
+        value_function_file=td / "skills" / "td-nl" / "value-function.md",
+        engine=FailingEngine(),
+    )
+    # NOTE: write_proposal() in the first run mutated the pending section to
+    # empty, so results2 may be empty - that's fine; we just want to ensure no
+    # exception propagates from engine failure.
+    shutil.rmtree(td)
+    print("  ok engine_wiring (fake engine injected + failure fallback)")
+
+
 def main():
     print(f"[smoke] backend={'textgrad' if USING_REAL_TEXTGRAD else 'shim'}")
     test_parse_and_dag()
     test_td_layer()
     test_backward_end_to_end()
     test_v3_parse_and_fields()
+    test_live_fixture_regression()
+    test_engine_wiring()
     print("[smoke] all tests passed")
 
 

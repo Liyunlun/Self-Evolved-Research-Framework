@@ -18,6 +18,7 @@ from .trace import SessionGraph, TraceNode, parse_feedback_log
 from .td_layer import TDLayer, td0_error
 from .backward import run_backward
 from .propose import write_proposal
+from .engines import ClaudeCodeCLIEngine, make_default_engine
 
 __all__ = [
     "Variable",
@@ -31,4 +32,6 @@ __all__ = [
     "td0_error",
     "run_backward",
     "write_proposal",
+    "ClaudeCodeCLIEngine",
+    "make_default_engine",
 ]

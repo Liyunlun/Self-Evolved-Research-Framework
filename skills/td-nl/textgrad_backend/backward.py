@@ -36,6 +36,7 @@ from .variables import (
 )
 from .trace import SessionGraph, TraceNode, parse_feedback_log
 from .td_layer import SkillAggregate, TDLayer, aggregate
+from .engines import make_default_engine
 
 
 OVERALL_RE = re.compile(r"-\s*overall:\s*([\d.]+)")
@@ -132,14 +133,26 @@ def _aggregated_critique(aggregates: Dict[str, SkillAggregate]) -> str:
     return " || ".join(parts)
 
 
+_UNSET = object()
+
+
 def run_backward(
     feedback_log: Path,
     skills_root: Path,
     skill_values_dir: Path,
     value_function_file: Path,
     gamma: float = 0.9,
+    engine=_UNSET,
 ) -> List[BackwardResult]:
-    """Run the full session-close backward pass. Returns per-session results."""
+    """Run the full session-close backward pass. Returns per-session results.
+
+    engine: LLM engine used by the (shim or real) TextualGradientDescent.
+            Default auto-selects via engines.make_default_engine() - currently
+            ClaudeCodeCLIEngine when `claude` is on PATH, else None (pure
+            deterministic shim). Pass None explicitly to force deterministic.
+    """
+    if engine is _UNSET:
+        engine = make_default_engine()
     graphs = parse_feedback_log(feedback_log)
     td = TDLayer(gamma=gamma)
     results: List[BackwardResult] = []
@@ -195,7 +208,7 @@ def run_backward(
         ]
         proposals: List[Proposal] = []
         if hard_specs:
-            optim = TextualGradientDescent(parameters=hard_specs)
+            optim = TextualGradientDescent(parameters=hard_specs, engine=engine)
             optim.step()
             for skill, agg in aggs.items():
                 if agg.strength != "hard" or skill not in spec_vars:
