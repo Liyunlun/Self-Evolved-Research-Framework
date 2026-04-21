@@ -9,7 +9,7 @@ when a skill's description matches the current conversation intent.
 
 ```
 skills/
-  {skill-name}/SKILL.md      # 42 SER skills
+  {skill-name}/SKILL.md      # 57 SER skills
   _shared/*.md               # Cross-cutting reference docs (not skills themselves)
   external/{name}/SKILL.md   # External skills (git submodules)
   td-nl/                     # Skill evolution infrastructure
@@ -20,18 +20,26 @@ skills/
 need them instruct Claude to Read them on demand. `_shared/` has no `SKILL.md`
 so it's ignored by `scripts/install-skills.sh`.
 
-## Skill index (42 SER + 1 external)
+## Skill index (57 SER + 1 external)
 
 ### Session lifecycle
 - `session-open`, `session-close`
 
 ### Paper reading
-- `paper-read`, `paper-compare`, `paper-index`
+- `paper-lit-search` (discovery — arXiv + Semantic Scholar + local), `paper-read` (triage or Fey-R), `paper-compare`, `paper-index`
 - `external/fey-r` — deep Feynman-method paper reading
+- Chain: `paper-lit-search → paper-read → paper-compare` / `paper-index`
+
+### Paper figures & build
+- `paper-illustrate` — structural diagrams (architecture, pipeline, flow) via TikZ or SVG
+- `paper-figure` — data-driven plots (line, bar, scatter, heatmap, table) from experiment results; script preserved under `paper/figures/scripts/`
+- `paper-art` — decorative / identity visuals (pixel art, project mascot, README hero); saved to `outputs/visuals/`
+- `paper-compile` — full LaTeX build pipeline (pdflatex×3 + bibtex/biber) with pre-compile integrity checks
 
 ### Theory & proofs
 - `theory-formalize`, `theory-decompose`, `theory-search`, `theory-counterexample`, `theory-generalize`
-- `proof-critique`, `proof-fix`, `proof-formalize`, `proof-verify`
+- `proof-write` (theorem → first draft), `proof-critique`, `proof-fix`, `proof-formalize`, `proof-verify`
+- Chain: `proof-write → proof-critique → proof-fix → proof-formalize → proof-verify`
 
 ### Writing
 - `writing-outline`, `writing-draft`, `writing-review`, `writing-polish`
@@ -40,10 +48,14 @@ so it's ignored by `scripts/install-skills.sh`.
 - `plan-suggest`, `plan-milestone`, `progress-capture`, `status-report`, `decision-analyze`, `experiment-analyze`
 
 ### Experiments
-- `experiment-run`, `experiment-monitor`
+- `experiment-plan` (design phase: claims / variables / baselines / ablations)
+- `experiment-dse` (hyperparameter sweep over a plan)
+- `experiment-run` (launch single config on GPU), `experiment-monitor` (poll)
+- Chain: `experiment-plan → experiment-dse → experiment-run → experiment-monitor → experiment-analyze`
 
 ### Ideas
-- `idea-discover`, `idea-verify`
+- `idea-discover` (generate), `idea-verify` (novelty check), `idea-refine` (rough → structured proposal)
+- Chain: `idea-discover → idea-verify → idea-refine → experiment-plan`
 
 ### Checklist engine
 - `checklist-create`, `checklist-verify`, `checklist-update`, `checklist-status`
@@ -55,6 +67,20 @@ so it's ignored by `scripts/install-skills.sh`.
 
 ### Research exploration
 - `research-explore`, `design-converge`
+
+### Code family
+- `code-branch`, `code-roadmap`, `code-implement`, `code-review`, `code-debug`, `code-commit`
+- Shared vocabulary: `_shared/git-conventions.md` (all tracks) and `_shared/codex-contract.md` (codex track only)
+
+### Codex track (cross-cutting)
+- Flag: `scripts/install-skills.sh --codex-track claude|codex` (default `claude`)
+- Skills shipping `SKILL.claude.md` + `SKILL.codex.md` variants (installer materializes the selected one as `SKILL.md`):
+  - `code-implement` — Track B delegates medium/large tasks to `/codex:rescue`
+  - `code-review` — Track B adds `/codex:review` as a second technical reviewer
+  - `writing-review` — Track B adds a 3rd Codex peer reviewer (ADD mode, max_rounds 4→3)
+  - `idea-verify` — Track B adds a 4th evidence source via `mcp__codex__codex` (post-Claude-cutoff prior work)
+- Shared vocabulary: `_shared/cross-model-review.md` (writing-review, idea-verify; codex track only)
+- `codex` track preflight strictly verifies `/codex:setup`, Superpowers, `/codex:review`, and `mcp__codex__codex` MCP registration
 
 ### Meta (TD-NL skill evolution)
 - `evolve-suggest`, `evolve-apply`, `general-research`

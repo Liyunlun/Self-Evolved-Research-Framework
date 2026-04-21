@@ -70,7 +70,7 @@ should be chosen.
 | 3b | User wants to deeply study a paper ("understand", "study", "Fey-R") | `paper-read` (Deep/Fey-R mode) → `fey-r` |
 | 4 | Comparing multiple papers | `paper-compare` |
 | 5 | User proposes a theorem/conjecture | `theory-formalize` |
-| 6 | User presents a proof draft | `proof-critique` |
+| 6 | User presents a proof draft for review | `proof-critique` |
 | 7 | User requests writing a paper section | `writing-draft` |
 | 8 | User asks "what to do next" | `plan-suggest` (reads the checklist tree) |
 | 9 | User asks "project status" | `status-report` / `checklist-status` |
@@ -90,6 +90,21 @@ should be chosen.
 | 23 | Architecture/design decision | `design-converge` |
 | 24 | Other research-related (fallback) | `general-research` |
 | 25 | User wants to add/track a task | `checklist-create` |
+| 26 | User asks to start a branch / isolate work / create a worktree | `code-branch` |
+| 27 | Medium/large coding task needing a plan before writing code | `code-roadmap` |
+| 28 | User asks to implement / add feature / change code behavior | `code-implement` |
+| 29 | Test fails / bug reported / unexpected behavior | `code-debug` |
+| 30 | Review code changes after implementation | `code-review` |
+| 31 | Commit reviewed code changes | `code-commit` |
+| 32 | User asks for architecture/pipeline/flow diagram for a paper | `paper-illustrate` |
+| 33 | User asks for pixel art / project mascot / README hero / decorative SVG | `paper-art` |
+| 34 | User asks to compile the paper / build PDF / "编译论文" | `paper-compile` |
+| 35 | User asks to generate a data plot / bar chart / heatmap / table — or chained after `experiment-analyze` | `paper-figure` |
+| 36 | User asks to prove a theorem / proposition from scratch (no draft yet) — "prove that …", "write a proof of …", "证明" | `proof-write` |
+| 37 | User asks to refine / sharpen / make concrete a rough idea — or chained after `idea-verify` | `idea-refine` |
+| 38 | User asks to plan / design an experiment / "what experiments should we run" — or chained after `idea-refine` | `experiment-plan` |
+| 39 | User asks to sweep / tune / explore hyperparameters / DSE / "grid search" / "超参搜索" | `experiment-dse` |
+| 40 | User asks to search the literature / find papers / "arxiv search" / "related work" / "survey this topic" / "文献搜索" | `paper-lit-search` |
 
 ---
 
@@ -186,7 +201,7 @@ are `memory-write`, `memory-retrieve`, `memory-consolidate`, `memory-forget`.
 ├── README.md / LICENSE
 ├── skills/
 │   ├── CLAUDE.md          # Skill index
-│   ├── {skill-name}/      # 42 SER skills, each with SKILL.md + YAML frontmatter
+│   ├── {skill-name}/      # 57 SER skills, each with SKILL.md + YAML frontmatter
 │   │   └── SKILL.md       # Auto-loaded by Claude Code when the skill fires
 │   ├── _shared/           # Cross-cutting infra read by related skills
 │   │   ├── checklist-engine.md
