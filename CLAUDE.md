@@ -104,6 +104,7 @@ should be chosen.
 | 37 | User asks to refine / sharpen / make concrete a rough idea — or chained after `idea-verify` | `idea-refine` |
 | 38 | User asks to plan / design an experiment / "what experiments should we run" — or chained after `idea-refine` | `experiment-plan` |
 | 39 | User asks to sweep / tune / explore hyperparameters / DSE / "grid search" / "超参搜索" | `experiment-dse` |
+| 40 | User asks to search the literature / find papers / "arxiv search" / "related work" / "survey this topic" / "文献搜索" | `paper-lit-search` |
 
 ---
 
@@ -200,7 +201,7 @@ are `memory-write`, `memory-retrieve`, `memory-consolidate`, `memory-forget`.
 ├── README.md / LICENSE
 ├── skills/
 │   ├── CLAUDE.md          # Skill index
-│   ├── {skill-name}/      # 56 SER skills, each with SKILL.md + YAML frontmatter
+│   ├── {skill-name}/      # 57 SER skills, each with SKILL.md + YAML frontmatter
 │   │   └── SKILL.md       # Auto-loaded by Claude Code when the skill fires
 │   ├── _shared/           # Cross-cutting infra read by related skills
 │   │   ├── checklist-engine.md

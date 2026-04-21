@@ -9,7 +9,7 @@ when a skill's description matches the current conversation intent.
 
 ```
 skills/
-  {skill-name}/SKILL.md      # 56 SER skills
+  {skill-name}/SKILL.md      # 57 SER skills
   _shared/*.md               # Cross-cutting reference docs (not skills themselves)
   external/{name}/SKILL.md   # External skills (git submodules)
   td-nl/                     # Skill evolution infrastructure
@@ -20,14 +20,15 @@ skills/
 need them instruct Claude to Read them on demand. `_shared/` has no `SKILL.md`
 so it's ignored by `scripts/install-skills.sh`.
 
-## Skill index (56 SER + 1 external)
+## Skill index (57 SER + 1 external)
 
 ### Session lifecycle
 - `session-open`, `session-close`
 
 ### Paper reading
-- `paper-read`, `paper-compare`, `paper-index`
+- `paper-lit-search` (discovery — arXiv + Semantic Scholar + local), `paper-read` (triage or Fey-R), `paper-compare`, `paper-index`
 - `external/fey-r` — deep Feynman-method paper reading
+- Chain: `paper-lit-search → paper-read → paper-compare` / `paper-index`
 
 ### Paper figures & build
 - `paper-illustrate` — structural diagrams (architecture, pipeline, flow) via TikZ or SVG
