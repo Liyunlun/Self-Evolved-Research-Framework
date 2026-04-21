@@ -5,7 +5,7 @@ description: Produce a first-draft mathematical proof from a bare theorem / prop
 
 # proof-write
 
-**Trigger**: User gives a theorem / proposition / claim and asks for a proof, with no existing draft. For critiquing a user-provided draft use `proof-critique`; for repairing identified issues use `proof-fix`; for polishing an already-validated proof into LaTeX use `proof-formalize`; for mechanical verification use `proof-verify`.
+**Trigger**: User gives a theorem / proposition / claim and asks for a proof, with no existing draft. For critiquing a user-provided draft use `proof-critique`; for repairing identified issues use `proof-fix`; for polishing an already-validated proof into LaTeX use `proof-formalize`; for spot-checking a specific formula / algebraic step use `proof-verify`.
 
 **Process**:
 
@@ -102,7 +102,7 @@ Promoted sub-arguments get their own `\begin{lemma}…\end{lemma}` block above t
 - Draft ready → suggest `proof-critique` to audit (catches the 30-40% the self-audit missed)
 - Critique finds fixable issues → `proof-fix`
 - Proof validated → `proof-formalize` to polish the LaTeX to publication form
-- Proof intended for mechanical check → `proof-verify` (Lean / Coq / Isabelle port)
+- Proof contains a specific formula / identity / algebraic step that needs spot-checking → `proof-verify` (symbolic / numeric / dimensional check; CONFIRMED / REFUTED / INCONCLUSIVE)
 - Theorem statement itself needs decomposition first → `theory-decompose` before this skill
 - Theorem is surprising / non-obvious → `theory-counterexample` to stress-test before committing to a proof
 
