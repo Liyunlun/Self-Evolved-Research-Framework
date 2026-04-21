@@ -2,6 +2,8 @@
 
 > A behavior-driven research framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 > Skills trigger automatically. The framework improves its own skills through use.
+>
+> **[中文版 README](README.zh-CN.md)**
 
 <p align="center">
   <img src="ser_architecture_overview.svg" alt="SER Architecture Overview" width="700"/>
@@ -14,11 +16,18 @@ You talk naturally. SER detects your intent and routes to the right micro-skill:
 | You say | SER triggers |
 |---------|-------------|
 | "I'm reading this paper..." | `paper-read` — structured notes |
+| "Search arXiv for X" | `paper-lit-search` — arXiv + Semantic Scholar |
 | "Is this proof correct?" | `proof-critique` — step-by-step check |
+| "Prove that …" | `proof-write` — first draft of the proof |
 | "What should I do next?" | `plan-suggest` — prioritized tasks |
+| "Design the experiment" | `experiment-plan` — claims / variables / baselines |
+| "Sweep these hyperparameters" | `experiment-dse` — search strategy + configs |
 | "Run the experiment" | `experiment-run` — launch + monitoring |
-| "Any novel ideas for X?" | `idea-discover` → `idea-verify` |
+| "Any novel ideas for X?" | `idea-discover` → `idea-verify` → `idea-refine` |
 | "Write the introduction" | `writing-draft` — section draft |
+| "Plot the results as a bar chart" | `paper-figure` — PGFPlots / matplotlib |
+| "Compile the paper" | `paper-compile` — pdflatex + bibtex/biber |
+| "Implement this feature" | `code-roadmap` → `code-implement` → `code-review` → `code-commit` |
 | (end conversation) | `session-close` — auto-saves summary |
 
 Every skill execution generates feedback. Over sessions, SER proposes improvements
@@ -81,26 +90,56 @@ bash scripts/install-skills.sh            # copy into ./.claude/skills
 bash scripts/install-skills.sh --link     # symlink (dev workflow)
 bash scripts/install-skills.sh --user     # install into ~/.claude/skills
 bash scripts/install-skills.sh --list     # list discovered skills
+bash scripts/install-skills.sh --dry-run  # preview without writing
+bash scripts/install-skills.sh --force    # overwrite existing skills
 ```
+
+**Selective install** — pick or drop skill families:
+
+```bash
+bash scripts/install-skills.sh --only 'paper-*'
+bash scripts/install-skills.sh --only 'code-*,paper-figure'
+bash scripts/install-skills.sh --exclude 'theory-*,proof-*'
+```
+
+**Codex track** — for skills that ship a Codex-augmented variant
+(`code-implement`, `code-review`, `writing-review`, `idea-verify`):
+
+```bash
+bash scripts/install-skills.sh --codex-track claude   # default, upstream Claude-only
+bash scripts/install-skills.sh --codex-track codex    # Codex-augmented cross-model review
+```
+
+The `codex` track adds an extra Codex pass:
+`code-implement` dispatches `/codex:rescue` for medium/large tasks;
+`code-review` adds `/codex:review` as a second reviewer;
+`writing-review` adds a 3rd Codex peer reviewer;
+`idea-verify` adds a 4th evidence source via `mcp__codex__codex`.
+When selected, the installer strictly preflights Codex CLI + Superpowers +
+`/codex:review` + `mcp__codex__codex` and aborts if any dep is missing.
 
 Each SER skill lives in its own directory under `skills/` with a standard
 `SKILL.md` (YAML frontmatter + body), so Claude Code auto-discovers and
 auto-triggers them once installed.
 
-## Skills (42 SER + 1 external)
+## Skills (57 SER + 1 external)
 
 Each skill lives in `skills/{skill-name}/SKILL.md` with standard YAML frontmatter.
+Skills marked † ship both `SKILL.claude.md` and `SKILL.codex.md` variants — pick
+via `--codex-track` at install time.
 
 | Category | Skills | Purpose |
 |----------|--------|---------|
 | **Session** | `session-open`, `session-close` | Lifecycle: status banner, auto-save |
-| **Paper** | `paper-read` (standard + deep/Fey-R), `paper-compare`, `paper-index` | Reading & analysis |
+| **Paper reading** | `paper-read` (standard + deep/Fey-R), `paper-compare`, `paper-index`, `paper-lit-search` | Reading, comparison, arXiv + Semantic Scholar search |
+| **Paper writing** | `writing-outline`, `writing-draft`, `writing-review`†, `writing-polish` | Outline → draft → peer-review → polish |
+| **Paper build** | `paper-compile`, `paper-figure`, `paper-illustrate`, `paper-art` | LaTeX build, data plots, architecture diagrams, pixel art |
 | **Theory** | `theory-formalize`, `theory-decompose`, `theory-search`, `theory-counterexample`, `theory-generalize` | Formalization & proof strategy |
-| **Proof** | `proof-critique`, `proof-fix`, `proof-formalize`, `proof-verify` | Verification & correction |
-| **Writing** | `writing-outline`, `writing-draft`, `writing-review`, `writing-polish` | Paper authoring |
-| **Planning** | `plan-suggest`, `plan-milestone`, `progress-capture`, `status-report`, `decision-analyze`, `experiment-analyze` | Project management |
-| **Experiment** | `experiment-run`, `experiment-monitor` | Experiment dispatch |
-| **Idea** | `idea-discover`, `idea-verify` | Gap analysis + novelty check |
+| **Proof** | `proof-write`, `proof-critique`, `proof-fix`, `proof-formalize`, `proof-verify` | First draft → review → repair → Lean/Coq → spot-check |
+| **Ideas** | `idea-discover`, `idea-verify`†, `idea-refine` | Gap analysis → novelty check → sharpened proposal |
+| **Experiment** | `experiment-plan`, `experiment-dse`, `experiment-run`, `experiment-monitor`, `experiment-analyze` | Design → hyperparameter sweep → dispatch → monitor → analyze |
+| **Coding** | `code-roadmap`, `code-branch`, `code-implement`†, `code-debug`, `code-review`†, `code-commit` | Plan → branch → implement → debug → review → commit |
+| **Planning** | `plan-suggest`, `plan-milestone`, `progress-capture`, `status-report`, `decision-analyze` | Project management |
 | **Checklist** | `checklist-create`, `checklist-verify`, `checklist-update`, `checklist-status` | Paper audit & claim tracking |
 | **Research** | `research-explore`, `design-converge` | Open-ended exploration |
 | **Memory** | `memory-write`, `memory-retrieve`, `memory-consolidate`, `memory-forget` | Persistent cross-session memory |
@@ -138,11 +177,14 @@ Version history in `skills/td-nl/history/` enables safe rollback.
 ├── config.template.yaml   # Copy to config.yaml and customize
 ├── README.md / LICENSE
 ├── skills/
-│   ├── {skill-name}/      # 42 SER skills, each with SKILL.md + YAML frontmatter
+│   ├── {skill-name}/      # 57 SER skills, each with SKILL.md + YAML frontmatter
 │   ├── _shared/           # Shared infra read by related skills
 │   │   ├── checklist-engine.md
 │   │   ├── memory-tiers.md
-│   │   └── evolve-cycle.md
+│   │   ├── evolve-cycle.md
+│   │   ├── codex-contract.md       # Codex track behaviour contract
+│   │   ├── cross-model-review.md   # ADD-mode cross-model review protocol
+│   │   └── git-conventions.md      # Shared git workflow
 │   ├── external/          # External skills (git submodules)
 │   │   └── fey-r/         # Feynman-method paper reading
 │   └── td-nl/             # Skill evolution infrastructure
@@ -169,7 +211,7 @@ Version history in `skills/td-nl/history/` enables safe rollback.
 SER is driven by `CLAUDE.md` — a behavioral protocol that Claude Code reads automatically.
 It defines:
 
-- **Intent router**: 25 patterns that map your messages to SER skills
+- **Intent router**: 40 patterns that map your messages to SER skills
 - **Session lifecycle**: auto-open/close with memory persistence
 - **Data contracts**: standardized formats for logs, paper notes, memory files
 - **Evolution loop**: G2/G1 feedback cycle for skill improvement
@@ -218,7 +260,45 @@ The root `CLAUDE.md` is the bootloader; subdirectory files are namespace guides.
 → writing-draft produces a draft
 
 "Review this version"
-→ writing-review simulates peer review
+→ writing-review simulates peer review (3-way if --codex-track codex)
+
+"Compile the paper"
+→ paper-compile runs pdflatex + bibtex/biber, reports errors
+```
+
+### Experiment Lifecycle
+
+```
+"Design an experiment to test claim C"
+→ experiment-plan writes claims / variables / baselines
+
+"Sweep the learning rate and batch size"
+→ experiment-dse generates configs + runs them with early stopping
+
+"Launch it"
+→ experiment-run dispatches (GPU pre-flight + SSH aware)
+
+"Analyze the results"
+→ experiment-analyze → paper-figure renders publication-ready plots
+```
+
+### Coding Workflow
+
+```
+"Start a branch for the ingest refactor"
+→ code-branch creates feat/... and (optionally) a worktree
+
+"Plan the refactor first"
+→ code-roadmap breaks it into steps
+
+"Implement step 2"
+→ code-implement (with /codex:rescue fallback if --codex-track codex)
+
+"Review the diff"
+→ code-review (with /codex:review as 2nd reviewer if --codex-track codex)
+
+"Commit"
+→ code-commit following shared git conventions
 ```
 
 ## License
