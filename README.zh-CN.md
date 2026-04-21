@@ -113,8 +113,18 @@ bash scripts/install-skills.sh --codex-track codex    # Codex 增强的跨模型
 `code-review` 增加 `/codex:review` 作为第二评审人；
 `writing-review` 增加第 3 位 Codex 同行评审；
 `idea-verify` 通过 `mcp__codex__codex` 增加第 4 个证据源。
-选择 `codex` 轨道时，安装器会严格预检 Codex CLI、Superpowers、
+选择 `codex` 轨道时，安装器会严格预检 Codex CLI 登录、
 `/codex:review`、`mcp__codex__codex`，缺任何一项都会直接中止。
+
+> **使用 `--codex-track codex` 之前请先准备：**
+> - 在本项目里安装 **Codex 的 Claude Code 插件**（提供 `/codex:*` 斜杠命令与
+>   `mcp__codex__codex` MCP 服务器）。按 Codex Claude Code 插件的官方说明在
+>   你的环境里装好。
+> - 用 `codex login` 登录一次（ChatGPT 或 API key）。
+> - **强烈建议在 Codex（而不是 Claude Code）里装上
+>   [Superpowers](https://github.com/obra/superpowers)** —— 它是 Codex 端的
+>   插件，会显著提升 Codex 轨道上 TDD / 规划 / 评审的效果。安装器不会对它做
+>   预检（因为它在 Codex 里），但 Codex 轨道的技能默认假设它已启用。
 
 每个 SER 技能都住在 `skills/` 下的独立目录里，带标准 `SKILL.md`
 （YAML frontmatter + 正文），安装完成后 Claude Code 会自动发现与自动触发。

@@ -159,16 +159,20 @@ if [ ! -d "$SOURCE_DIR" ]; then
 fi
 
 # --- Codex preflight (only runs when --codex-track codex) ---------------------
-# Track B (codex) strictly requires all four of:
+# Track B (codex) strictly requires:
 #   1. `codex login status` reports an authenticated session (non-interactive
 #      check — `/codex:setup` cannot be used here because it opens a TUI and
 #      fails in non-TTY shells).
-#   2. Superpowers installed at ~/.agents/skills/superpowers/ with the
-#      test-driven-development sub-skill (superpowers is a collection of
-#      sub-skills; there is no top-level SKILL.md).
-#   3. `/codex:review` skill available (used by code-review Track B).
-#   4. `mcp__codex__codex` MCP server reachable (used by writing-review and
+#   2. `/codex:review` skill available (used by code-review Track B).
+#   3. `mcp__codex__codex` MCP server reachable (used by writing-review and
 #      idea-verify Track B for cross-model review).
+#
+# NOTE: Superpowers is NOT preflighted here. Superpowers is a Codex-side plugin
+# (installed inside Codex itself, not in Claude Code's skill tree), so there is
+# no reliable way to probe it from this Claude-side installer. It is strongly
+# recommended for best results on the Codex track — see README for the install
+# link.
+#
 # Any failure aborts installation with a clear remediation message.
 preflight_codex() {
   local problems=0
@@ -192,23 +196,7 @@ preflight_codex() {
     fi
   fi
 
-  # 2. Superpowers presence.
-  # Superpowers ships as a collection of sub-skills under
-  # ~/.agents/skills/superpowers/{sub-skill}/SKILL.md — there is no top-level
-  # SKILL.md. We verify the directory exists and that the specific sub-skill
-  # the Codex track depends on (test-driven-development) is installed.
-  local sp="${HOME}/.agents/skills/superpowers"
-  if [ ! -d "$sp" ]; then
-    log_error "Superpowers skill not found at $sp. Install Superpowers before using --codex-track codex."
-    problems=$((problems + 1))
-  else
-    if [ ! -f "$sp/test-driven-development/SKILL.md" ]; then
-      log_error "$sp/test-driven-development/SKILL.md missing — Superpowers TDD sub-skill required by Codex track is not installed."
-      problems=$((problems + 1))
-    fi
-  fi
-
-  # 3. /codex:review availability
+  # 2. /codex:review availability
   if ! command -v codex >/dev/null 2>&1; then
     : # already reported above
   elif ! codex /codex:review --help >/dev/null 2>&1 && ! codex help 2>/dev/null | grep -q 'codex:review'; then
@@ -216,7 +204,7 @@ preflight_codex() {
     problems=$((problems + 1))
   fi
 
-  # 4. mcp__codex__codex MCP server — best-effort probe via `claude mcp`.
+  # 3. mcp__codex__codex MCP server — best-effort probe via `claude mcp`.
   # We skip hard failure if claude CLI isn't available (Codex CLI alone is
   # enough for /codex:* skills). When `claude mcp` is present, list servers
   # and look for the codex entry.
