@@ -20,7 +20,7 @@ skills/
 need them instruct Claude to Read them on demand. `_shared/` has no `SKILL.md`
 so it's ignored by `scripts/install-skills.sh`.
 
-## Skill index (42 SER + 1 external)
+## Skill index (48 SER + 1 external)
 
 ### Session lifecycle
 - `session-open`, `session-close`
@@ -55,6 +55,11 @@ so it's ignored by `scripts/install-skills.sh`.
 
 ### Research exploration
 - `research-explore`, `design-converge`
+
+### Code family
+- `code-branch`, `code-roadmap`, `code-implement`, `code-review`, `code-debug`, `code-commit`
+- Shared vocabulary: `_shared/git-conventions.md` (all tracks) and `_shared/codex-contract.md` (codex track only)
+- Two install tracks via `scripts/install-skills.sh --code-track claude|codex`; `code-implement` and `code-review` each ship `SKILL.claude.md` + `SKILL.codex.md` variants materialized at install time
 
 ### Meta (TD-NL skill evolution)
 - `evolve-suggest`, `evolve-apply`, `general-research`

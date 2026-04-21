@@ -90,6 +90,12 @@ should be chosen.
 | 23 | Architecture/design decision | `design-converge` |
 | 24 | Other research-related (fallback) | `general-research` |
 | 25 | User wants to add/track a task | `checklist-create` |
+| 26 | User asks to start a branch / isolate work / create a worktree | `code-branch` |
+| 27 | Medium/large coding task needing a plan before writing code | `code-roadmap` |
+| 28 | User asks to implement / add feature / change code behavior | `code-implement` |
+| 29 | Test fails / bug reported / unexpected behavior | `code-debug` |
+| 30 | Review code changes after implementation | `code-review` |
+| 31 | Commit reviewed code changes | `code-commit` |
 
 ---
 
