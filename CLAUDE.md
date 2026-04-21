@@ -96,6 +96,8 @@ should be chosen.
 | 29 | Test fails / bug reported / unexpected behavior | `code-debug` |
 | 30 | Review code changes after implementation | `code-review` |
 | 31 | Commit reviewed code changes | `code-commit` |
+| 32 | User asks for architecture/pipeline/flow diagram for a paper | `paper-illustrate` |
+| 33 | User asks for pixel art / project mascot / README hero / decorative SVG | `pixel-create` |
 
 ---
 
