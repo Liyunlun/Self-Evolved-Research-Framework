@@ -59,7 +59,16 @@ so it's ignored by `scripts/install-skills.sh`.
 ### Code family
 - `code-branch`, `code-roadmap`, `code-implement`, `code-review`, `code-debug`, `code-commit`
 - Shared vocabulary: `_shared/git-conventions.md` (all tracks) and `_shared/codex-contract.md` (codex track only)
-- Two install tracks via `scripts/install-skills.sh --code-track claude|codex`; `code-implement` and `code-review` each ship `SKILL.claude.md` + `SKILL.codex.md` variants materialized at install time
+
+### Codex track (cross-cutting)
+- Flag: `scripts/install-skills.sh --codex-track claude|codex` (default `claude`)
+- Skills shipping `SKILL.claude.md` + `SKILL.codex.md` variants (installer materializes the selected one as `SKILL.md`):
+  - `code-implement` — Track B delegates medium/large tasks to `/codex:rescue`
+  - `code-review` — Track B adds `/codex:review` as a second technical reviewer
+  - `writing-review` — Track B adds a 3rd Codex peer reviewer (ADD mode, max_rounds 4→3)
+  - `idea-verify` — Track B adds a 4th evidence source via `mcp__codex__codex` (post-Claude-cutoff prior work)
+- Shared vocabulary: `_shared/cross-model-review.md` (writing-review, idea-verify; codex track only)
+- `codex` track preflight strictly verifies `/codex:setup`, Superpowers, `/codex:review`, and `mcp__codex__codex` MCP registration
 
 ### Meta (TD-NL skill evolution)
 - `evolve-suggest`, `evolve-apply`, `general-research`

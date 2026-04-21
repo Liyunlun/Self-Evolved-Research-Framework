@@ -9,7 +9,7 @@ description: Review code changes after `code-implement` completes. For roadmap-d
 
 **Shared context**: None (Track A). The roadmap file — if present — carries the spec to check against.
 
-**Track**: A. Installed via `--code-track claude`. Track B installs a dual-reviewer variant that adds Codex as a second independent reviewer.
+**Track**: A. Installed via `--codex-track claude`. Track B installs a dual-reviewer variant that adds Codex as a second independent reviewer.
 
 ---
 

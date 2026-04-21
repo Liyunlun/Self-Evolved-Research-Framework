@@ -9,7 +9,7 @@ description: Write or modify code with strict TDD discipline. Small tasks are ha
 
 **Shared context**: Before delegating to Codex, Read `skills/_shared/codex-contract.md` for the prompt contract, invocation rules, background threshold, and error handling.
 
-**Track**: B (Codex executor for medium/large; Claude for small and framework files). Installed via `./scripts/install-skills.sh --code-track codex`. For Track A semantics (Claude direct TDD everywhere), see `SKILL.claude.md`.
+**Track**: B (Codex executor for medium/large; Claude for small and framework files). Installed via `./scripts/install-skills.sh --codex-track codex`. For Track A semantics (Claude direct TDD everywhere), see `SKILL.claude.md`.
 
 ---
 

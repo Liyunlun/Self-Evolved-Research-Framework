@@ -9,7 +9,7 @@ description: Write or modify code via strict Red-Green-Refactor TDD. For small t
 
 **Shared context**: None at this stage; if a roadmap is used, that file carries the spec.
 
-**Track**: A (Claude direct TDD). Installed via `./scripts/install-skills.sh --code-track claude`. For Track B semantics (Codex executor), see the codex-track variant installed at `SKILL.codex.md`.
+**Track**: A (Claude direct TDD). Installed via `./scripts/install-skills.sh --codex-track claude`. For Track B semantics (Codex executor), see the codex-track variant installed at `SKILL.codex.md`.
 
 ---
 

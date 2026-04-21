@@ -9,7 +9,7 @@ description: Dual-reviewer code review. Review A (Claude) checks roadmap complia
 
 **Shared context**: Before invoking Codex, Read `skills/_shared/codex-contract.md § 1, 5` for dependencies and error handling. Codex invocation here does not use the four-tag contract (that's only for `/codex:rescue`); `/codex:review` has its own interface.
 
-**Track**: B. Installed via `--code-track codex`. Requires `/codex:review` available at install time.
+**Track**: B. Installed via `--codex-track codex`. Requires `/codex:review` available at install time.
 
 ---
 

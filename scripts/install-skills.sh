@@ -28,13 +28,18 @@
 #       --exclude PATTERNS  Skip skills matching PATTERNS (comma-separated, glob
 #                         supported; e.g. 'proof-*,theory-generalize'). Applied
 #                         after --only. Repeatable; union of all patterns.
-#       --code-track T    Select coding-family track: 'claude' (default) or 'codex'.
-#                         'claude' is Claude-native TDD with no external deps.
-#                         'codex' delegates medium/large tasks to /codex:rescue and
-#                         adds a second-reviewer pass via /codex:review.
-#                         For skills that ship track variants (code-implement,
-#                         code-review), the matching SKILL.T.md is installed as
-#                         SKILL.md. 'codex' strictly preflights codex deps.
+#       --codex-track T   Select codex-augmented variants: 'claude' (default) or 'codex'.
+#                         'claude' installs the upstream, Claude-only variant of every
+#                         skill that ships a codex variant — no external deps required.
+#                         'codex' installs the Codex-augmented variant where the skill
+#                         adds an extra Codex pass (code-implement: /codex:rescue for
+#                         medium/large; code-review: /codex:review second reviewer;
+#                         writing-review: 3rd Codex peer reviewer; idea-verify: 4th
+#                         evidence source via `mcp__codex__codex`).
+#                         For skills that ship track variants (code-implement, code-review,
+#                         writing-review, idea-verify), the matching SKILL.T.md is
+#                         materialized as SKILL.md. 'codex' strictly preflights codex
+#                         deps (/codex:setup, Superpowers, /codex:review, mcp__codex__codex).
 #       --list            List discovered skills (after --only/--exclude filters)
 #                         and exit without installing
 #       --no-color        Disable ANSI color output
@@ -44,8 +49,9 @@
 #   --only paper-read,writing-draft        # pick two skills
 #   --exclude 'theory-*,proof-*'           # drop theory + proof families
 #   --only 'paper-*' --exclude paper-index # paper-* minus paper-index
-#   --code-track codex                     # install code-family with Codex executor
-#   --only 'code-*' --code-track claude    # install only code family, Claude-only
+#   --codex-track codex                    # install Codex-augmented variants for every
+#                                          # skill that ships them (code + research family)
+#   --only 'code-*' --codex-track claude   # install only code family, upstream Claude-only variants
 #
 # Exit codes:
 #   0  success (or nothing to do)
@@ -67,7 +73,7 @@ LIST_ONLY=0
 USE_COLOR=1
 ONLY_PATTERNS=()
 EXCLUDE_PATTERNS=()
-CODE_TRACK="claude"    # claude | codex — selects SKILL.{track}.md variant for track-variant skills
+CODEX_TRACK="claude"    # claude | codex — selects SKILL.{track}.md variant for any skill that ships variants
 
 # --- Helpers -------------------------------------------------------------------
 if [ -t 1 ]; then :; else USE_COLOR=0; fi
@@ -121,10 +127,10 @@ while [ $# -gt 0 ]; do
                     IFS=',' read -r -a _tmp <<<"$2"
                     EXCLUDE_PATTERNS+=("${_tmp[@]}")
                     shift 2 ;;
-    --code-track)   [ $# -ge 2 ] || { log_error "--code-track requires an argument"; exit 1; }
+    --codex-track)  [ $# -ge 2 ] || { log_error "--codex-track requires an argument"; exit 1; }
                     case "$2" in
-                      claude|codex) CODE_TRACK="$2" ;;
-                      *) log_error "--code-track must be 'claude' or 'codex' (got: $2)"; exit 1 ;;
+                      claude|codex) CODEX_TRACK="$2" ;;
+                      *) log_error "--codex-track must be 'claude' or 'codex' (got: $2)"; exit 1 ;;
                     esac
                     shift 2 ;;
     --list)         LIST_ONLY=1; shift ;;
@@ -152,12 +158,14 @@ if [ ! -d "$SOURCE_DIR" ]; then
   exit 2
 fi
 
-# --- Codex preflight (only runs when --code-track codex) -----------------------
-# Track B (codex) strictly requires all three of:
+# --- Codex preflight (only runs when --codex-track codex) ---------------------
+# Track B (codex) strictly requires all four of:
 #   1. `/codex:setup` passes (Codex CLI configured and authenticated)
 #   2. Superpowers installed at ~/.agents/skills/superpowers/ (with SKILL.md +
 #      test-driven-development/ subdirectory — Codex's TDD discipline).
-#   3. `/codex:review` skill available.
+#   3. `/codex:review` skill available (used by code-review Track B).
+#   4. `mcp__codex__codex` MCP server reachable (used by writing-review and
+#      idea-verify Track B for cross-model review).
 # Any failure aborts installation with a clear remediation message.
 preflight_codex() {
   local problems=0
@@ -166,7 +174,7 @@ preflight_codex() {
 
   # 1. /codex:setup
   if ! command -v codex >/dev/null 2>&1; then
-    log_error "codex CLI not found on PATH. Install Codex before using --code-track codex."
+    log_error "codex CLI not found on PATH. Install Codex before using --codex-track codex."
     problems=$((problems + 1))
   else
     # `codex /setup` should exit 0 and emit a "ready"-style marker. We run it
@@ -181,7 +189,7 @@ preflight_codex() {
   # 2. Superpowers presence
   local sp="${HOME}/.agents/skills/superpowers"
   if [ ! -d "$sp" ]; then
-    log_error "Superpowers skill not found at $sp. Install Superpowers before using --code-track codex."
+    log_error "Superpowers skill not found at $sp. Install Superpowers before using --codex-track codex."
     problems=$((problems + 1))
   else
     if [ ! -f "$sp/SKILL.md" ]; then
@@ -198,18 +206,36 @@ preflight_codex() {
   if ! command -v codex >/dev/null 2>&1; then
     : # already reported above
   elif ! codex /codex:review --help >/dev/null 2>&1 && ! codex help 2>/dev/null | grep -q 'codex:review'; then
-    log_error "/codex:review skill not available. Install it before using --code-track codex."
+    log_error "/codex:review skill not available. Install it before using --codex-track codex."
     problems=$((problems + 1))
   fi
 
+  # 4. mcp__codex__codex MCP server — best-effort probe via `claude mcp`.
+  # We skip hard failure if claude CLI isn't available (Codex CLI alone is
+  # enough for /codex:* skills). When `claude mcp` is present, list servers
+  # and look for the codex entry.
+  if command -v claude >/dev/null 2>&1; then
+    local mcp_list=""
+    if mcp_list="$(claude mcp list 2>/dev/null)"; then
+      if ! printf '%s' "$mcp_list" | grep -qiE 'codex'; then
+        log_error "mcp__codex__codex MCP server not registered. Run \`claude mcp add codex <command>\` or equivalent before using --codex-track codex."
+        problems=$((problems + 1))
+      fi
+    else
+      log_warn "Could not query \`claude mcp list\` — skipping mcp__codex__codex preflight. Ensure it is registered for writing-review / idea-verify cross-model reviews."
+    fi
+  else
+    log_warn "claude CLI not on PATH — skipping mcp__codex__codex preflight. Ensure it is registered for writing-review / idea-verify cross-model reviews."
+  fi
+
   if [ "$problems" -gt 0 ]; then
-    log_error "Codex preflight failed with $problems issue(s). Fix the above or rerun with --code-track claude."
+    log_error "Codex preflight failed with $problems issue(s). Fix the above or rerun with --codex-track claude."
     exit 1
   fi
   log_ok "Codex preflight passed."
 }
 
-if [ "$CODE_TRACK" = "codex" ] && [ "$LIST_ONLY" -eq 0 ] && [ "$DRY_RUN" -eq 0 ]; then
+if [ "$CODEX_TRACK" = "codex" ] && [ "$LIST_ONLY" -eq 0 ] && [ "$DRY_RUN" -eq 0 ]; then
   preflight_codex
 fi
 
@@ -329,7 +355,7 @@ log_info "Source : $SOURCE_DIR"
 log_info "Target : $TARGET_DIR"
 log_info "Mode   : $MODE$( [ "$DRY_RUN" -eq 1 ] && echo ' (dry-run)' )"
 log_info "Force  : $( [ "$FORCE" -eq 1 ] && echo yes || echo no )"
-log_info "Code   : track=$CODE_TRACK"
+log_info "Codex  : track=$CODEX_TRACK"
 echo
 
 if [ "$DRY_RUN" -eq 0 ]; then
@@ -350,9 +376,9 @@ install_one() {
   # and should be installed as-is.)
   local has_plain=0 has_variant=0 variant_file=""
   [ -f "$src/SKILL.md" ] && has_plain=1
-  if [ -f "$src/SKILL.${CODE_TRACK}.md" ]; then
+  if [ -f "$src/SKILL.${CODEX_TRACK}.md" ]; then
     has_variant=1
-    variant_file="SKILL.${CODE_TRACK}.md"
+    variant_file="SKILL.${CODEX_TRACK}.md"
   fi
   # If variant files exist but the selected track's variant is missing, warn
   # and fall back to whichever variant is present (preferring claude).
@@ -360,11 +386,11 @@ install_one() {
     if [ -f "$src/SKILL.claude.md" ]; then
       variant_file="SKILL.claude.md"
       has_variant=1
-      log_warn "$name: no SKILL.${CODE_TRACK}.md; falling back to SKILL.claude.md"
+      log_warn "$name: no SKILL.${CODEX_TRACK}.md; falling back to SKILL.claude.md"
     elif [ -f "$src/SKILL.codex.md" ]; then
       variant_file="SKILL.codex.md"
       has_variant=1
-      log_warn "$name: no SKILL.${CODE_TRACK}.md; falling back to SKILL.codex.md"
+      log_warn "$name: no SKILL.${CODEX_TRACK}.md; falling back to SKILL.codex.md"
     fi
   fi
 
@@ -381,7 +407,7 @@ install_one() {
 
   if [ "$DRY_RUN" -eq 1 ]; then
     if [ "$has_variant" -eq 1 ] && [ "$has_plain" -eq 0 ]; then
-      log_ok "would $action (copy, track=$CODE_TRACK): $name ← $src ($variant_file → SKILL.md)"
+      log_ok "would $action (copy, track=$CODEX_TRACK): $name ← $src ($variant_file → SKILL.md)"
     elif [ "$MODE" = "link" ]; then
       log_ok "would $action (symlink): $name → $src"
     else
@@ -409,7 +435,7 @@ install_one() {
       rm -f "$dst/SKILL.claude.md" "$dst/SKILL.codex.md"
     fi
     cp "$src/$variant_file" "$dst/SKILL.md"
-    log_ok "$action (copy, track=$CODE_TRACK): $name"
+    log_ok "$action (copy, track=$CODEX_TRACK): $name"
   elif [ "$MODE" = "link" ]; then
     # Use absolute symlink so the target is resilient to cwd changes.
     ln -s "$src" "$dst"

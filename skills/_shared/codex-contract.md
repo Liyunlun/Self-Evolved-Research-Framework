@@ -9,7 +9,7 @@
 > (`code-implement/SKILL.codex.md`, `code-review/SKILL.codex.md`) direct
 > Claude to read this file before calling Codex.
 >
-> **This file is only installed on Track B (`--code-track codex`).**
+> **This file is only installed on Track B (`--codex-track codex`).**
 > Track A installations (Claude-only) do not include it and do not reference
 > it.
 
