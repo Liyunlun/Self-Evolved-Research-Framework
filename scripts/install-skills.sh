@@ -160,9 +160,12 @@ fi
 
 # --- Codex preflight (only runs when --codex-track codex) ---------------------
 # Track B (codex) strictly requires all four of:
-#   1. `/codex:setup` passes (Codex CLI configured and authenticated)
-#   2. Superpowers installed at ~/.agents/skills/superpowers/ (with SKILL.md +
-#      test-driven-development/ subdirectory — Codex's TDD discipline).
+#   1. `codex login status` reports an authenticated session (non-interactive
+#      check — `/codex:setup` cannot be used here because it opens a TUI and
+#      fails in non-TTY shells).
+#   2. Superpowers installed at ~/.agents/skills/superpowers/ with the
+#      test-driven-development sub-skill (superpowers is a collection of
+#      sub-skills; there is no top-level SKILL.md).
 #   3. `/codex:review` skill available (used by code-review Track B).
 #   4. `mcp__codex__codex` MCP server reachable (used by writing-review and
 #      idea-verify Track B for cross-model review).
@@ -172,32 +175,35 @@ preflight_codex() {
 
   log_info "Codex track preflight — checking dependencies…"
 
-  # 1. /codex:setup
+  # 1. Codex CLI + authenticated login.
+  # We use `codex login status` instead of `codex /codex:setup` because the
+  # latter launches an interactive TUI that fails in non-TTY shells with
+  # "stdin is not a terminal". `codex login status` is a non-interactive
+  # subcommand that prints the current login state and exits with 0 when
+  # authenticated.
   if ! command -v codex >/dev/null 2>&1; then
     log_error "codex CLI not found on PATH. Install Codex before using --codex-track codex."
     problems=$((problems + 1))
   else
-    # `codex /setup` should exit 0 and emit a "ready"-style marker. We run it
-    # with a short timeout and inspect both exit code and output.
-    local setup_out=""
-    if ! setup_out="$(codex /codex:setup 2>&1)" || ! printf '%s' "$setup_out" | grep -qiE 'ready|ok|configured'; then
-      log_error "/codex:setup did not report ready. Run \`codex /codex:setup\` manually and resolve errors."
+    local login_out=""
+    if ! login_out="$(codex login status 2>&1)" || ! printf '%s' "$login_out" | grep -qiE 'logged in|authenticated'; then
+      log_error "Codex CLI is not logged in. Run \`codex login\` (ChatGPT or API key) and retry."
       problems=$((problems + 1))
     fi
   fi
 
-  # 2. Superpowers presence
+  # 2. Superpowers presence.
+  # Superpowers ships as a collection of sub-skills under
+  # ~/.agents/skills/superpowers/{sub-skill}/SKILL.md — there is no top-level
+  # SKILL.md. We verify the directory exists and that the specific sub-skill
+  # the Codex track depends on (test-driven-development) is installed.
   local sp="${HOME}/.agents/skills/superpowers"
   if [ ! -d "$sp" ]; then
     log_error "Superpowers skill not found at $sp. Install Superpowers before using --codex-track codex."
     problems=$((problems + 1))
   else
-    if [ ! -f "$sp/SKILL.md" ]; then
-      log_error "$sp exists but is missing SKILL.md — Superpowers install is incomplete."
-      problems=$((problems + 1))
-    fi
-    if [ ! -d "$sp/test-driven-development" ]; then
-      log_error "$sp is missing the test-driven-development/ subskill required by Codex track."
+    if [ ! -f "$sp/test-driven-development/SKILL.md" ]; then
+      log_error "$sp/test-driven-development/SKILL.md missing — Superpowers TDD sub-skill required by Codex track is not installed."
       problems=$((problems + 1))
     fi
   fi
