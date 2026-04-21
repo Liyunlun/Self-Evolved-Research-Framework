@@ -12,7 +12,7 @@ description: Generate rigorous academic figures — architecture diagrams, pipel
 ### 1. Understand the concept
 
 1. Read `methodology/approach.md` (if it exists) to anchor terminology with the project's own method description.
-2. If the figure depicts a specific section of a paper draft, peek at `paper/papers/{section}.tex` or `outputs/paper/` to match notation.
+2. If the figure depicts a specific section of a paper draft, peek at `paper/papers/{section}.tex` to match notation.
 3. Identify:
    - **What is being communicated?** — system structure, data flow, algorithmic stages, side-by-side comparison, conceptual relationship
    - **Who reads it?** — conference paper (TikZ), workshop slide (SVG), internal doc (SVG)
@@ -106,12 +106,12 @@ description: Generate rigorous academic figures — architecture diagrams, pipel
 
 ### 5. Save
 
-- TikZ → `outputs/paper/figures/{name}.tex`. Also emit a compile note:
+- TikZ → `paper/figures/{name}.tex`. Also emit a compile note:
   ```
-  To compile standalone: pdflatex outputs/paper/figures/{name}.tex
+  To compile standalone: pdflatex paper/figures/{name}.tex
   To include in paper:   \input{figures/{name}}  (then wrap with \begin{figure}...)
   ```
-- SVG → `outputs/paper/figures/{name}.svg`
+- SVG → `paper/figures/{name}.svg`
 - Optionally emit rendered preview (`.pdf` or `.png`) if user's tooling supports it, but keep the `.tex` / `.svg` as canonical source.
 
 ### 6. Iterate
@@ -120,8 +120,8 @@ description: Generate rigorous academic figures — architecture diagrams, pipel
 - Use `Edit` for small tweaks; rewrite with `Write` only on major redesigns.
 - Typical 2–4 iterations.
 
-**Inputs**: user concept + `methodology/approach.md` + relevant paper source (`paper/papers/*.tex`, `outputs/paper/*`)
-**Outputs**: `outputs/paper/figures/{name}.tex` (TikZ) or `outputs/paper/figures/{name}.svg`
+**Inputs**: user concept + `methodology/approach.md` + relevant paper source (`paper/papers/*.tex`)
+**Outputs**: `paper/figures/{name}.tex` (TikZ) or `paper/figures/{name}.svg`
 **Token**: ~3-10K (3-6K for first draft + 2-4K for iteration)
 **Composition**:
 - Figure done and belongs to a section → suggest `writing-draft` to integrate (`\includegraphics` + caption)
