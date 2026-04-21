@@ -9,7 +9,7 @@ when a skill's description matches the current conversation intent.
 
 ```
 skills/
-  {skill-name}/SKILL.md      # 52 SER skills
+  {skill-name}/SKILL.md      # 56 SER skills
   _shared/*.md               # Cross-cutting reference docs (not skills themselves)
   external/{name}/SKILL.md   # External skills (git submodules)
   td-nl/                     # Skill evolution infrastructure
@@ -20,7 +20,7 @@ skills/
 need them instruct Claude to Read them on demand. `_shared/` has no `SKILL.md`
 so it's ignored by `scripts/install-skills.sh`.
 
-## Skill index (52 SER + 1 external)
+## Skill index (56 SER + 1 external)
 
 ### Session lifecycle
 - `session-open`, `session-close`
@@ -37,7 +37,8 @@ so it's ignored by `scripts/install-skills.sh`.
 
 ### Theory & proofs
 - `theory-formalize`, `theory-decompose`, `theory-search`, `theory-counterexample`, `theory-generalize`
-- `proof-critique`, `proof-fix`, `proof-formalize`, `proof-verify`
+- `proof-write` (theorem → first draft), `proof-critique`, `proof-fix`, `proof-formalize`, `proof-verify`
+- Chain: `proof-write → proof-critique → proof-fix → proof-formalize → proof-verify`
 
 ### Writing
 - `writing-outline`, `writing-draft`, `writing-review`, `writing-polish`
@@ -46,10 +47,14 @@ so it's ignored by `scripts/install-skills.sh`.
 - `plan-suggest`, `plan-milestone`, `progress-capture`, `status-report`, `decision-analyze`, `experiment-analyze`
 
 ### Experiments
-- `experiment-run`, `experiment-monitor`
+- `experiment-plan` (design phase: claims / variables / baselines / ablations)
+- `experiment-dse` (hyperparameter sweep over a plan)
+- `experiment-run` (launch single config on GPU), `experiment-monitor` (poll)
+- Chain: `experiment-plan → experiment-dse → experiment-run → experiment-monitor → experiment-analyze`
 
 ### Ideas
-- `idea-discover`, `idea-verify`
+- `idea-discover` (generate), `idea-verify` (novelty check), `idea-refine` (rough → structured proposal)
+- Chain: `idea-discover → idea-verify → idea-refine → experiment-plan`
 
 ### Checklist engine
 - `checklist-create`, `checklist-verify`, `checklist-update`, `checklist-status`
