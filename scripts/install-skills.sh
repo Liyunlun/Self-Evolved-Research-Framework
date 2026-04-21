@@ -22,8 +22,21 @@
 #   -s, --source DIR      Source directory to scan (default: ./skills)
 #   -t, --target DIR      Target directory            (default: ./.claude/skills)
 #       --user            Shortcut for --target ~/.claude/skills (global install)
-#       --list            List discovered skills and exit (no installation)
+#       --only PATTERNS   Install only skills matching PATTERNS (comma-separated,
+#                         glob supported; e.g. 'paper-*,pixel-create').
+#                         Repeatable; union of all patterns is kept.
+#       --exclude PATTERNS  Skip skills matching PATTERNS (comma-separated, glob
+#                         supported; e.g. 'proof-*,theory-generalize'). Applied
+#                         after --only. Repeatable; union of all patterns.
+#       --list            List discovered skills (after --only/--exclude filters)
+#                         and exit without installing
 #       --no-color        Disable ANSI color output
+#
+# Selection examples:
+#   --only 'paper-*'                       # all paper-* skills
+#   --only paper-read,writing-draft        # pick two skills
+#   --exclude 'theory-*,proof-*'           # drop theory + proof families
+#   --only 'paper-*' --exclude paper-index # paper-* minus paper-index
 #
 # Exit codes:
 #   0  success (or nothing to do)
@@ -43,6 +56,8 @@ DRY_RUN=0
 FORCE=0
 LIST_ONLY=0
 USE_COLOR=1
+ONLY_PATTERNS=()
+EXCLUDE_PATTERNS=()
 
 # --- Helpers -------------------------------------------------------------------
 if [ -t 1 ]; then :; else USE_COLOR=0; fi
@@ -71,7 +86,8 @@ log_warn()    { echo "$(color yellow '[!]') $*" >&2; }
 log_error()   { echo "$(color red    '[x]') $*" >&2; }
 
 usage() {
-  sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'
+  # Print the header block (between the two ──── separators) as help text.
+  awk '/^# ─{10,}/{n++; next} n==1' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
@@ -87,6 +103,14 @@ while [ $# -gt 0 ]; do
     -t|--target)    [ $# -ge 2 ] || { log_error "--target requires an argument"; exit 1; }
                     TARGET_DIR="$2"; shift 2 ;;
     --user)         TARGET_DIR="${HOME}/.claude/skills"; shift ;;
+    --only)         [ $# -ge 2 ] || { log_error "--only requires an argument"; exit 1; }
+                    IFS=',' read -r -a _tmp <<<"$2"
+                    ONLY_PATTERNS+=("${_tmp[@]}")
+                    shift 2 ;;
+    --exclude)      [ $# -ge 2 ] || { log_error "--exclude requires an argument"; exit 1; }
+                    IFS=',' read -r -a _tmp <<<"$2"
+                    EXCLUDE_PATTERNS+=("${_tmp[@]}")
+                    shift 2 ;;
     --list)         LIST_ONLY=1; shift ;;
     --no-color)     USE_COLOR=0; shift ;;
     --)             shift; break ;;
@@ -136,6 +160,45 @@ mapfile -t DISCOVERED < <(discover_skills)
 
 if [ "${#DISCOVERED[@]}" -eq 0 ]; then
   log_warn "No SKILL.md files found under $SOURCE_DIR — nothing to install."
+  exit 0
+fi
+
+# --- Apply --only / --exclude filters ------------------------------------------
+# Glob patterns match against the skill's leaf directory name.
+name_matches_any() {
+  local name="$1"; shift
+  local p
+  for p in "$@"; do
+    # shellcheck disable=SC2053  # $p is a glob pattern, intentionally unquoted
+    [[ $name == $p ]] && return 0
+  done
+  return 1
+}
+
+filter_discovered() {
+  local mode="$1"; shift
+  local filtered=()
+  local entry name path
+  for entry in "${DISCOVERED[@]}"; do
+    IFS=$'\t' read -r name path <<<"$entry"
+    if name_matches_any "$name" "$@"; then
+      [ "$mode" = "include" ] && filtered+=("$entry")
+    else
+      [ "$mode" = "exclude" ] && filtered+=("$entry")
+    fi
+  done
+  DISCOVERED=("${filtered[@]}")
+}
+
+if [ "${#ONLY_PATTERNS[@]}" -gt 0 ]; then
+  filter_discovered include "${ONLY_PATTERNS[@]}"
+fi
+if [ "${#EXCLUDE_PATTERNS[@]}" -gt 0 ] && [ "${#DISCOVERED[@]}" -gt 0 ]; then
+  filter_discovered exclude "${EXCLUDE_PATTERNS[@]}"
+fi
+
+if [ "${#DISCOVERED[@]}" -eq 0 ]; then
+  log_warn "No skills matched --only/--exclude selection — nothing to install."
   exit 0
 fi
 
