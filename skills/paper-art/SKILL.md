@@ -1,11 +1,11 @@
 ---
-name: pixel-create
-description: Create pixel art / flat SVG visual identity for the research project — project mascots, concept illustrations, README hero images, slide decorations that stay visually consistent across paper, README, and presentation materials. Save to outputs/visuals/{name}.svg as a tracked deliverable. Triggers on "pixel art", "画像素图", "SVG illustration", "project mascot", "README hero image", "decorative visual for {slide|README|docs}".
+name: paper-art
+description: Create pixel art / flat SVG visual identity for the research project — project mascots, concept illustrations, README hero images, slide decorations that stay visually consistent across paper, README, and presentation materials. Save to outputs/visuals/{name}.svg as a tracked deliverable. Triggers on "pixel art", "画像素图", "SVG illustration", "project mascot", "README hero image", "decorative visual for {slide|README|docs}". For rigorous academic figures (architecture / pipeline / flow) use `paper-illustrate`; for data-driven plots (line / bar / scatter / heatmap) use `paper-figure`.
 ---
 
-# pixel-create
+# paper-art
 
-**Trigger**: User asks for a decorative or identity-level visual — pixel art, flat SVG, isometric illustration, README hero image, project mascot, slide decoration. For rigorous academic figures (architecture diagrams, pipelines, TikZ), route to `paper-illustrate` instead.
+**Trigger**: User asks for a decorative or identity-level visual — pixel art, flat SVG, isometric illustration, README hero image, project mascot, slide decoration. For rigorous academic figures (architecture, pipeline, TikZ), route to `paper-illustrate`; for data-driven plots (matplotlib / seaborn / PGFPlots), route to `paper-figure`.
 
 **Process**:
 
@@ -98,7 +98,8 @@ Row 7 (legs):       2 + gap + 2                (5 wide with gap)
 **Outputs**: `outputs/visuals/{name}.svg` (self-contained, no external deps)
 **Token**: ~2-6K (1-2K generation + 1-4K iteration)
 **Composition**:
-- For academic paper figures (architecture, pipeline, flow) → `paper-illustrate` instead
+- For academic paper figures (architecture, pipeline, flow) → `paper-illustrate`
+- For data-driven plots (line / bar / scatter / heatmap / table) → `paper-figure`
 - When visual is a listed checklist deliverable → `checklist-update`
 - When visual anchors a README/slide section → `writing-draft` for accompanying text
 

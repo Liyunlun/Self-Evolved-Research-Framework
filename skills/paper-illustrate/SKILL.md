@@ -1,11 +1,11 @@
 ---
 name: paper-illustrate
-description: Generate rigorous academic figures — architecture diagrams, pipeline illustrations, concept maps, flow charts, side-by-side method comparisons — as TikZ (LaTeX-ready) or SVG (slides/README). Triggers on "draw the architecture", "pipeline figure", "method overview diagram", "tikz figure", "画架构图", "画流程图", "illustrate the method", or any paper-facing figure request. For decorative/identity visuals (pixel art, mascots, README hero), use `pixel-create` instead.
+description: Generate rigorous academic figures — architecture diagrams, pipeline illustrations, concept maps, flow charts, side-by-side method comparisons — as TikZ (LaTeX-ready) or SVG (slides/README). Triggers on "draw the architecture", "pipeline figure", "method overview diagram", "tikz figure", "画架构图", "画流程图", "illustrate the method", or any paper-facing figure request. For data-driven plots (line / bar / scatter / heatmap / table) use `paper-figure`; for decorative/identity visuals (pixel art, mascots, README hero), use `paper-art`.
 ---
 
 # paper-illustrate
 
-**Trigger**: User requests a diagram intended for a paper, slide deck, or technical doc — architecture, pipeline, flow chart, concept map, comparison. If the request is decorative (cute mascot, pixel art hero), route to `pixel-create`.
+**Trigger**: User requests a diagram intended for a paper, slide deck, or technical doc — architecture, pipeline, flow chart, concept map, comparison. For data-driven plots (line / bar / scatter / heatmap) route to `paper-figure`; for decorative visuals (mascot, pixel art hero), route to `paper-art`.
 
 **Process**:
 

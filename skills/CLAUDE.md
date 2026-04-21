@@ -9,7 +9,7 @@ when a skill's description matches the current conversation intent.
 
 ```
 skills/
-  {skill-name}/SKILL.md      # 42 SER skills
+  {skill-name}/SKILL.md      # 52 SER skills
   _shared/*.md               # Cross-cutting reference docs (not skills themselves)
   external/{name}/SKILL.md   # External skills (git submodules)
   td-nl/                     # Skill evolution infrastructure
@@ -20,7 +20,7 @@ skills/
 need them instruct Claude to Read them on demand. `_shared/` has no `SKILL.md`
 so it's ignored by `scripts/install-skills.sh`.
 
-## Skill index (48 SER + 1 external)
+## Skill index (52 SER + 1 external)
 
 ### Session lifecycle
 - `session-open`, `session-close`
@@ -28,6 +28,12 @@ so it's ignored by `scripts/install-skills.sh`.
 ### Paper reading
 - `paper-read`, `paper-compare`, `paper-index`
 - `external/fey-r` — deep Feynman-method paper reading
+
+### Paper figures & build
+- `paper-illustrate` — structural diagrams (architecture, pipeline, flow) via TikZ or SVG
+- `paper-figure` — data-driven plots (line, bar, scatter, heatmap, table) from experiment results; script preserved under `paper/figures/scripts/`
+- `paper-art` — decorative / identity visuals (pixel art, project mascot, README hero); saved to `outputs/visuals/`
+- `paper-compile` — full LaTeX build pipeline (pdflatex×3 + bibtex/biber) with pre-compile integrity checks
 
 ### Theory & proofs
 - `theory-formalize`, `theory-decompose`, `theory-search`, `theory-counterexample`, `theory-generalize`

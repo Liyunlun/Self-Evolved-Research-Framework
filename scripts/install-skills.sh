@@ -23,7 +23,7 @@
 #   -t, --target DIR      Target directory            (default: ./.claude/skills)
 #       --user            Shortcut for --target ~/.claude/skills (global install)
 #       --only PATTERNS   Install only skills matching PATTERNS (comma-separated,
-#                         glob supported; e.g. 'paper-*,pixel-create').
+#                         glob supported; e.g. 'paper-*,code-*').
 #                         Repeatable; union of all patterns is kept.
 #       --exclude PATTERNS  Skip skills matching PATTERNS (comma-separated, glob
 #                         supported; e.g. 'proof-*,theory-generalize'). Applied

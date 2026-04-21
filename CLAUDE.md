@@ -97,7 +97,9 @@ should be chosen.
 | 30 | Review code changes after implementation | `code-review` |
 | 31 | Commit reviewed code changes | `code-commit` |
 | 32 | User asks for architecture/pipeline/flow diagram for a paper | `paper-illustrate` |
-| 33 | User asks for pixel art / project mascot / README hero / decorative SVG | `pixel-create` |
+| 33 | User asks for pixel art / project mascot / README hero / decorative SVG | `paper-art` |
+| 34 | User asks to compile the paper / build PDF / "编译论文" | `paper-compile` |
+| 35 | User asks to generate a data plot / bar chart / heatmap / table — or chained after `experiment-analyze` | `paper-figure` |
 
 ---
 
@@ -194,7 +196,7 @@ are `memory-write`, `memory-retrieve`, `memory-consolidate`, `memory-forget`.
 ├── README.md / LICENSE
 ├── skills/
 │   ├── CLAUDE.md          # Skill index
-│   ├── {skill-name}/      # 42 SER skills, each with SKILL.md + YAML frontmatter
+│   ├── {skill-name}/      # 52 SER skills, each with SKILL.md + YAML frontmatter
 │   │   └── SKILL.md       # Auto-loaded by Claude Code when the skill fires
 │   ├── _shared/           # Cross-cutting infra read by related skills
 │   │   ├── checklist-engine.md
