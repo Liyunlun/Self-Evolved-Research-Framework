@@ -42,4 +42,4 @@ Primary probes at this stage:
 - Do NOT flag dimensionality when the paper uses conventional shorthand (scalar vs 1-vector).
 
 ## Tests
-`tests/test_correctness.sh` — fixture contains an equation with mismatched dims: `y = W x + b` where `y ∈ R^3`, `W ∈ R^{2×4}`, `x ∈ R^4`. Output must contain `[critical]` flagging dimension mismatch.
+`tests/test_correctness.sh` — runs on a fixture paper containing an equation with a seeded dimensional mismatch between LHS and RHS; the stage's output must flag it at `[critical]` severity.

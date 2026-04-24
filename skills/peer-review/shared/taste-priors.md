@@ -11,6 +11,13 @@ the orchestrator uses for downstream aggregation; do NOT rename them.
 
 Use only this catalog. Do not invent new probes.
 
+**Finding-shape rule (all probes)**: every finding emitted by a probe must (a) cite
+internal evidence from the paper under review (section / equation / figure / table), (b)
+name the probe in the `probe:` tag, (c) state what empirical, theoretical, or
+presentational change would resolve or downgrade the finding. Do not write illustrative
+text that resembles the prose of any specific prior paper; write the concrete mechanics
+observed in *this* paper.
+
 ---
 
 ## Probe 1 — `mechanism_attribution`
@@ -19,11 +26,13 @@ Use only this catalog. Do not invent new probes.
 
 **Fires when** any of the following holds:
 - The paper claims mechanism M causes gain G, but no ablation isolates M.
-- The paper itself reports a setting where M does not hold (e.g., M was not observed) yet G still appears — so G cannot be *because* of M.
+- The paper itself reports a setting where M does not hold yet G still appears — so G cannot be *because* of M.
 - The experimental regime cannot produce behavior that would distinguish M-works from M-does-not-work.
 
-**Finding shape** (synthetic illustration — do NOT copy a real paper):
-> *The paper attributes the improvement on task T to mechanism M, but Table X reports the same improvement in a regime where Section Y states M does not activate. Either M is not the operative mechanism or the attribution is under-specified. Propose: add an ablation that removes M while keeping the rest of the architecture constant, and report G on the same benchmarks.*
+**What the finding must contain**:
+- The paper's stated attribution (mechanism → gain), cited to the section or figure that makes the claim.
+- The specific evidence inside the paper that undercuts the attribution — either a missing ablation or an internal inconsistency.
+- A concrete resolution: the ablation, control, or regime change that would isolate the claimed mechanism from confounds.
 
 **Severity rule**: if the paper's headline claim depends on the attribution → `major` (poster) or `critical` (oral/best_paper). If the attribution is secondary → `minor`.
 
@@ -35,11 +44,13 @@ Use only this catalog. Do not invent new probes.
 
 **Fires when** any of the following holds:
 - A derivation uses an equality/inequality that silently drops a term (the dropped term may be where the claimed phenomenon actually lives).
-- An assumption is stated but is trivially false for the actual deployment distribution (e.g., "assume uniform policy" for a well-trained policy).
-- A bound holds "for any π" or "for any x" but must necessarily include a degenerate case the authors did not intend.
+- An assumption is stated but is trivially false for the actual deployment distribution.
+- A bound holds "for any" quantifier over a set that must necessarily include a degenerate case the authors did not intend.
 
-**Finding shape** (synthetic illustration — do NOT copy a real paper):
-> *Equation K states H ≥ H' via a step that drops a non-negative term T. The paper's claimed benefit (multi-modality / diversity / stability) resides in T. Maximizing H' alone is therefore insufficient to drive the claimed benefit. Either bound T from below or demonstrate empirically that T is small at convergence.*
+**What the finding must contain**:
+- The exact step or assumption, cited to the equation or lemma number in the paper.
+- Why the assumption is load-bearing: name the part of the main claim that depends on it.
+- A concrete resolution: either bound the dropped/unjustified term, restrict the claim to the regime where the assumption holds, or supply an empirical check that the assumption is approximately satisfied.
 
 **Severity rule**: if the dropped/violated assumption is load-bearing for the main claim → `major` or higher; if it only affects a secondary claim → `minor`.
 
@@ -50,12 +61,14 @@ Use only this catalog. Do not invent new probes.
 **Principle**: For every primary claim, at least one experiment must run in a regime that could *fail* if the claim were wrong.
 
 **Fires when** any of the following holds:
-- The claim is about property P (e.g., exploration, generality, long-horizon behavior), but every benchmark either does not exercise P or is dominated by a different bottleneck.
+- The claim is about property P, but every benchmark either does not exercise P or is dominated by a different bottleneck.
 - The benchmarks are structurally similar to each other (same family, same observation modality, same horizon scale), so together they test one regime — not a range.
-- The paper generalizes to a broad category (e.g., "language models", "continuous control") but exercises ≤2 narrow instances of that category.
+- The paper generalizes to a broad category but exercises only a narrow slice of that category.
 
-**Finding shape** (synthetic illustration):
-> *Section Z claims property P as the central motivation. All reported benchmarks fall in regime R, where property P is not the bottleneck. Either rescope the claim to regime R, or add at least one benchmark in a regime where P-absent methods are known to fail.*
+**What the finding must contain**:
+- The paper's stated property-of-interest, cited to the motivation section.
+- The regime the reported benchmarks actually exercise, cited to the experiments section.
+- A concrete resolution: either rescope the claim to match the tested regime, or add a benchmark in a regime where property-P-absent methods are known to fail.
 
 **Severity rule**: `major` when the claim is headline; `minor` when the claim is secondary and the paper admits the limitation explicitly.
 
@@ -66,12 +79,14 @@ Use only this catalog. Do not invent new probes.
 **Principle**: When a method adds forward passes, backward passes, memory, or search, its computational cost must be reported *at the setting where the claimed advantage is strongest* — not at the cheapest setting.
 
 **Fires when** any of the following holds:
-- Wall-clock is reported only on the simpler/smaller environment, while the claim is about scaling to a larger one.
-- The method introduces K-way replication, J inner steps, or tree search, but the cost breakdown does not vary K / J / depth.
-- Back-of-envelope compute accounting (passes × batch × steps) produces a number that contradicts the reported wall-clock.
+- Wall-clock is reported only on a simpler/smaller environment, while the claim is about scaling to a larger one.
+- The method introduces a multiplicative factor (replication count, inner-loop depth, search width) but the reported cost does not vary that factor.
+- Back-of-envelope compute accounting (passes × batch × steps) contradicts the reported wall-clock.
 
-**Finding shape** (synthetic illustration):
-> *The method adds K auxiliary networks and one inner-loop solve per update. Wall-clock is reported only on the smallest benchmark. Because the claim is strongest on the largest benchmark, add a cost breakdown there. For orientation: reporting passes-per-update × K would already let readers check the trade-off.*
+**What the finding must contain**:
+- The method's added computational cost, identified in the algorithm or pseudocode.
+- The setting at which cost is reported vs. the setting at which the advantage is strongest.
+- A concrete resolution: the specific cost breakdown (e.g., per-update passes, or variation along the expensive axis) that would let the reader judge the trade-off.
 
 **Severity rule**: `major` when the cost could plausibly dominate the reported advantage; `minor` when the added cost is clearly negligible and the paper acknowledges it.
 
@@ -79,15 +94,19 @@ Use only this catalog. Do not invent new probes.
 
 ## Probe 5 — `terminology_audit`
 
-**Principle**: A loaded term (e.g., "causal", "bi-level", "self-supervised", "meta-") is a contribution only when the paper's mechanism distinctively realizes that concept. Using the term for a standard mechanism oversells the contribution.
+**Principle**: A loaded term is a contribution only when the paper's mechanism distinctively realizes that concept. Using the term for a standard mechanism oversells the contribution.
 
 **Fires when** any of the following holds:
-- The named mechanism is mathematically equivalent (or near-equivalent) to a well-known un-flashy operation (importance weighting, alternating updates, reweighted regression, etc.).
-- The paper does not cite or contrast the un-flashy version.
-- A structural property of the mechanism (e.g., symmetry, commutativity) directly contradicts the semantic load of the term.
+- The named mechanism is mathematically equivalent (or near-equivalent) to an established operation whose ordinary name does not carry the loaded connotation.
+- The paper does not cite or contrast the established version.
+- A structural property of the mechanism directly contradicts the semantic load of the term.
 
-**Finding shape** (synthetic illustration):
-> *The paper terms its mechanism "<loaded term>". Inspection of Equation K shows the mechanism reduces to <standard operation>. The reported improvements are compatible with <standard operation> being the operative effect. Either provide a contrast experiment that <standard operation> cannot reproduce, or rename the mechanism to reflect its actual operation.*
+**What the finding must contain**:
+- The term in question, cited to the title, abstract, or contribution list.
+- The equation that shows the mechanism reducing to a standard operation, cited by equation number.
+- A concrete resolution: either add a contrast experiment that the standard operation cannot reproduce, or rename the mechanism to reflect its actual operation.
+
+This probe is *structural*, not stylistic: the trigger is "the math equals a standard operation", not "the name sounds fancy."
 
 **Severity rule**: `major` when the loaded term is in the title or contribution list; `minor` when it only appears in section headings.
 
@@ -98,13 +117,15 @@ Use only this catalog. Do not invent new probes.
 **Principle**: A theorem is a contribution only when it explains the empirical gain. Existence theorems, combinations of two prior bounds, or asymptotic results that do not tighten any practical regime are decorative.
 
 **Fires when** any of the following holds:
-- The theorem establishes that "there exists a function F that achieves property Q", but the paper's method does not compute F.
-- The theorem is the composition of two well-known results with no new step.
-- The theorem's hypotheses rule out the realistic regime (e.g., convexity, infinite samples, continuous-time limit) while the method operates in the discrete / finite / non-convex regime.
+- The theorem establishes existence of an object the paper's method does not compute.
+- The theorem is the composition of prior results with no new step.
+- The theorem's hypotheses rule out the realistic regime while the method operates outside that regime.
 - The paper provides no link between the theorem's conclusion and any experimental metric that improved.
 
-**Finding shape** (synthetic illustration):
-> *Theorem T concludes <existence / asymptotic property>. Nothing in the proof connects T to the empirical improvement on Table X. Either restate T to directly imply the improved metric, or move T to an appendix and refocus the main-text claim.*
+**What the finding must contain**:
+- The theorem's precise conclusion, cited to its numbered statement.
+- The gap between the theorem's conclusion and any experimental metric in the paper.
+- A concrete resolution: either restate the theorem to directly imply an improved metric, or move it to an appendix and refocus the main-text claim.
 
 **Severity rule**: `major` at oral/best_paper (theory contribution overstated); `minor` at poster (decorative theorem is tolerated if clearly labeled).
 
@@ -116,8 +137,10 @@ Use only this catalog. Do not invent new probes.
 
 **Fires when**: a weakness lacks a resolution path — no added experiment, no clarification, no proof step, no rewording would change the reviewer's severity.
 
-**Finding shape** (stated in the review's Weaknesses bullet itself, not a separate finding):
-> *[major] <weakness statement>. Resolution: <what evidence or clarification would reduce this to minor or dissolve it>.*
+**What the audited bullet must contain**:
+- The weakness statement, severity-tagged.
+- A trailing `Resolution:` clause that names the specific evidence or clarification that would reduce the severity or dissolve the weakness.
+- If no such resolution exists, the weakness itself is out of scope for this review — drop it.
 
 **Severity rule**: this probe does not produce new findings; it audits existing ones. Applied by `peer-review-critique` during self-critique (Sub-step B).
 
@@ -129,6 +152,7 @@ Use only this catalog. Do not invent new probes.
 - **Cite internal evidence.** Each finding must cite a section, equation, figure, or table from the paper being reviewed, per `base_instruction.md`.
 - **Probes are floors, not ceilings.** The must-check lists in each stage SKILL are separate. Probes add to them; they do not replace them.
 - **Language register** matches the rest of the review: neutral, evidence-first, constructive. No sarcasm, no rhetorical questions.
+- **Do not import prose** from unrelated papers when writing a finding. Describe only what is in the paper under review.
 
 ## Probe-to-stage map
 

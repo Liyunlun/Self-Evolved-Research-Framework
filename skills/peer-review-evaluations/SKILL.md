@@ -33,7 +33,7 @@ Primary probes at this stage:
 5. Write findings with concrete table/figure citations.
 
 ## Tools
-- **Bash** — for running snippets and doing arithmetic sanity checks (e.g., `python -c "assert 0 <= 0.95 <= 1"`).
+- **Bash** — for running snippets from the paper and for arithmetic sanity checks on reported numbers. Use a temp dir; disallow network and filesystem access outside it.
 - Read, Grep on markdown.
 
 ## Output
@@ -44,4 +44,4 @@ Primary probes at this stage:
 - Do NOT flag missing baselines the paper explicitly justifies as out-of-scope.
 
 ## Tests
-`tests/test_evaluations.sh` — fixture paper reports accuracy `1.3` in a results table. Output must contain `[critical]` flagging impossible/out-of-range value.
+`tests/test_evaluations.sh` — runs on a fixture paper with a seeded out-of-range reported metric; the stage's output must flag it at `[critical]` severity.

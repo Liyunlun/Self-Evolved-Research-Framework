@@ -20,9 +20,9 @@ Fifth stage of the AAAI-26 AI peer-review pipeline. **Uses WebSearch + WebFetch.
 
 ## Taste probes (from `shared/taste-priors.md`)
 Primary probe at this stage:
-- **`terminology_audit`** — When the paper names its mechanism with a loaded term (e.g., "causal", "bi-level", "meta-", "self-supervised"), check whether the underlying equations reduce to a standard un-flashy operation (importance weighting, alternating updates, reweighted regression, EMA, etc.). If they do, and the paper does not contrast against the standard version, tag the finding with `probe: terminology_audit`. Propose a rename in the resolution text — it both shows the concern and gives the authors an actionable path.
+- **`terminology_audit`** — When the paper names its mechanism with a term that carries a loaded theoretical or methodological connotation, check whether the underlying equations reduce to a standard, established operation. If they do, and the paper does not contrast against the standard version, tag the finding with `probe: terminology_audit`. Propose a rename in the resolution text — it both shows the concern and gives the authors an actionable path.
 
-This probe is *structural*, not stylistic: the trigger is "the math equals a standard operation", not "the name sounds fancy."
+This probe is *structural*, not stylistic: the trigger is "the math equals a standard operation", not "the name sounds fancy." The definition of "loaded term" is contextual — any term whose ordinary technical meaning implies a stronger claim than the underlying operation realizes qualifies.
 
 ## Process
 1. Extract the paper's main claim and 3–5 keywords.
@@ -45,4 +45,4 @@ This probe is *structural*, not stylistic: the trigger is "the math equals a sta
 - Do NOT rely on a single search result — corroborate.
 
 ## Tests
-`tests/test_significance.sh` — fixture contains a fake citation `Nonexistent et al. (2025). A Paper That Does Not Exist. NeurIPS 2099.`. Output must flag this as `[critical]` hallucinated/unverifiable citation OR the QA stage will catch it — either is acceptable. Static test accepts either location.
+`tests/test_significance.sh` — runs on a fixture paper containing a seeded unverifiable citation. The stage's output OR the downstream QA stage must flag it at `[critical]` as hallucinated/unverifiable; the static test accepts a flag in either location.

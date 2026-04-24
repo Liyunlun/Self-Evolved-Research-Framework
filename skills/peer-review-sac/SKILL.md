@@ -60,8 +60,8 @@ Weaknesses (all reviewers agree, tagged with max severity across reviewers):
 - ...
 
 ## Points of disagreement
-- <normalized weakness key> — R1: [major]; R2: not flagged; R3: [minor].
-  SAC note: <one-line adjudication — e.g. "Downgrade to major since R1's severity is supported by §4.2 evidence the others did not examine.">
+- <normalized weakness key> — R1: <severity or not flagged>; R2: <severity or not flagged>; R3: <severity or not flagged>.
+  SAC note: <one-line adjudication stating which reviewer's severity is supported by the strongest internal evidence and citing the section / equation / table in the paper that resolves the disagreement.>
 - ...
 
 ## Unified Recommendation  <!-- only when run_config.yaml has recommendation: yes -->
@@ -91,7 +91,7 @@ None (just Read/Write).
 
 ## Tests
 
-`tests/test_sac.sh` — feed 3 mock `06_final.md` files (2 weak_accept, 1 weak_reject at oral level) and verify:
-- `sac_summary.md` emits `weak reject` (median rounded down at oral).
-- Only the 4 specified sections are present.
-- No `## Synopsis / Summary / Strengths / Weaknesses / References` headers appear.
+`tests/test_sac.sh` — runs on mock reviewer final reviews whose recommendation tokens and configured venue level exercise the median-with-tie-break logic. The stage's output must:
+- emit a `## Unified Recommendation` section whose first token is the label selected by the documented median and tie-break rules;
+- contain only the four specified section headings (in order);
+- contain none of the AAAI per-reviewer section headings (`## Synopsis`, `## Summary`, `## Strengths`, `## Weaknesses`, `## References`).

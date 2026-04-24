@@ -45,4 +45,4 @@ None. Use Read + Grep on the markdown. Open the PDF only for figure/table captio
 - Do NOT evaluate experiments here — that's `evaluations`.
 
 ## Tests
-`tests/test_story.sh` — runs this stage on fixture `toy_paper.pdf` (which has a seeded [major] gap-claim flaw) and verifies the output contains `[major]` flagging the unsupported gap.
+`tests/test_story.sh` — runs this stage on a fixture paper that contains a seeded unsupported-gap flaw at `[major]` severity; the stage's output must flag it at `[major]`.

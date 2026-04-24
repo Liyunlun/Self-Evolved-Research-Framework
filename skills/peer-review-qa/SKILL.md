@@ -21,7 +21,7 @@ Final stage: an independent critic that audits the finished review. Uses web fet
 ## Process
 1. Read `06_final.md`. Parse the six sections (fail loudly if any missing).
 2. Regex scan for patterns that leak identity: explicit author name mentions not present in the paper's own text; phrases like "I know the authors", "authors' prior work at X".
-3. Regex scan for offensive/biased word list (e.g., "trivial", "garbage", "amateur" as pejoratives — context-aware).
+3. Regex scan for pejorative, dismissive, or ad-hominem language directed at the authors or the work. Judge in context: a word that is technical in one sentence may be demeaning in another. Flag only usages where the same point could be made with neutral, evidence-first language.
 4. Sample up to 5 citations. For each: WebSearch the title; WebFetch the top result; compare authors/year/venue.
 5. Write `07_qa.md` per `shared/review_schema.md` with:
    - `severity_counts.critical` ≥ 1 if any hallucinated citation found or identity disclosed
@@ -41,4 +41,4 @@ Final stage: an independent critic that audits the finished review. Uses web fet
 - Do NOT re-audit content correctness (that was earlier stages).
 
 ## Tests
-`tests/test_qa.sh` — supply a mock `06_final.md` containing a fake citation `Nonexistent, A. (2025). Paper That Doesn't Exist. NeurIPS 2099.` and an author-identity leak. Output must flag both as `[critical]`.
+`tests/test_qa.sh` — runs on a mock `06_final.md` with a seeded unverifiable citation and a seeded author-identity disclosure; the stage's output must flag both at `[critical]` severity.
