@@ -24,3 +24,4 @@ ser-v*.zip
 _trash/
 .claude/worktrees/
 .claude/skills/
+outputs/
