@@ -1,0 +1,50 @@
+# Per-run venue-level bar and acceptance thresholds.
+# The orchestrator looks up one top-level key (poster | oral | best_paper) and
+#  (a) appends its `bar` text to base_instruction.md when dispatching every stage,
+#  (b) passes `critical_threshold` / `major_threshold` / `required_qualities`
+#      to peer-review-critique for the final recommendation computation.
+#
+# Users can edit the drafted bar per-run via the orchestrator's interactive
+# prompt; the edited text is saved to outputs/.../level_bar.md and overrides
+# the `bar` field below for that single run (this file is never mutated).
+
+poster:
+  label: "Poster (NeurIPS/ICML/ICLR poster track)"
+  bar: |
+    Paper must be technically sound and present at least one clearly useful
+    result. Incremental contributions are acceptable. The reviewer should
+    focus on correctness and minimal-novelty thresholds, not transformative
+    impact.
+  required_qualities: [soundness]
+  critical_threshold: 1    # critical_count >= this -> reject
+  major_threshold: 4       # major_count > this -> weak reject
+
+oral:
+  label: "Oral / Spotlight"
+  bar: |
+    Paper must be technically sound AND present a genuinely new insight AND
+    demonstrate a solid method validated by strong empirical or theoretical
+    evidence. Purely incremental contributions are NOT acceptable at this
+    level. The reviewer should actively probe whether the claimed insight is
+    truly new and whether the method's validation is strong enough to
+    warrant a spotlight slot.
+  required_qualities: [soundness, novel_insight, strong_method]
+  critical_threshold: 1
+  major_threshold: 2
+
+best_paper:
+  label: "Best Paper"
+  bar: |
+    Paper must be flawless in correctness and presentation, present a
+    transformative insight that materially advances the field, and
+    demonstrate a best-in-class method that sets a new standard. Any
+    critical or major flaw disqualifies. Even several minor presentation
+    issues should weigh against a best-paper recommendation.
+  required_qualities:
+    - soundness
+    - novel_insight
+    - strong_method
+    - best_in_class
+    - flawless_presentation
+  critical_threshold: 1
+  major_threshold: 1

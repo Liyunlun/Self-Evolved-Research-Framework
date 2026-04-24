@@ -35,5 +35,6 @@ run "Layer 1: static lint"        "$PY" test_skills_static.py
 run "Layer 2: negative cases"     "$PY" test_negative_cases.py
 run "Layer 3: stage findings"     "$PY" test_stage_findings.py
 run "Layer 4: E2E pipeline"       "$PY" test_pipeline_e2e.py
+run "Layer 5: SAC golden"         bash "../../peer-review-sac/tests/test_sac.sh"
 
 echo "---- all tests passed ----"

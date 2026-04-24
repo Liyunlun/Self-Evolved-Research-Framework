@@ -34,7 +34,10 @@ STAGE_SKILLS = [
     "peer-review-critique",
     "peer-review-qa",
 ]
-ALL_SKILLS = [ORCHESTRATOR] + STAGE_SKILLS
+AUX_SKILLS = [
+    "peer-review-sac",   # multi-reviewer synthesizer
+]
+ALL_SKILLS = [ORCHESTRATOR] + STAGE_SKILLS + AUX_SKILLS
 
 
 def read_frontmatter(skill_md: pathlib.Path) -> dict | None:
@@ -70,16 +73,25 @@ def main() -> int:
         if not isinstance(desc, str) or len(desc) < 40:
             errors.append(f"{s}: description too short ({len(desc)} chars, need >=40)")
 
-    # 4: orchestrator references all stage skills
+    # 4: orchestrator references all stage skills + SAC + level config
     orch_text = (SKILLS_ROOT / ORCHESTRATOR / "SKILL.md").read_text()
     for stage in STAGE_SKILLS:
         if stage not in orch_text:
             errors.append(f"orchestrator SKILL.md does not reference {stage}")
+    for aux in AUX_SKILLS:
+        if aux not in orch_text:
+            errors.append(f"orchestrator SKILL.md does not reference {aux}")
+    for keyword in ("level", "reviewers", "recommendation"):
+        if keyword not in orch_text:
+            errors.append(
+                f"orchestrator SKILL.md does not mention '{keyword}' "
+                f"(required for interactive-launch documentation)"
+            )
 
     # 5: shared assets present
     shared = SKILLS_ROOT / ORCHESTRATOR / "shared"
     for asset in ("base_instruction.md", "review_schema.md",
-                  "output_format.md", "rubric.yaml"):
+                  "output_format.md", "rubric.yaml", "review_level.yaml"):
         p = shared / asset
         if not p.is_file():
             errors.append(f"missing shared asset: {p}")
@@ -96,6 +108,27 @@ def main() -> int:
         for stage, spec in rubric.items():
             if "must_check" not in (spec or {}):
                 errors.append(f"rubric.yaml stage '{stage}' missing must_check list")
+
+    # 7: review_level.yaml parses and contains expected levels + fields
+    level_path = shared / "review_level.yaml"
+    if level_path.is_file():
+        levels = yaml.safe_load(level_path.read_text()) or {}
+        expected_levels = {"poster", "oral", "best_paper"}
+        missing_levels = expected_levels - set(levels.keys())
+        if missing_levels:
+            errors.append(
+                f"review_level.yaml missing levels: {sorted(missing_levels)}"
+            )
+        for lname, lspec in levels.items():
+            if not isinstance(lspec, dict):
+                errors.append(f"review_level.yaml[{lname}] is not a mapping")
+                continue
+            for field in ("bar", "required_qualities",
+                          "critical_threshold", "major_threshold"):
+                if field not in lspec:
+                    errors.append(
+                        f"review_level.yaml[{lname}] missing field: {field}"
+                    )
 
     if errors:
         print("FAIL: static lint", file=sys.stderr)
