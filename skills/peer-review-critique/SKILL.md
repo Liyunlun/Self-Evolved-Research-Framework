@@ -1,6 +1,6 @@
 ---
 name: peer-review-critique
-description: Stage 6 of the peer-review pipeline. Compiles findings from stages 1-5 into an AAAI-format draft review, then performs a self-critique pass (check for unsupported claims, factual errors, incomplete citations), then revises the draft into the final review. When `verdict=true` is passed by the orchestrator, also emits a `## Verdict` section with Rate (strong accept / accept / weak accept / weak reject / reject / strong reject) and Confidence (1-5). Invoked by the `peer-review` orchestrator; standalone triggers include "compile these review findings into a review", "self-critique this draft review".
+description: Stage 6 of the peer-review pipeline. Compiles findings from stages 1-5 into an AAAI-format draft review, then performs a self-critique pass (check for unsupported claims, factual errors, incomplete citations), then revises the draft into the final review. When run_config.yaml has recommendation=yes, also emits a venue-level-aware accept/weak accept/weak reject/reject recommendation. Invoked by the `peer-review` orchestrator; standalone triggers include "compile these review findings into a review", "self-critique this draft review".
 ---
 
 # peer-review-critique
@@ -11,7 +11,9 @@ Combined compile + self-critique + revise stage. This is one skill because the t
 - `paper_pdf`, `paper_md`, `paper_id`
 - All prior stage outputs: `01_story.md`, `02_presentation.md`, `03_evaluations.md`, `04_correctness.md`, `05_significance.md`
 - `shared/base_instruction.md`, `shared/review_schema.md`, `shared/output_format.md` (required final format)
-- Optional flag `verdict` (bool, default false): when true, emit a final `## Verdict` section.
+- `shared/review_level.yaml` (for the level's `critical_threshold`, `major_threshold`, `required_qualities`)
+- `run_config.yaml` (to look up `level` and `recommendation` flag; and `reviewer_backgrounds[i]` when running under a reviewer sub-agent)
+- `level_bar.md` (appended to `base_instruction.md` under `## Level bar`; affects how you weigh findings)
 
 ## Process (three sub-steps, one skill)
 
@@ -36,42 +38,52 @@ Combined compile + self-critique + revise stage. This is one skill because the t
    - Severity inflation (is that really [critical] or just [major]?)
 7. Produce a critique list (mental or scratch).
 
-### Sub-step C: Revise
+### Sub-step C: Revise (and emit recommendation)
 8. Apply all critique fixes to the draft.
 9. Verify all six AAAI section headings are present verbatim.
+10. **Recommendation** (only if `run_config.yaml` has `recommendation: yes`):
+    - Aggregate severity counts across stages 01–05 (sum the `severity_counts` YAML frontmatter from each `NN_<stage>.md`).
+    - Load `shared/review_level.yaml[<level>]` for `critical_threshold`, `major_threshold`, `required_qualities`.
+    - Apply the decision logic documented in `shared/output_format.md` (§ "Decision mapping"):
 
-### Sub-step D: Verdict (only when `verdict=true`)
-10. Compute the Rate by mapping the severity-tagged weakness counts + strengths balance:
-    - 0 critical, 0-1 major, positive strength signal → `accept` or `strong accept`
-    - 0 critical, 2-3 major → `weak accept`
-    - 0 critical, 4+ major OR 1 critical at the edges → `weak reject`
-    - 1 critical in the method/correctness core → `reject`
-    - 2+ critical compounding across dimensions → `strong reject`
-    Adjust up or down by one step if the Strengths section carries unusually strong (or weak) positive signal. Rate MUST be one of: `strong accept` | `accept` | `weak accept` | `weak reject` | `reject` | `strong reject`.
-11. Set Confidence (integer 1-5):
-    - 5: all dimensions scrutinized, evidence is self-checked, reviewer has domain expertise and all claims in the review are cited.
-    - 4: same as 5 but at least one dimension relied on a shallow pass or an external reference.
-    - 3: default when some findings are uncertain or lacked verification (e.g., could not re-run code).
-    - 2: multiple findings hinge on assumed facts rather than cited evidence.
-    - 1: outside of the reviewer's expertise or read at very high level.
-12. Write a 1-2 sentence rationale that (a) maps the Strengths/Weaknesses balance to the Rate and (b) justifies the Confidence. Do NOT introduce new findings here.
-13. Append the `## Verdict` section exactly per `shared/output_format.md § Optional Verdict section`.
+      ```
+      if critical_count >= level.critical_threshold:
+          rec = reject
+      elif major_count > level.major_threshold:
+          rec = weak_reject
+      elif any required_quality is missing per stage findings:
+          rec = weak_reject
+      elif level == best_paper and minor_count > 3:
+          rec = weak_accept
+      elif (critical + major + minor) == 0:
+          rec = accept
+      else:
+          rec = weak_accept
+      ```
 
-### Sub-step E: Write
-14. Write final to `outputs/peer-review/<paper_id>/06_final.md`.
+      For `oral` / `best_paper`: if neither the `story` nor `significance` stage surfaces a
+      finding supporting a "novel insight" AND the paper's contribution reads as
+      incremental, degrade the result by one step (accept→weak accept, weak accept→weak
+      reject).
+    - Append a `## Recommendation` section to the review. The first non-blank line is the
+      literal token (`accept` / `weak accept` / `weak reject` / `reject`). The next line
+      begins with `Justification:` and cites (a) the aggregate severity counts, and (b)
+      the top 1–2 weakness bullets (by severity) that drove the decision — especially
+      when the recommendation is `weak reject` or `reject`.
+11. Write final to `outputs/peer-review/<paper_id>/06_final.md` (or `reviewer_<i>/06_final.md` when invoked from a reviewer sub-agent).
 
 ## Tools
 None (just Read/Write).
 
 ## Output
-`outputs/peer-review/<paper_id>/06_final.md` — must conform to `shared/output_format.md`. Unlike stage outputs 01-05, this file is the **final review itself**, not a findings file.
+`outputs/peer-review/<paper_id>/06_final.md` (or `reviewer_<i>/06_final.md`) — must conform to `shared/output_format.md`. Unlike stage outputs 01-05, this file is the **final review itself**, not a findings file. When `recommendation: yes`, it also contains a `## Recommendation` section after `## References`.
 
 ## Failure modes to avoid
 - Do NOT include findings that contradict each other without adjudication.
 - Do NOT drop `[critical]` findings when revising — only clarify or re-sever.
-- Do NOT add new content in Sub-step C that wasn't in the draft or the critique list.
-- Do NOT emit `## Verdict` when `verdict=false` (even a placeholder is a schema violation).
-- Do NOT invent a Rate outside the six allowed strings, and do NOT write Confidence as a float.
+- Do NOT add new content in Sub-step C that wasn't in the draft or the critique list, except for the `## Recommendation` section.
+- Do NOT emit a recommendation when `run_config.yaml` has `recommendation: no` (or the file is absent) — in that case, omit the section entirely.
+- Do NOT invent severity counts; always aggregate from the stage findings' YAML frontmatter.
 
 ## Tests
-`tests/test_critique.sh` — supply mock stage outputs missing a `## Strengths` section. Verify final review adds one. Also verify exact presence of all six AAAI headings in output.
+`tests/test_critique.sh` — supply mock stage outputs missing a `## Strengths` section. Verify final review adds one. Also verify exact presence of all six AAAI headings in output, and that (when recommendation is requested) the `## Recommendation` section is present and its first token matches one of the four allowed labels.
