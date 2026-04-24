@@ -36,6 +36,7 @@ Combined compile + self-critique + revise stage. This is one skill because the t
    - Factual errors (numbers, section/equation refs that don't exist)
    - Incomplete citations (every APA entry must have author/year/venue)
    - Severity inflation (is that really [critical] or just [major]?)
+   - **`vote_moving_weakness`** (from `shared/taste-priors.md`) — every `[major]` or `[critical]` weakness must be phrased so the authors can tell what concrete evidence (added experiment, clarification, proof step, rewording) would resolve or downgrade it. A weakness the authors cannot act on is a complaint, not a review; rewrite it to end with a resolution clause, e.g. `Resolution: <what would reduce this to minor>`, or drop it.
 7. Produce a critique list (mental or scratch).
 
 ### Sub-step C: Revise (and emit recommendation)

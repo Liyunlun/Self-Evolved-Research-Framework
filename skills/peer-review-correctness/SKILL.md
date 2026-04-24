@@ -19,6 +19,11 @@ Fourth stage of the AAAI-26 AI peer-review pipeline. **Uses Bash as code interpr
 4. **figure_axis_labels_match_claims** — If text says "Fig 3 shows X decreases with Y", axes must be X and Y.
 5. **table_numbers_consistent_across_text_and_table** — Number cited in prose must match the cell in the table.
 
+## Taste probes (from `shared/taste-priors.md`)
+Primary probes at this stage:
+- **`hidden_assumption_audit`** — For each derivation, enumerate every assumption it invokes (including implicit ones — bounds that drop terms, "for any π", "assuming convergence", distributional assumptions). For each, check whether the paper justifies it in the regime the method operates. If an assumption is load-bearing and unjustified, tag the finding with `probe: hidden_assumption_audit`.
+- **`decorative_theorem`** — For each theorem, ask: *does its conclusion imply the empirical improvement reported in experiments?* Existence results, compositions of two prior bounds, and asymptotic statements about regimes the method does not occupy should be tagged with `probe: decorative_theorem`.
+
 ## Process
 1. Pull all numbered equations from the markdown. For each, parse LHS and RHS; note declared dimensions/shapes from surrounding prose.
 2. Use Bash + Python sympy (if available) to symbolically verify 1–3 key equations. Log what you checked.

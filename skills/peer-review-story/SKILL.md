@@ -20,6 +20,12 @@ First stage of the AAAI-26 AI peer-review pipeline. No external tools — pure r
 3. **contribution_list_matches_content** — Every bullet in the contributions list must map to a concrete section/experiment. Flag orphan contributions and flag undisclosed contributions.
 4. **narrative_coherence** — Does motivation → method → experiments → claim form a straight line, or are there non-sequiturs?
 
+## Taste probes (from `shared/taste-priors.md`)
+Primary probe at this stage:
+- **`mechanism_attribution`** — For each contribution the paper claims, ask: *would the reported results survive if this mechanism were removed?* If the paper does not provide (or could not provide given its setup) an experiment that would isolate the claimed mechanism, fire this probe. Tag the finding with `probe: mechanism_attribution`.
+
+Apply `terminology_audit` lightly here only when a loaded term appears in the contribution list; it will be audited in depth by `peer-review-significance`.
+
 ## Process
 1. Read the markdown. Locate: abstract, introduction (esp. final 1-2 paragraphs listing contributions), related work, conclusion.
 2. For each must-check item, find concrete evidence in the paper. Cite it.

@@ -18,6 +18,12 @@ Fifth stage of the AAAI-26 AI peer-review pipeline. **Uses WebSearch + WebFetch.
 3. **cited_work_accuracy** — Spot-check 3–5 citations from the bibliography. Does the cited author/year/venue exist? Use WebSearch.
 4. **missing_key_related_work** — Any widely-cited work on the same topic that the paper fails to cite?
 
+## Taste probes (from `shared/taste-priors.md`)
+Primary probe at this stage:
+- **`terminology_audit`** — When the paper names its mechanism with a loaded term (e.g., "causal", "bi-level", "meta-", "self-supervised"), check whether the underlying equations reduce to a standard un-flashy operation (importance weighting, alternating updates, reweighted regression, EMA, etc.). If they do, and the paper does not contrast against the standard version, tag the finding with `probe: terminology_audit`. Propose a rename in the resolution text — it both shows the concern and gives the authors an actionable path.
+
+This probe is *structural*, not stylistic: the trigger is "the math equals a standard operation", not "the name sounds fancy."
+
 ## Process
 1. Extract the paper's main claim and 3–5 keywords.
 2. Run WebSearch on `<keyword> <year-range>` (2023–present for AI/ML). Scan top-10 results; pick 2–3 closest papers.
