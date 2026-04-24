@@ -1,0 +1,32 @@
+# Expected findings per stage for the toy fixture paper.
+# Each stage MUST (at minimum) flag an item matching the listed pattern + severity.
+
+story:
+  - severity: major
+    pattern: "gap|prior work|claim"     # related work contradicts claimed "never been studied"
+    reason: "Related work shows Smith & Jones 2020, Doe et al. 2021, Lee 2022 all address flawed-input classification"
+
+presentation:
+  - severity: minor
+    pattern: "heading|duplicate|repeat|section"
+    reason: "Two consecutive '## 3. Method' sections"
+
+evaluations:
+  - severity: critical
+    pattern: "1\\.3|range|impossible|accuracy"
+    reason: "Reported accuracy 1.30 is outside [0,1]"
+
+correctness:
+  - severity: critical
+    pattern: "dimension|shape|mismatch|R\\^3|R\\^2"
+    reason: "y = W x + b: W is R^{2x4}, x is R^4, so W x is R^2, but y is R^3 — dimension mismatch"
+
+significance:
+  - severity: critical
+    pattern: "Nonexistent|hallucinat|fabricat|cannot verify|does not exist"
+    reason: "Citation Nonexistent et al. 2025 is fabricated"
+
+qa:
+  - severity: critical
+    pattern: "Nonexistent|hallucinat|citation"
+    reason: "QA citation hallucination spot check must flag Nonexistent et al. 2025"

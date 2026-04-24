@@ -1,0 +1,60 @@
+{
+  "backend": "shim",
+  "sessions": [
+    {
+      "session": "s8",
+      "v_l_old": 5.0,
+      "v_l_new": 6.126,
+      "skills": {
+        "design-converge": {
+          "net_delta": 1,
+          "td_error": 0.963,
+          "strength": "soft",
+          "V": 5.0,
+          "V_next": 6.25,
+          "confidence": "high"
+        },
+        "general-research": {
+          "net_delta": 1,
+          "td_error": 1.625,
+          "strength": "hard",
+          "V": 5.0,
+          "V_next": 6.25,
+          "confidence": "high"
+        },
+        "session-close": {
+          "net_delta": 0,
+          "td_error": 0.2,
+          "strength": "drop",
+          "V": 5.0,
+          "V_next": 6.0,
+          "confidence": "high"
+        },
+        "writing-draft": {
+          "net_delta": 2,
+          "td_error": 1.717,
+          "strength": "hard",
+          "V": 5.0,
+          "V_next": 6.667,
+          "confidence": "high"
+        }
+      },
+      "proposals": [
+        {
+          "skill": "general-research",
+          "old_value": 5.0,
+          "new_value": 6.625,
+          "td_error": 1.625,
+          "strength": "hard"
+        },
+        {
+          "skill": "writing-draft",
+          "old_value": 5.0,
+          "new_value": 6.717,
+          "td_error": 1.717,
+          "strength": "hard"
+        }
+      ]
+    }
+  ]
+}

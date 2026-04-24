@@ -1,0 +1,23 @@
+[evolve-textgrad] no proposal written (no hard-strength skills)
+{
+  "backend": "shim",
+  "engine": "claude-code-cli",
+  "sessions": [
+    {
+      "session": "ttt-c005-g09",
+      "v_l_old": 5.0,
+      "v_l_new": 1.376,
+      "skills": {
+        "play-tic-tac-toe": {
+          "net_delta": -1,
+          "td_error": -0.252,
+          "strength": "soft",
+          "V": 1.502,
+          "V_next": 2.5,
+          "confidence": "medium"
+        }
+      },
+      "proposals": []
+    }
+  ]
+}

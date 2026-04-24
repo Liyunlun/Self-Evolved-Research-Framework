@@ -1,0 +1,30 @@
+{
+  "backend": "shim",
+  "engine": "claude-code-cli",
+  "sessions": [
+    {
+      "session": "ttt-c005-g05",
+      "v_l_old": 5.0,
+      "v_l_new": 2.561,
+      "skills": {
+        "play-tic-tac-toe": {
+          "net_delta": -1,
+          "td_error": -1.227,
+          "strength": "hard",
+          "V": 3.174,
+          "V_next": 3.274,
+          "confidence": "medium"
+        }
+      },
+      "proposals": [
+        {
+          "skill": "play-tic-tac-toe",
+          "old_value": 3.174,
+          "new_value": 2.561,
+          "td_error": -1.227,
+          "strength": "hard"
+        }
+      ]
+    }
+  ]
+}

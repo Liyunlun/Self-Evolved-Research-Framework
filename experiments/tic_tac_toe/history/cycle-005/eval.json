@@ -1,0 +1,17 @@
+{
+  "cycle": 5,
+  "mode": "online-evolve",
+  "games": 10,
+  "edits_applied": 3,
+  "model": "sonnet",
+  "summary": {
+    "games": 10,
+    "forfeits": 8,
+    "decisive_wins": 1,
+    "draws": 1,
+    "total_moves": 23,
+    "total_mistakes": 1,
+    "clean_games": 1,
+    "mistake_rate": 0.043478260869565216
+  }
+}

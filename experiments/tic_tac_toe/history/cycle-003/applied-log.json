@@ -1,0 +1,112 @@
+[
+  {
+    "game": 1,
+    "terminal": "draw",
+    "winner": null,
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": null,
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 2,
+    "terminal": "draw",
+    "winner": null,
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": null,
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 3,
+    "terminal": "draw",
+    "winner": null,
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": null,
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 4,
+    "terminal": "forfeit",
+    "winner": "O",
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": "X",
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 5,
+    "terminal": "draw",
+    "winner": null,
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": null,
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 6,
+    "terminal": "draw",
+    "winner": null,
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": null,
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 7,
+    "terminal": "forfeit",
+    "winner": "X",
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": "O",
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 8,
+    "terminal": "draw",
+    "winner": null,
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": null,
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 9,
+    "terminal": "draw",
+    "winner": null,
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": null,
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  },
+  {
+    "game": 10,
+    "terminal": "draw",
+    "winner": null,
+    "x_mistakes": 0,
+    "o_mistakes": 0,
+    "forfeit_side": null,
+    "applied": false,
+    "spec_len_before": 1292,
+    "spec_len_after": 1292
+  }
+]
