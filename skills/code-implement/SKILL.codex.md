@@ -1,6 +1,6 @@
 ---
 name: code-implement
-description: Write or modify code with strict TDD discipline. Small tasks are handled by Claude directly (Red-Green-Refactor). Medium/large tasks read `docs/implement_roadmap/YYYY-MM-DD-{name}.md` and are delegated to the `codex:codex-rescue` subagent via the Agent tool (flags `--write --fresh [--background]`) using a four-tag prompt contract; Codex runs TDD internally via its own Superpowers. SER framework files always stay with Claude. Triggers on "implement X", "add feature Y", "execute the roadmap", or any code-writing request after a roadmap is ready.
+description: Write or modify code with strict TDD discipline. Small tasks are handled by Claude directly (Red-Green-Refactor). Medium/large tasks read `docs/implement_roadmap/YYYY-MM-DD-{name}.md` and are delegated to the `codex:codex-rescue` subagent via the Agent tool, **one roadmap step per background invocation** (flags `--write --fresh --background`), using a four-tag per-step prompt contract; Codex runs TDD internally via its own Superpowers. SER framework files always stay with Claude. Triggers on "implement X", "add feature Y", "execute the roadmap", or any code-writing request after a roadmap is ready.
 ---
 
 # code-implement (Track B — Codex delegated)
@@ -88,58 +88,60 @@ If the roadmap touches SER framework paths listed under Executor signals, Codex 
 5. Write the base SHA into Status under `Base commit:`. Update `Last updated:`.
 6. Runtime Codex check: invoke `/codex:setup`. If it fails (auth expired, service down, CLI missing), jump to **Step 4e** (Claude fallback).
 
-### Step 4b — Construct the prompt
+### Step 4b — Per-step prompt template
 
-Follow `skills/_shared/codex-contract.md § 2–3`. Four tags in order:
+For each roadmap step `S_i`, build a per-step four-tag prompt. Follow `skills/_shared/codex-contract.md § 2–3`. The four tags in order:
 
-- `<task>` — fill from roadmap: Goal line, Key files, Steps overview (one line per step), Test command.
-- `<completeness_contract>` — fixed body from the contract file.
+- `<task>` — per-step shape: scope to step `i` only. Includes Goal (full roadmap context, repeated each step), Step.title, Step.purpose, Step.files, Step.what_to_do, Step.acceptance, and the list of already-completed step titles. See contract § 3 for the template.
+- `<completeness_contract>` — per-step variant from the contract file: complete this single step, do not attempt other steps.
 - `<default_follow_through_policy>` — fixed body.
 - `<action_safety>` — fixed body (forbidden paths + no `git commit`/`git push`).
 
 Do not omit any tag. Do not reorder.
 
-### Step 4c — Invoke
+### Step 4c — Per-step dispatch loop
 
 Per `skills/_shared/codex-contract.md § 4`, from Claude's main session Codex is ONLY reachable via the `Agent` tool with `subagent_type: "codex:codex-rescue"`. Do NOT call the `Skill` tool with `codex:rescue` and do NOT emit the literal `/codex:rescue ...` slash-command string — both paths return success without spawning a Codex job.
 
-```
-Agent({
-  subagent_type: "codex:codex-rescue",
-  description: "Codex — {short roadmap name}",
-  prompt: "--write --fresh [--background]\n\n{full four-tag prompt built in Step 4b}"
-})
-```
+Each roadmap step is dispatched as an **independent background codex invocation**. Loop over the roadmap's `## Steps` section in order. For each step `S_i`:
 
-`--write` and `--fresh` are mandatory. The flags can appear anywhere in the `prompt`; the subagent strips them before forwarding to `codex-companion.mjs task`.
+1. Build the per-step four-tag prompt per Step 4b (only `S_i`'s scope + already-completed list).
+2. Invoke codex with `--background`:
+   ```
+   Agent({
+     subagent_type: "codex:codex-rescue",
+     description: "Codex — {short roadmap name} step {i}",
+     prompt: "--write --fresh --background\n\n{per-step four-tag prompt}"
+   })
+   ```
+   The companion spawns a detached worker and returns a task ID immediately. Poll for completion before dispatching the next step.
+3. Poll for completion: check the job log for "Turn completed" / "Turn failed", or use `codex-companion.mjs status {task-id}`.
+4. Run per-step post-processing per Step 4d (verify dispatch, run step Acceptance, update Status).
+5. Decide continue vs stop:
+   - Step Acceptance passed (`[x]`) → continue to `S_{i+1}`.
+   - Step Acceptance failed (`[!]`) → **stop**. Surface to user. Do NOT auto-fix; defer to `code-debug` or user direction.
 
-Background flag:
+`--write`, `--fresh`, and `--background` are the standard flags. The `codex:codex-rescue` subagent passes them through to `codex-companion.mjs task` as command-line flags.
 
-| Signal | Flag |
-|---|---|
-| Roadmap has ≤ 3 steps OR estimated < 5 min | foreground (default) |
-| Roadmap has > 3 steps OR estimated > 5 min | add `--background` |
+### Step 4d — Per-step post-processing
 
-If `--background` is used, tell the user Codex is working and the session can proceed.
+After each `Agent` invocation in the Step 4c loop returns:
 
-### Step 4c.v — Verify the call landed (takes seconds, catches silent failures)
+1. **Verify dispatch landed.** Sanity-check that codex actually started:
+   ```bash
+   ls -lt /tmp/codex-companion/*/jobs/ 2>/dev/null | head -5
+   ```
+   If no job file from this run, the invocation used the wrong channel (see `skills/_shared/codex-contract.md § 5` last row). Re-invoke via `Agent` exactly as shown in Step 4c.
+2. **Read codex's per-step report.** Note what it claims completed and any issues raised.
+3. **Sanity-check the diff.** `git diff --stat` should show changes only in `S_i`'s declared files; out-of-scope edits are noted, not auto-reverted.
+4. **Run step Acceptance.** Execute `S_i`'s Acceptance command from the roadmap. A quick smoke run of the step's test file is fine; the **full Done Criteria suite is reserved for Step 5** after every step is `[x]`.
+5. **Update roadmap Status** for `S_i`:
+   - `[x]` if Acceptance passed.
+   - `[!]` with a one-line note referencing the failure if Acceptance failed.
+   Update `Last updated:`.
+6. **Do NOT self-fix.** Issues are deferred to `code-debug` or `code-review`.
 
-Immediately after the `Agent` call returns, sanity-check that Codex actually started:
-
-```bash
-ls -lt /tmp/codex-companion/*/jobs/ 2>/dev/null | head -5
-```
-
-If no job file was created in the last minute, the invocation used the wrong channel (see `skills/_shared/codex-contract.md § 5` last row). Do NOT retry the Skill tool or the slash-command string — the bug is the channel, not Codex. Re-invoke via `Agent` exactly as shown above.
-
-### Step 4d — Post-invocation
-
-Per `skills/_shared/codex-contract.md § 6`:
-
-1. Read Codex's final report. Note reported-complete steps, issues, out-of-scope modifications.
-2. `git diff --stat` sanity check.
-3. Do NOT self-fix issues found. They are deferred to `code-review`.
-4. Update roadmap Status: `[x]` for completed steps, `[!]` with one-line note for steps Codex reported blocked. Update `Last updated:`.
+After all steps are `[x]`, proceed to Step 5 (Done Criteria).
 
 ### Step 4e — Claude fallback (Codex unavailable / framework file)
 
