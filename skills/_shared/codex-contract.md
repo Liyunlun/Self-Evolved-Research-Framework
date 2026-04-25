@@ -159,14 +159,13 @@ fail silently (they return success but create no job under
   Subagents defined inside the codex plugin DO have `CLAUDE_PLUGIN_ROOT`
   set, which is why the `Agent` path works.
 
-### Per-step dispatch loop (foreground)
+### Per-step dispatch loop
 
 Codex receives ONE roadmap step per `Agent` invocation. The orchestrator
 (Claude's main session) loops over the roadmap's `## Steps`, dispatching
-each `S_i` independently and waiting for it to complete before dispatching
-`S_{i+1}`. Per-step dispatch keeps blast radius small and recoverable: a
-failure on `S_i` leaves `S_1..S_{i-1}` validated and the failure localized
-to one step.
+each `S_i` independently. Per-step dispatch keeps blast radius small and
+recoverable: a failure on `S_i` leaves `S_1..S_{i-1}` validated and the
+failure localized to one step.
 
 For each step `S_i`:
 
@@ -174,7 +173,7 @@ For each step `S_i`:
 Agent({
   subagent_type: "codex:codex-rescue",
   description: "Codex — {short roadmap name} step {i}",
-  prompt: "--write --fresh\n\n{per-step four-tag prompt for S_i}"
+  prompt: "--write --fresh --background\n\n{per-step four-tag prompt for S_i}"
 })
 ```
 
@@ -183,37 +182,40 @@ Agent({
   no `--resume`. Loop continuity is maintained by the orchestrator's
   per-step prompt (which lists already-completed steps), not by codex
   thread state.
-- `--background` is **opt-in only** — see the next subsection.
+- `--background` is the default. The `codex:codex-rescue` subagent passes
+  this flag through to `codex-companion.mjs task --background`, which
+  spawns a detached worker process (PPID=1, own PGID/SID) that survives
+  subagent cleanup. The orchestrator polls for completion before
+  dispatching `S_{i+1}`.
 - The flags may appear anywhere in the `prompt`. The `codex:codex-rescue`
-  subagent parses and strips them before forwarding the remaining task
-  text to `scripts/codex-companion.mjs task ...`.
+  subagent passes `--background`, `--write`, `--fresh` through to
+  `codex-companion.mjs task` as command-line flags, and strips `--resume`
+  / `--fresh` from the task text.
 
-### Background flag — opt-in only
+### Background execution model
 
-`--background` is **opt-in per step**, not a default. Default for per-step
-dispatch is foreground (the `Agent` call blocks while codex runs to
-completion, typically 5–15 min for a single step). Foreground keeps the
-orchestrator and codex coupled and makes failures recoverable in the
-current session.
+`--background` tells the companion to spawn a **detached worker** that
+runs independently of the parent process tree. The worker completes even
+if the subagent or parent session ends. After dispatching a step, the
+orchestrator must poll for completion before dispatching the next step:
 
-Use `--background` only when ALL of the following hold:
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" status {task-id}
+```
 
-1. The single step genuinely takes >5 min AND blocking the orchestrator's
-   main session is undesirable.
-2. The user has explicitly authorized non-blocking dispatch for this step.
-3. The orchestrator is prepared to poll for completion (e.g.,
-   `scripts/codex-companion.mjs status`) before dispatching `S_{i+1}`.
+Or check the job's log file for "Turn completed" / "Turn failed".
 
-Background mode has been observed to abort silently with
-`turn_aborted: interrupted` in some Claude Code SDK contexts: zero work
-product on disk, companion `jobs: []`, and the `Agent` reports
-"completed" with a task ID even though no codex work was produced.
-Foreground is the safer default.
+**Foreground alternative.** Omit `--background` to have the `Agent` call
+block until codex finishes (typically 5–15 min per step). Use foreground
+when the orchestrator has no other work to do while waiting.
 
-**Do NOT double-background.** Never set `run_in_background: true` on the
-`Agent` tool while ALSO including `--background` in the prompt. The
-Agent's `run_in_background` triggers early parent-process detach,
-cascading SIGINT to the codex child within ~5–10 s of Agent return.
+**Plugin requirement.** The `codex:codex-rescue` agent definition must
+treat `--background` as a companion-level flag, not a routing control.
+If the subagent strips `--background` and sets `run_in_background: true`
+on its Bash call instead, the SDK will kill the foreground companion
+process when the subagent finishes, aborting the codex turn. This was
+the root cause of `turn_aborted: interrupted` failures observed before
+2026-04-25. The fix is in the plugin's `agents/codex-rescue.md`.
 
 ---
 
