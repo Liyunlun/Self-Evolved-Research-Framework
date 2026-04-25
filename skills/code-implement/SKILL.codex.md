@@ -111,6 +111,8 @@ Agent({
 })
 ```
 
+**IMPORTANT — do not double-background**: Do NOT set `run_in_background: true` on the Agent tool when the prompt contains `--background`. The Agent's `run_in_background` triggers early parent-process detach, cascading SIGINT to codex within ~5-10s of Agent return (codex aborts with `turn_aborted: interrupted`, zero work product on disk). Always invoke the Agent in foreground; the prompt's `--background` flag handles non-blocking dispatch at the codex-companion level. The foreground Agent itself returns within ~60s (just dispatch overhead) — your main session is unblocked then while codex runs for hours under codex-companion supervision.
+
 `--write` and `--fresh` are mandatory. The flags can appear anywhere in the `prompt`; the subagent strips them before forwarding to `codex-companion.mjs task`.
 
 Background flag:

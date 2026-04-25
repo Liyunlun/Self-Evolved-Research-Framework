@@ -174,6 +174,22 @@ Agent({
   subagent parses and strips them before forwarding the remaining task
   text to `scripts/codex-companion.mjs task ...`.
 
+### Do not double-background
+
+Do NOT set `run_in_background: true` on the `Agent` tool when the prompt
+contains `--background`. The Agent's `run_in_background` triggers early
+parent-process detach, cascading SIGINT to the codex child within
+~5-10s of Agent return — codex aborts with
+`turn_aborted: reason "interrupted"`, leaves zero work product on disk,
+and the companion job state is removed (`jobs: []`). The failure is silent:
+the Agent reports "completed" and a task ID is issued, but no files appear.
+
+Always invoke the `Agent` in foreground; the prompt's `--background` flag
+handles non-blocking dispatch at the `codex-companion.mjs` supervision
+layer. The foreground Agent itself returns within ~60s (just dispatch
+overhead) — the caller's main session is unblocked then, while codex
+continues for hours under codex-companion supervision.
+
 ### Background threshold
 
 | Signal | Flag |
