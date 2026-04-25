@@ -1,6 +1,6 @@
 ---
 name: code-implement
-description: Write or modify code with strict TDD discipline. Small tasks are handled by Claude directly (Red-Green-Refactor). Medium/large tasks read `docs/implement_roadmap/YYYY-MM-DD-{name}.md` and are delegated to the `codex:codex-rescue` subagent via the Agent tool, **one roadmap step per foreground invocation** (flags `--write --fresh`; `--background` is opt-in only), using a four-tag per-step prompt contract; Codex runs TDD internally via its own Superpowers. SER framework files always stay with Claude. Triggers on "implement X", "add feature Y", "execute the roadmap", or any code-writing request after a roadmap is ready.
+description: Write or modify code with strict TDD discipline. Small tasks are handled by Claude directly (Red-Green-Refactor). Medium/large tasks read `docs/implement_roadmap/YYYY-MM-DD-{name}.md` and are delegated to the `codex:codex-rescue` subagent via the Agent tool, **one roadmap step per background invocation** (flags `--write --fresh --background`), using a four-tag per-step prompt contract; Codex runs TDD internally via its own Superpowers. SER framework files always stay with Claude. Triggers on "implement X", "add feature Y", "execute the roadmap", or any code-writing request after a roadmap is ready.
 ---
 
 # code-implement (Track B — Codex delegated)
@@ -103,28 +103,25 @@ Do not omit any tag. Do not reorder.
 
 Per `skills/_shared/codex-contract.md § 4`, from Claude's main session Codex is ONLY reachable via the `Agent` tool with `subagent_type: "codex:codex-rescue"`. Do NOT call the `Skill` tool with `codex:rescue` and do NOT emit the literal `/codex:rescue ...` slash-command string — both paths return success without spawning a Codex job.
 
-Each roadmap step is dispatched as an **independent foreground codex invocation**. Loop over the roadmap's `## Steps` section in order. For each step `S_i`:
+Each roadmap step is dispatched as an **independent background codex invocation**. Loop over the roadmap's `## Steps` section in order. For each step `S_i`:
 
 1. Build the per-step four-tag prompt per Step 4b (only `S_i`'s scope + already-completed list).
-2. Invoke codex in **foreground** — no `run_in_background` on the Agent, no `--background` in the prompt:
+2. Invoke codex with `--background`:
    ```
    Agent({
      subagent_type: "codex:codex-rescue",
      description: "Codex — {short roadmap name} step {i}",
-     prompt: "--write --fresh\n\n{per-step four-tag prompt}"
+     prompt: "--write --fresh --background\n\n{per-step four-tag prompt}"
    })
    ```
-   Agent blocks while codex runs to completion. For a typical 5–15 min step this is acceptable; the user's main session pauses but resumes immediately when codex finishes.
-3. Run per-step post-processing per Step 4d (verify dispatch, run step Acceptance, update Status).
-4. Decide continue vs stop:
+   The companion spawns a detached worker and returns a task ID immediately. Poll for completion before dispatching the next step.
+3. Poll for completion: check the job log for "Turn completed" / "Turn failed", or use `codex-companion.mjs status {task-id}`.
+4. Run per-step post-processing per Step 4d (verify dispatch, run step Acceptance, update Status).
+5. Decide continue vs stop:
    - Step Acceptance passed (`[x]`) → continue to `S_{i+1}`.
    - Step Acceptance failed (`[!]`) → **stop**. Surface to user. Do NOT auto-fix; defer to `code-debug` or user direction.
 
-`--write` and `--fresh` are mandatory. The flags can appear anywhere in the `prompt`; the subagent strips them before forwarding to `codex-companion.mjs task`.
-
-**Background flag — opt-in only.** `--background` is opt-in for individual steps that genuinely take >5 min AND the user explicitly authorizes non-blocking dispatch. Default for per-step dispatch is foreground. Background mode has been observed to abort silently with `turn_aborted: interrupted` in some Claude Code SDK contexts (zero work product on disk, companion job state cleared). Foreground is the safer default.
-
-**Do NOT double-background.** Never set `run_in_background: true` on the `Agent` tool while ALSO including `--background` in the prompt — that combination cascades SIGINT to codex within ~5–10 s of Agent return.
+`--write`, `--fresh`, and `--background` are the standard flags. The `codex:codex-rescue` subagent passes them through to `codex-companion.mjs task` as command-line flags.
 
 ### Step 4d — Per-step post-processing
 
