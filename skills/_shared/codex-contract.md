@@ -70,44 +70,49 @@ Do not omit any tag. Do not reorder.
 
 ## 3. Standard Tag Bodies
 
-### `<task>` template
+### `<task>` template (per-step)
+
+Each codex invocation is for a **single roadmap step**. The orchestrator
+loops over the roadmap's `## Steps` and dispatches one codex job per step.
+The `<task>` body for step `S_i` is:
 
 ```
-Implement the feature described below. The full implementation roadmap is at
-{roadmap_path} — read it first before writing any code.
+Implement Step {i} of the roadmap at {roadmap_path}. Read the roadmap once
+to understand context, then focus only on Step {i}.
 
-Goal: {copy the Goal line from the roadmap verbatim}
+Roadmap goal (full context, applies to all steps): {Goal}
 
-Key files to read for context:
-- {path} — {role}
-- {path} — {role}
+Step {i} title: {Step.title}
+Step {i} purpose: {Step.purpose}
+Step {i} files: {Step.files}
+Step {i} what-to-do: {Step.what_to_do}
+Step {i} acceptance: {Step.acceptance}
 
-Steps overview:
-1. {Step 1 title}: {one-line summary}
-2. {Step 2 title}: {one-line summary}
-...
+Already-completed steps in this roadmap (do NOT re-implement):
+{list of [x] step titles}
 
-Test command: {test command from roadmap Context}
-
-After completing all steps, run the full test suite and the Done Criteria
-checks listed in the roadmap. Report which steps passed and which failed.
+Test command for the whole roadmap: {test_command}
+After completing Step {i}, run only Step {i}'s acceptance command, plus a
+quick `pytest <step_i_test_file>` smoke. Do NOT run the full Done Criteria
+suite — that is the orchestrator's job after all steps complete.
 ```
 
 **Fill rules**
 - `{roadmap_path}`: full path, e.g., `docs/implement_roadmap/2026-04-21-config-parser.md`.
-- `{Goal}`: copy verbatim from roadmap's Goal section.
-- `{Key files}`: copy from roadmap's Context § Key files.
-- `{Steps overview}`: one line per step — title + brief summary only. Do
-  NOT inline the full Files / What to do / Acceptance; Codex reads those
-  from the roadmap file.
-- `{Test command}`: copy from roadmap's Context § Test command.
+- `{i}`: 1-indexed step number from the roadmap's `## Steps` section.
+- `{Goal}`: copy verbatim from roadmap's Goal section. Same value for every step in the loop.
+- `{Step.title}`, `{Step.purpose}`, `{Step.files}`, `{Step.what_to_do}`, `{Step.acceptance}`: copy from the roadmap's Step `i` block.
+- `{list of [x] step titles}`: titles of all roadmap steps already marked `[x]` in this run. Write `none` (or omit the line) for the first invocation in the loop.
+- `{test_command}`: copy from roadmap's Context § Test command.
+- `{step_i_test_file}`: the test file mentioned in Step `i`'s Files section, if any. Omit the smoke line if no test file applies.
 
-### `<completeness_contract>` body (fixed text)
+### `<completeness_contract>` body (fixed text, per-step)
 
 ```
-Complete ALL steps listed in the roadmap file. Do not stop after partial
-implementation. For each step, verify its Acceptance criteria before moving
-to the next step. After all steps, verify the Done Criteria.
+Complete the single roadmap step described in <task>. Do not stop after
+partial implementation of this step. Verify the step's Acceptance criteria
+before reporting completion. Do NOT attempt other steps in the roadmap —
+they are dispatched separately by the orchestrator.
 ```
 
 ### `<default_follow_through_policy>` body (fixed text)
@@ -154,36 +159,61 @@ fail silently (they return success but create no job under
   Subagents defined inside the codex plugin DO have `CLAUDE_PLUGIN_ROOT`
   set, which is why the `Agent` path works.
 
-### Single invocation, no loop
+### Per-step dispatch loop (foreground)
+
+Codex receives ONE roadmap step per `Agent` invocation. The orchestrator
+(Claude's main session) loops over the roadmap's `## Steps`, dispatching
+each `S_i` independently and waiting for it to complete before dispatching
+`S_{i+1}`. Per-step dispatch keeps blast radius small and recoverable: a
+failure on `S_i` leaves `S_1..S_{i-1}` validated and the failure localized
+to one step.
+
+For each step `S_i`:
 
 ```
 Agent({
   subagent_type: "codex:codex-rescue",
-  description: "Codex — {short roadmap name}",
-  prompt: "--write --fresh [--background]\n\n{full four-tag prompt body}"
+  description: "Codex — {short roadmap name} step {i}",
+  prompt: "--write --fresh\n\n{per-step four-tag prompt for S_i}"
 })
 ```
 
 - `--write` is mandatory. Without it, Codex runs read-only.
-- `--fresh` is mandatory. SER has no loop; each code-implement run is a
-  fresh thread.
-- `--background` is added per the threshold table below.
-- `--resume` is **not used** in this contract (loop removed from SER
-  workflow).
+- `--fresh` is mandatory. Each per-step dispatch is a clean codex thread;
+  no `--resume`. Loop continuity is maintained by the orchestrator's
+  per-step prompt (which lists already-completed steps), not by codex
+  thread state.
+- `--background` is **opt-in only** — see the next subsection.
 - The flags may appear anywhere in the `prompt`. The `codex:codex-rescue`
   subagent parses and strips them before forwarding the remaining task
   text to `scripts/codex-companion.mjs task ...`.
 
-### Background threshold
+### Background flag — opt-in only
 
-| Signal | Flag |
-|---|---|
-| Roadmap has ≤ 3 steps OR estimated < 5 min | foreground (default) |
-| Roadmap has > 3 steps OR estimated > 5 min | add `--background` |
+`--background` is **opt-in per step**, not a default. Default for per-step
+dispatch is foreground (the `Agent` call blocks while codex runs to
+completion, typically 5–15 min for a single step). Foreground keeps the
+orchestrator and codex coupled and makes failures recoverable in the
+current session.
 
-When using `--background`, the calling skill must inform the user that
-Codex is working and the session can continue with other tasks. Codex
-result is collected later.
+Use `--background` only when ALL of the following hold:
+
+1. The single step genuinely takes >5 min AND blocking the orchestrator's
+   main session is undesirable.
+2. The user has explicitly authorized non-blocking dispatch for this step.
+3. The orchestrator is prepared to poll for completion (e.g.,
+   `scripts/codex-companion.mjs status`) before dispatching `S_{i+1}`.
+
+Background mode has been observed to abort silently with
+`turn_aborted: interrupted` in some Claude Code SDK contexts: zero work
+product on disk, companion `jobs: []`, and the `Agent` reports
+"completed" with a task ID even though no codex work was produced.
+Foreground is the safer default.
+
+**Do NOT double-background.** Never set `run_in_background: true` on the
+`Agent` tool while ALSO including `--background` in the prompt. The
+Agent's `run_in_background` triggers early parent-process detach,
+cascading SIGINT to the codex child within ~5–10 s of Agent return.
 
 ---
 
@@ -201,16 +231,23 @@ result is collected later.
 
 ---
 
-## 6. Post-Invocation
+## 6. Post-Invocation (per step)
 
-After Codex returns control:
+After each per-step `Agent` invocation returns control:
 
-1. **Read Codex output.** Note which steps it reports completed, any issues,
-   any files modified outside the roadmap scope.
-2. **Sanity check:** `git diff --stat` to confirm Codex produced changes.
-   This is NOT a review — just a smoke test.
-3. **Do NOT self-fix.** Any issues found by Codex, or any concerns, are
-   deferred to the next phase (`code-review`). Do not patch silently.
-4. **Update roadmap Status.** Mark completed steps `[x]`. Mark steps with
-   Codex-reported failures `[!]` with a one-line note referencing the
-   Codex output. (Single-round only; no Fix Steps section appended.)
+1. **Verify dispatch landed.** Sanity-check that codex actually started
+   this step (see § 5 last row for the failure-mode signature).
+2. **Read codex's per-step report.** Note completion status of the single
+   dispatched step, any issues raised, any files modified outside `S_i`'s
+   declared scope.
+3. **Sanity check.** `git diff --stat` to confirm codex produced changes
+   for `S_i`'s files. This is NOT a review — just a smoke test.
+4. **Do NOT self-fix.** Any issues found by codex, or any concerns, are
+   deferred to the next phase (`code-review` or `code-debug`). Do not
+   patch silently.
+5. **Update roadmap Status** for the dispatched step: `[x]` if Acceptance
+   passed, `[!]` with a one-line note if it failed. (Single-round only;
+   no Fix Steps section appended.)
+
+The full Done Criteria suite runs only after every roadmap step is `[x]`,
+not after each individual step.
