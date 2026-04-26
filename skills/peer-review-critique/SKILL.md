@@ -36,6 +36,7 @@ Combined compile + self-critique + revise stage. This is one skill because the t
    - Factual errors (numbers, section/equation refs that don't exist)
    - Incomplete citations (every APA entry must have author/year/venue)
    - Severity inflation (is that really [critical] or just [major]?)
+   - **`vote_moving_weakness`** (from `shared/taste-priors.md`) — every `[major]` or `[critical]` weakness must be phrased so the authors can tell what concrete evidence would resolve or downgrade it. A weakness the authors cannot act on is a complaint, not a review; rewrite it to end with a trailing `Resolution:` clause that names the specific evidence or clarification that would reduce the severity, or drop it.
 7. Produce a critique list (mental or scratch).
 
 ### Sub-step C: Revise (and emit recommendation)
@@ -86,4 +87,4 @@ None (just Read/Write).
 - Do NOT invent severity counts; always aggregate from the stage findings' YAML frontmatter.
 
 ## Tests
-`tests/test_critique.sh` — supply mock stage outputs missing a `## Strengths` section. Verify final review adds one. Also verify exact presence of all six AAAI headings in output, and that (when recommendation is requested) the `## Recommendation` section is present and its first token matches one of the four allowed labels.
+`tests/test_critique.sh` — runs on mock stage outputs with a seeded structural gap (a required final-review section missing). The stage's output must contain all six AAAI headings verbatim, and, when recommendation is enabled in the run config, must include a `## Recommendation` section whose first non-blank line is exactly one of the four allowed labels.

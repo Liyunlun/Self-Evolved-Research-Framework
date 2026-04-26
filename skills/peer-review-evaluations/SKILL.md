@@ -20,6 +20,11 @@ Third stage of the AAAI-26 AI peer-review pipeline. **Uses Bash as code interpre
 5. **reproducibility_of_reported_numbers** — Sample 1–2 numbers; check if an embedded code snippet or formula reproduces them (via Bash).
 6. **sanity_of_reported_values** — Accuracy in [0,1]; probabilities sum to 1; percentages ≤ 100; timing ≥ 0.
 
+## Taste probes (from `shared/taste-priors.md`)
+Primary probes at this stage:
+- **`benchmark_claim_match`** — For each primary claim from stage 01 (`story`), check whether at least one experiment runs in a regime that could *fail* if the claim were wrong. If all benchmarks are structurally similar or dominated by a different bottleneck than the claim targets, tag the finding with `probe: benchmark_claim_match`.
+- **`efficiency_vs_claim`** — When the method adds forward/backward passes, auxiliary networks, inner-loop solves, tree search, or replication — check that wall-clock is reported at the setting where the claimed advantage is strongest, not only on the cheapest benchmark. If the compute reporting is asymmetric, tag the finding with `probe: efficiency_vs_claim`. When possible, do a back-of-envelope accounting (passes × K × batch × steps) and flag contradictions with the reported wall-clock.
+
 ## Process
 1. Enumerate baselines and datasets from tables/text.
 2. Read all claimed metrics from Tables and Figures.
@@ -28,7 +33,7 @@ Third stage of the AAAI-26 AI peer-review pipeline. **Uses Bash as code interpre
 5. Write findings with concrete table/figure citations.
 
 ## Tools
-- **Bash** — for running snippets and doing arithmetic sanity checks (e.g., `python -c "assert 0 <= 0.95 <= 1"`).
+- **Bash** — for running snippets from the paper and for arithmetic sanity checks on reported numbers. Use a temp dir; disallow network and filesystem access outside it.
 - Read, Grep on markdown.
 
 ## Output
@@ -39,4 +44,4 @@ Third stage of the AAAI-26 AI peer-review pipeline. **Uses Bash as code interpre
 - Do NOT flag missing baselines the paper explicitly justifies as out-of-scope.
 
 ## Tests
-`tests/test_evaluations.sh` — fixture paper reports accuracy `1.3` in a results table. Output must contain `[critical]` flagging impossible/out-of-range value.
+`tests/test_evaluations.sh` — runs on a fixture paper with a seeded out-of-range reported metric; the stage's output must flag it at `[critical]` severity.

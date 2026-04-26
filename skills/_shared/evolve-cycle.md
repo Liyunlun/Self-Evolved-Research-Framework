@@ -1,153 +1,134 @@
-# TD-NL Skill Evolution Cycle — Shared Reference
+# Skill Evolution Cycle — Shared Reference
 
-> Shared reference for the `evolve-*` skills. Describes the TD-NL infrastructure,
-> the G2 (inline) → G1 (aggregated) feedback loop, and the rollback mechanism.
+> Shared reference for the evolution skills (`skill-feedback`, `evolve-suggest`,
+> `evolve-apply`). Describes the value-function infrastructure, the online
+> incremental Q-update path, the on-demand audit/proposal path, and the
+> rollback mechanism.
 >
-> Not a skill itself (no `SKILL.md`). Each `evolve-*/SKILL.md` reads this file
-> for the cycle definition, file layout, and safety rules.
+> Not a skill itself (no `SKILL.md`). Skills that need this reference Read it
+> on demand.
 
 ---
 
-## TD-NL Infrastructure
+## Architecture (replaces the v3 batch G2→G1 pipeline)
+
+The previous design said "every skill firing writes a 5-phase G2 block; at
+session-close, G1 aggregates them and proposes spec edits." In practice G2
+was rarely populated, G1 always reported 'no pending feedback', and evolution
+never happened. The fix is **not** to enforce G2 harder — it is to remove the
+self-assessment step entirely and only update values when there is a real
+signal.
+
+```
+OLD (deprecated, do not implement):
+  every firing → 5-phase G2 → session-close → G1 batch → TextGrad → proposal
+                                                       ^ never reached
+
+NEW (signal-gated online):
+  firing with reward signal ──► skill-feedback ──► EWMA Q-update
+                                       │            (+ optional FLAG line)
+                                       │
+  user types `audit` / session-close ──► evolve-suggest
+                                            ├─ reads § Pending Flags
+                                            ├─ recomputes V^L from Q^L's
+                                            └─ drafts proposal (if hard signal)
+                                                       │
+                                            user approves
+                                                       │
+                                                       ▼
+                                                evolve-apply
+                                                (archive + edit)
+```
+
+Two-tier separation:
+
+| Tier | Skill | Frequency | Token cost | Purpose |
+|------|-------|-----------|------------|---------|
+| Online | `skill-feedback` | Per-firing **with reward** (~3-8/session) | ~80-150 ea | Keep Q^L current |
+| Audit  | `evolve-suggest` | On demand or at session-close | ~2-3K | Aggregate flags, draft spec proposal, recompute V^L |
+
+`skill-feedback` is honest about being an EWMA-with-anchor. It is **not**
+TD(0): there is no Markov state-transition between skill firings, no `V(s')`
+to bootstrap from. Calling it TD(0) was a category error in the old design.
+
+---
+
+## Infrastructure
 
 ```
 skills/td-nl/
-  feedback-log.md          # Append-only session feedback (G2 entries)
-  value-function.md        # V^L: global skill system assessment
-  skill-values/            # Q^L per skill (created on first firing)
+  feedback-log.md          # § Pending Flags  +  § Processed Flags
+  value-function.md        # V^L: derived from Q^L's (recomputed, not stored as ground truth)
+  skill-values/            # Q^L per skill
     _template.md           # Template for new skill value files
-    {skill-name}.md        # Per-skill value (e.g., paper-read.md)
+    {skill-name}.md        # Per-skill Q^L
   history/                 # Spec version archive for rollback
     {skill}-v{N}.md        # Snapshot before edit
 ```
 
----
-
-## G2 — Inline Skill Assessment (5-phase TD reflection)
-
-**When**: After EVERY micro-skill execution (automatic, silent).
-
-G2 is the raw feedback signal. Appended to `skills/td-nl/feedback-log.md § Pending Feedback`.
-Schema **v3** (preferred) walks through a short 5-phase TD reflection; schemas
-v2/v1 remain accepted for brevity or legacy lines.
-
-**Process (v3, 5 phases)**:
-
-1. **P1 ANALYSIS** — Describe the firing state:
-   - Key features of the input / situation
-   - V^L coverage: does the global value function cover this scenario? flag gaps
-   - Watch-outs: any prior failure mode this skill has exhibited in similar contexts?
-2. **P2 VALUE PREDICTION** — Before the effect of this firing is known:
-   - V (1-10): your self-estimate of the skill's Q^L in this context
-   - confidence: high | medium | low
-   - reason: 1-sentence why you chose this V
-3. **P3 TD REFLECTION** — Only meaningful when there is a previous firing in the chain:
-   - delta = reward_prev + γ·V(current) - V(previous)   (γ defaults 0.9)
-   - interp: why the surprise is positive / negative
-   - Omit this line on root firings (`upstream:-`).
-4. **P4 STRATEGY** — Based on P3:
-   - action ∈ {refine, keep, reset}
-   - note: one concrete adjustment you will apply in THIS firing
-5. **P5 RESULT** — After the firing has happened:
-   - outcome: better | as_expected | worse
-   - reward: +1 | 0 | -1
-   - ev: 1-sentence post-hoc evidence (the textual gradient seed)
-
-**Canonical v3 block**:
-```
-- [YYYY-MM-DD] session:{sid} node:{nid} upstream:{csv|-} skill:{name}
-    P1_analysis: "..."
-    P2_predict:  V=6, conf=med, reason="..."
-    P3_td:       delta=-1.2, interp="..."          # omit on root firings
-    P4_strategy: refine, note="..."
-    P5_result:   outcome=worse, reward=-1, ev="..."
-```
-
-**Short-form v2 (still accepted when no TD reasoning needed)**:
-```
-- [YYYY-MM-DD] session:{sid} node:{nid} upstream:{csv|-} skill:{name} | outcome:{o} | delta:{d} | "{evidence}"
-```
-
-Legacy v1 (no session/node/upstream) is also accepted; the parser treats
-such lines as isolated root firings in a synthetic `legacy` session.
-
-**DAG conventions**:
-- `session` is a short id that survives the session (e.g. `s1`, or a hash)
-- `node` is a per-session unique id (e.g. `n1`, `n2`, ...)
-- `upstream` lists node ids whose outputs this firing consumed; use `-` for
-  root firings (e.g. `session-open`, `session-close`)
-
-If `skill-values/{skill-name}.md` doesn't exist yet, create from `_template.md`.
-
-**Token**: ~200-400 for v3 blocks; ~100-200 for v2 lines.
-
-**Important**: G2 is cheap and frequent. Do NOT skip it. The quality of
-evolution depends on honest, granular feedback. Even `as_expected` is valuable
-signal. Prefer v3 when the firing is non-trivial (proof steps, paper reads,
-design decisions); v2 is fine for routine firings (`memory-write`,
-`progress-capture`).
+`feedback-log.md` is no longer a stream of G2 blocks. It is a list of flags
+(`[FLAG-HARD]`, `[FLAG-SOFT]`, `[ROLLBACK-CANDIDATE]`, `[APPLIED]`,
+`[ROLLBACK]`) that survive until `evolve-suggest` processes them.
 
 ---
 
-## G1 — Session-Close Aggregation
+## skill-feedback — Online Q-update (signal-gated)
 
-Runs inside `evolve-suggest` at `session-close`, after `memory-write` and
-`memory-consolidate`. Aggregates pending G2 entries into per-skill value
-updates and (optionally) proposes spec edits.
+Full spec lives in `skills/skill-feedback/SKILL.md`. Key invariants:
 
-See `skills/evolve-suggest/SKILL.md` for the full 6-phase process (Read →
-Aggregate → TD(0) Scoring → Update V^L → TextGrad Backward + Propose → Cleanup).
+**Signal gate** — fire only when one of these is true:
+1. Explicit user feedback in the messages following the firing.
+2. Downstream skill consumed the output (or had to redo it).
+3. Hard failure (no output, error, schema-invalid artifact).
 
-### TD(0) layer on top of TextGrad
+Self-assessment is **not** a signal source. That was the failure mode of v3.
 
-G1 no longer updates Q^L by the raw sum of G2 deltas. Instead:
+**Math (EWMA-with-anchor)**:
+```
+alpha = 1.0 (high) | 0.5 (medium) | 0.25 (low)   # confidence
+Q_new = clip(Q_old + alpha * reward, 1, 10)
+```
+`reward ∈ {-2, -1, +1, +2}`. (`reward = 0` is the gate-rejected case; never reached.)
 
-1. V(s') estimate:
-   - If v3 blocks supplied `P2_predict.V`, use the mean of those self-reports.
-   - Else bootstrap: V(s') = clip(V(s) + 0.5 · r_clipped, 1, 10) where
-     r_clipped = clip(net_delta · learning_rate, -2, 2).
-2. TD error: `td = r + γ · V(s') - V(s)` with γ = 0.9 by default.
-3. If v3 blocks also supplied `P3_td.delta` (inline per-firing TD), blend 50/50
-   with the batch td so session-close and per-firing views stay consistent.
-4. `new_score = clamp(old_score + learning_rate · td, 1, 10)`.
+**Strength gate (controls flagging only — Q always updates)**:
+- `|reward * alpha|` ≥ 2 (loosely: |delta| ≥ 2) → `[FLAG-HARD]`, eligible for proposal
+- `|reward * alpha|` ≥ 1 → `[FLAG-SOFT]`, promotes to hard after 3 same-direction firings
+- otherwise: silent update
 
-Strength thresholds gate downstream behavior:
-- `hard`  (|td| ≥ 1.0): textual gradient kept, enters TGD.step, eligible for proposal
-- `soft`  (|td| ≥ 0.25): value is updated, gradient kept but no proposal
-                          unless the direction holds for 3 consecutive sessions
-- `drop`  (|td| < 0.25): gradient is discarded; value update still applied
+---
 
-Learning rate by confidence:
-- If v3 blocks supplied `P2_predict.conf`, take the majority vote.
-- Else fall back to entry-count bins:
-  - high (6+ entries): 1.0
-  - medium (3-5 entries): 0.5
-  - low (1-2 entries): 0.25
+## evolve-suggest — On-demand Audit & Proposal
 
-### TextGrad backward over the session DAG
+No longer a mandatory session-close step. The user invokes it explicitly
+(or `session-close` invokes it only if the user opts in).
 
-For every session the backend reconstructs the DAG from `node`/`upstream`
-fields, wraps each SKILL.md as a `requires_grad` Variable, wraps every firing
-as an output Variable whose predecessors are `[spec_var] + upstream_firing_vars`,
-then attaches a `TextLoss` at a synthetic head and runs one `loss.backward(...)`
-call. Textual gradients therefore flow backward through the chain so an upstream
-skill can be credited/blamed for a downstream failure. `TextualGradientDescent.step()`
-is then called over the subset of specs with `strength == hard`.
+Process:
+1. Read `feedback-log.md § Pending Flags`. If empty → terminate.
+2. Read `value-function.md` and per-skill `skill-values/*.md` for any skill
+   that appears in the flag list.
+3. **Recompute V^L** as a derived quantity (no separate update path):
+   ```
+   V^L.overall = recency-weighted mean of Q^L.overall across all skills with
+                 at least one firing in the last 30 days
+   ```
+4. **Decide whether to propose** a spec edit. Propose iff:
+   - At least one `[FLAG-HARD]` exists in pending flags, OR
+   - `[FLAG-SOFT]` for the same skill in the same direction appears 3+ times
+     consecutively in the flag list.
+5. **Pick one skill** (the one with the largest |Q_new − Q_old| since its
+   last edit). Draft a proposal:
+   ```
+   [PROPOSE] {skill-name} (Q^L: {old} → {new})
+     Pattern: {synthesized from the flag evidence strings}
+     Suggested edit: {1-3 sentence prose change to SKILL.md}
+     Risk: {what could break; history snapshot path skills/td-nl/history/{name}-v{N}.md}
+   ```
+6. Append the proposal to `feedback-log.md § Pending Proposals`.
+7. Move processed flags from `§ Pending Flags` to `§ Processed Flags`.
+8. Do **not** auto-apply. The user runs `evolve-apply` to commit.
 
-If the `textgrad` package is not installed, a small shim implements just
-enough of the `Variable` / `TextLoss` / `TextualGradientDescent` API to keep
-the pipeline runnable; the shim emits deterministic placeholder gradients
-instead of LLM-generated ones, so CI and smoke tests stay offline.
-
-### Spec-edit trigger
-
-A spec edit is proposed only when:
-- At least one skill reached `strength == hard` in this session, OR
-- Same `improvement_direction` for a skill across 3+ consecutive sessions.
-
-Otherwise `evolve-suggest` logs "insufficient signal" and skips proposal.
-When multiple skills qualify, only the one with the largest |td| gets a
-proposal this session (enforcing one-edit-per-session).
+**Audit mode** (`evolve-suggest --audit`): does steps 1–3 only; reports the
+flag distribution and current V^L without drafting a proposal.
 
 ---
 
@@ -157,40 +138,72 @@ Applied by `evolve-apply` when the user approves a proposal:
 
 1. **Archive before edit**: copy `skills/{skill-name}/SKILL.md` →
    `skills/td-nl/history/{skill-name}-v{N}.md` before any modification.
-2. **One edit per session**: max 1 spec edit per session to prevent cascading
-   changes obscuring cause-effect attribution.
-3. **Post-edit tracking**: update `skill-values/{skill-name}.md`:
+2. **One edit per session**: max 1 spec edit per session to keep
+   cause-effect attribution clean.
+3. **Stamp the skill-values file**:
    - `last_spec_edit` → today's date
    - `edit_reason` → proposal summary
-4. **Apply log entry** in `feedback-log.md`:
+   - `Q_at_edit` → record current Q^L (used by the rollback gate)
+4. **Append `[APPLIED]`** to feedback-log:
    ```
-   - [YYYY-MM-DD] APPLIED: {skill-name} v{N-1}→v{N}: "{edit summary}"
+   - [YYYY-MM-DD] [APPLIED] skill:{name} v{N-1}→v{N} "{edit summary}"
    ```
 
 ---
 
-## Rollback Mechanism
+## Rollback Mechanism (defined, not decorative)
 
-Safety net for bad edits. Checked by `evolve-suggest` at the next session-close:
+The old doc said "check rollback conditions" without specifying them. The new
+gate is explicit:
 
-- If `output_usefulness` dropped ≥ 2 points since the edit, auto-propose a rollback.
-- Rollback = copy `skills/td-nl/history/{skill-name}-v{N-1}.md` back to
-  `skills/{skill-name}/SKILL.md`.
-- Log line:
+**Trigger**: within 5 firings after `last_spec_edit`, if `Q^L` has dropped
+by ≥ 1.5 from `Q_at_edit`, `skill-feedback` writes a `[ROLLBACK-CANDIDATE]`
+flag.
+
+**Action**: next `evolve-suggest` run sees the rollback candidate and stages
+an `evolve-apply --rollback` proposal. On user approval:
+- Copy `skills/td-nl/history/{skill-name}-v{N-1}.md` back to
+  `skills/{skill-name}/SKILL.md`
+- Append:
   ```
-  - [YYYY-MM-DD] ROLLBACK: {skill-name} v{N}→v{N-1}: "{reason}"
+  - [YYYY-MM-DD] [ROLLBACK] skill:{name} v{N}→v{N-1} reason:"Q^L drop of {drop} within 5 firings"
   ```
-- Rollbacks count against the "one edit per session" cap (they're edits too).
+- Rollbacks **count** against the one-edit-per-session cap.
 
 ---
 
-## V^L — Global System Value
+## V^L — Global System Value (derived)
 
-Stored in `skills/td-nl/value-function.md`. Recomputed at each `evolve-suggest`:
+Stored in `skills/td-nl/value-function.md` for display, but recomputed by
+`evolve-suggest` rather than maintained by a separate update path:
 
-- `intent_routing_accuracy` ← average of `trigger_accuracy` across fired skills
-- `output_quality` ← average of `output_usefulness`
-- `token_efficiency` ← average of `token_efficiency`
-- `overall` ← weighted average (weights configurable in `config.yaml`)
+```
+V^L.overall = sum_{s in active_skills}  w(s) * Q^L_s.overall
+            / sum_{s in active_skills}  w(s)
 
-Compared with previous prediction to update `delta_direction` (improving / stable / degrading).
+where w(s) = exp(-days_since_last_firing(s) / 14)   # 14-day half-life
+      active_skills = skills with at least one firing in the last 30 days
+```
+
+Component scores (`intent_routing_accuracy`, `output_quality`,
+`token_efficiency`) are computed analogously from the per-skill `Q^L`
+component fields.
+
+`delta_direction` (`improving` / `stable` / `degrading`) is set by comparing
+the current `V^L.overall` to the value last written, with hysteresis: change
+only when |new − old| ≥ 0.3.
+
+---
+
+## Migration notes (from v3 batch pipeline)
+
+- The v3 5-phase G2 block format is **deprecated**. Existing G2 entries in
+  `feedback-log.md § Pending Feedback` can stay as-is — `evolve-suggest`
+  reads the new `§ Pending Flags` section instead. A one-shot migration
+  script (optional) can collapse old G2 blocks into flags by `outcome`.
+- The `textgrad_backend/` directory and the TextGrad backward-pass code
+  path are no longer load-bearing. Keep the directory for now in case
+  someone wants to revisit batch attribution; mark it deprecated in its
+  README.
+- `evolve-suggest --apply-proposal --json` (Python backend invocation) is
+  retained but now operates on `§ Pending Flags` only.

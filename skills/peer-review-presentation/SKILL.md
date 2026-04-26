@@ -36,4 +36,4 @@ None. Read + Grep.
 - Do NOT evaluate content correctness — that's a later stage.
 
 ## Tests
-`tests/test_presentation.sh` — runs on fixture paper with two seeded consecutive duplicate section headings. Output must contain `[minor]` flagging duplicate or repeated headings.
+`tests/test_presentation.sh` — runs on a fixture paper with a seeded heading-consistency flaw; the stage's output must flag a heading-consistency issue at `[minor]` severity.

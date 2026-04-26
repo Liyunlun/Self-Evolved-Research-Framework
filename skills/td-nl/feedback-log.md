@@ -1,30 +1,28 @@
 # Skill Feedback Log
-<!-- Append-only during sessions. Processed by evolve-suggest at session-close. -->
-<!-- After processing, entries move to "Processed" section below. -->
+<!-- Two active sections: § Pending Flags (written by skill-feedback online),
+     § Pending Proposals (written by evolve-suggest). Processed entries move
+     to § Processed Flags. The legacy § Pending Feedback (G2 v3 5-phase blocks)
+     is deprecated and kept only for historical inspection. -->
 
-<!-- SCHEMA v3 (5-phase inline TD; preferred):
-     Each G2 entry is a 6-line block:
+<!-- ACTIVE FORMAT — flag lines (written by skill-feedback):
 
-     - [DATE] session:{sid} node:{nid} upstream:{csv|-} skill:{name}
-         P1_analysis: "key features; V^L coverage gap; watch-outs from prior failures"
-         P2_predict:  V={1-10}, conf={high|med|low}, reason="why this V"
-         P3_td:       delta={float}, interp="why the surprise"    # omit on root firings
-         P4_strategy: {refine|keep|reset}, note="concrete adjustment"
-         P5_result:   outcome={better|as_expected|worse}, reward={+1|0|-1}, ev="post-hoc evidence"
+       - [YYYY-MM-DD] [FLAG-HARD]            skill:{name} Q:{old}→{new} delta:{±r} conf:{c} ev:"..."
+       - [YYYY-MM-DD] [FLAG-SOFT]            skill:{name} Q:{old}→{new} delta:{±r} conf:{c} ev:"..."
+       - [YYYY-MM-DD] [ROLLBACK-CANDIDATE]   skill:{name} Q since edit: {Q_at_edit}→{Q_new} (Δ={drop})
 
-     Field roles:
-       - P2_predict.V    : self-estimate of Q^L BEFORE firing; replaces bootstrap in td_layer
-       - P3_td.delta     : inline TD error = reward_prev + gamma*V(curr) - V(prev);
-                           omit on root firings (upstream:-) - no previous reward to use
-       - P5_result.reward: observed outcome of THIS firing; used as r for the NEXT firing's P3
+     Plus the lines evolve-apply writes:
 
-     SCHEMA v2 (single-line DAG-aware; still accepted):
-       - [DATE] session:{sid} node:{nid} upstream:{csv|-} skill:{name} | outcome:{o} | delta:{d} | "{evidence}"
+       - [YYYY-MM-DD] [APPLIED]              skill:{name} v{N-1}→v{N} "{edit summary}"
+       - [YYYY-MM-DD] [ROLLBACK]             skill:{name} v{N}→v{N-1} reason:"..."
 
-     SCHEMA v1 (legacy single-line; still accepted, treated as isolated root firings):
-       - [DATE] skill:{name} | outcome:{o} | delta:{d} | "{evidence}" -->
+     DEPRECATED FORMAT (v3 5-phase G2 block) is documented at the end of this file. -->
 
-## Pending Feedback
+## Pending Flags
+<!-- Written by skill-feedback after a signal-gated firing. Consumed by evolve-suggest. -->
+
+
+
+## Pending Feedback (DEPRECATED — v3 batch pipeline; do not append new entries)
 
 
 

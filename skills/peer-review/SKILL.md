@@ -29,7 +29,7 @@ Before downloading or preprocessing anything, collect the run configuration. Use
    - Oral: additionally requires genuine new insight AND strong method validation.
    - Best Paper: additionally requires transformative insight, best-in-class method, flawless presentation.
 2. **Reviewer count** (`reviewers`): `1 (solo)` / `2` / `3`.
-3. **Reviewer backgrounds** (only if `reviewers > 1`): free-text persona per reviewer (e.g. "RL theorist", "empirical RL engineer", "NLP practitioner"). Ask via `AskUserQuestion` Other/free-text field or a follow-up prompt.
+3. **Reviewer backgrounds** (only if `reviewers > 1`): free-text persona per reviewer describing the subfield, methodological orientation, or role the reviewer is meant to embody. Ask via `AskUserQuestion` Other/free-text field or a follow-up prompt. Accept any short descriptor the user supplies; do not suggest specific fields.
 4. **Recommendation emission** (`rec`): `yes (default)` / `no`. Default-on means every final review contains a `## Recommendation` section.
 
 After collecting Q1, load the default bar block from `shared/review_level.yaml[<level>].bar` and show it to the user:
@@ -44,14 +44,14 @@ Save all answers to `outputs/peer-review/<paper_id>/run_config.yaml`:
 level: <poster|oral|best_paper>
 reviewers: <1|2|3>
 recommendation: <yes|no>
-reviewer_backgrounds:  # only if reviewers > 1
-  - "RL theorist"
-  - "empirical RL engineer"
+reviewer_backgrounds:  # only if reviewers > 1; one free-text descriptor per reviewer
+  - "<reviewer 1 background>"
+  - "<reviewer 2 background>"
 ```
 
 ## Step 1 — Resolve input & preprocess
 
-1. If arXiv URL, download PDF via `better-fetch` or curl; if PDF path given, copy to `00_preprocess/paper.pdf`. Derive `paper_id` (e.g., `arxiv_2604.13940`).
+1. If arXiv URL, download PDF via `better-fetch` or curl; if PDF path given, copy to `00_preprocess/paper.pdf`. Derive `paper_id` as an alphanumeric slug from the arXiv identifier or the PDF filename (strip extension, lowercase, replace non-alphanumerics with `_`).
 2. Invoke `document-skills:pdf` to extract text → `00_preprocess/paper.md`. Store page count, title, authors in `metadata.yaml`.
 
 Preprocessing is ALWAYS done once, regardless of reviewer count (shared across reviewers).
