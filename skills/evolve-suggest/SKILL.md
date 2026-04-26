@@ -1,102 +1,166 @@
 ---
 name: evolve-suggest
-description: At session-close, aggregate pending G2 feedback (from skills/td-nl/feedback-log.md) into per-skill value updates (Q^L) and the global V^L, then — when the TD error is strong enough — propose a concrete edit to a skill's SKILL.md. Runs a TextGrad-based backward pass with a TD(0) layer on top. Never auto-applies; a proposal is queued for user approval via evolve-apply.
+description: On-demand audit and spec-edit proposer for the SER skill evolution cycle. Reads skills/td-nl/feedback-log.md § Pending Flags (written by skill-feedback during normal use), recomputes V^L from per-skill Q^L's, and — when the flag pattern meets the proposal threshold — drafts a single spec edit for the most-affected skill. Never auto-applies. Triggered by the user (e.g. "audit the skills", "propose any skill edits") or optionally invoked from session-close.
 ---
 
 # evolve-suggest
 
-**Trigger**: Runs at `session-close`, after `memory-write` and `memory-consolidate`.
+**Trigger**: On demand. The user asks for an audit or for the framework to
+propose skill improvements. May also be invoked from `session-close` if the
+user opts into the optional evolution step.
 
-**Shared context**: Before running this skill, Read `skills/_shared/evolve-cycle.md` for the G2/G1 loop, DAG schema, TD(0) layer, infrastructure layout, and rollback rules.
+**Shared context**: Read `skills/_shared/evolve-cycle.md` for the
+infrastructure layout, the online vs. audit split, and rollback rules.
 
-This is the aggregation and reasoning step. It runs a TextGrad-style backward
-pass over the per-session DAG of skill firings, scales the resulting textual
-gradients by a TD(0) error, and (optionally) proposes spec edits.
+This skill no longer runs the per-firing learning loop — that lives in
+`skill-feedback` (online, EWMA-with-anchor, signal-gated). `evolve-suggest`
+now does three things only:
 
-**Preferred path — run the Python backend**:
+1. Recompute the global system value `V^L` from current per-skill `Q^L`'s.
+2. Decide whether the accumulated `[FLAG-HARD]` / `[FLAG-SOFT]` /
+   `[ROLLBACK-CANDIDATE]` lines justify a spec-edit proposal.
+3. Draft at most **one** proposal and queue it for `evolve-apply`.
 
-```bash
-python scripts/evolve_textgrad.py --apply-proposal --json
+## Modes
+
+- **Default**: full audit + propose-if-justified.
+- **`--audit`** (or user says "just audit, don't propose"): steps 1–3 below
+  only. No proposal drafted.
+- **`--apply-proposal --json`**: legacy Python-backend invocation; same
+  pipeline, machine-readable output. The TextGrad backward pass path that
+  used to run here is removed — it only made sense for the deprecated batch
+  G2→G1 pipeline.
+
+## Phase 1 — Read state
+
+1. Read `skills/td-nl/feedback-log.md`. Locate `§ Pending Flags`.
+2. If empty → exit with "no pending flags; nothing to audit". Skip the rest.
+3. Read `skills/td-nl/value-function.md` (current `V^L`).
+4. Read `skills/td-nl/skill-values/{name}.md` for every skill named in the
+   pending flags (and any skill referenced for V^L recomputation).
+
+## Phase 2 — Recompute V^L (derived, not stored separately)
+
+Per `_shared/evolve-cycle.md § V^L`:
+
+```
+V^L.overall = sum_{s in active_skills}  w(s) * Q^L_s.overall
+            / sum_{s in active_skills}  w(s)
+
+w(s) = exp(-days_since_last_firing(s) / 14)
+active_skills = skills with at least one firing in the last 30 days
 ```
 
-The backend (`skills/td-nl/textgrad_backend/`) performs all of Phases 1-6
-below automatically and writes the cycle summary + optional PROPOSAL entry
-back into `skills/td-nl/feedback-log.md`. Use `--dry-run` first if you want
-a preview without mutating the log.
+Component fields (`intent_routing_accuracy`, `output_quality`,
+`token_efficiency`) are recomputed the same way from the corresponding
+per-skill components. Update `delta_direction` with hysteresis (change only
+when |Δ| ≥ 0.3 vs the previously written value). Write
+`skills/td-nl/value-function.md`.
 
-**Fallback path — execute the phases manually** (use when Python is not
-available in the environment, or when you want to audit a specific step):
+In `--audit` mode, **stop here** and emit a short report:
 
-## Phase 1: Read Current State
-1. Read `skills/td-nl/feedback-log.md § Pending Feedback`
-2. If no pending feedback → terminate (nothing to update)
-3. Read `skills/td-nl/value-function.md`
-4. Read relevant `skills/td-nl/skill-values/*.md` for skills that fired
+```
+[AUDIT] V^L: {old} → {new} (Δ {±d.dd}, direction: {improving|stable|degrading})
+        active skills: {N}
+        pending flags:  HARD={a}  SOFT={b}  ROLLBACK={c}
+        top movers:
+          - {skill}: Q^L {q_old}→{q_new}
+          - ...
+```
 
-## Phase 2: DAG Reconstruction + Per-Skill Aggregation (G1)
-5. Parse each pending G2 entry (schema v2: includes `session`, `node`,
-   `upstream`). Group by session → per-session DAG of firings.
-6. For each skill in each session:
-   - Count: N_better, N_expected, N_worse
-   - Compute `net_delta` = sum of all delta values
-   - Synthesize `dominant_pattern` = 1-sentence summary of evidence
-   - Confidence: high (6+ entries), medium (3-5), low (1-2)
+## Phase 3 — Proposal trigger
 
-## Phase 3: TD(0) Scoring + Per-Skill Value Update
-7. For each skill with G1 output:
-   a. Read current `overall` from `skill-values/{skill-name}.md` as V(s)
-   b. Bootstrap V(s') = clip(V(s) + 0.5 · r_clipped, 1, 10)
-   c. Compute TD error: `td = r + γ·V(s') - V(s)` with γ=0.9
-   d. Strength: `hard` (|td| ≥ 1.0), `soft` (≥ 0.25), `drop` (< 0.25)
-   e. Learning rate by confidence: high=1.0, medium=0.5, low=0.25
-   f. Update: `new_score = clamp(old_score + lr · td, 1, 10)`
-   g. Append session row to History table; write updated file.
+Draft a proposal iff **either**:
+- At least one `[FLAG-HARD]` line exists in pending flags, OR
+- `[FLAG-SOFT]` for the same skill in the same direction (positive vs.
+  negative) appears **3+ times in a row** in the flag list.
 
-## Phase 4: System Value Update
-8. Recompute V^L from per-skill values:
-   - intent_routing_accuracy ← average of trigger_accuracy across fired skills
-   - output_quality ← average of output_usefulness
-   - token_efficiency ← average of token_efficiency
-   - overall ← weighted average
-9. Compare with previous prediction → update delta_direction
-10. Write updated `value-function.md`
+If neither holds → log `insufficient signal — no proposal` and proceed to
+Phase 5.
 
-## Phase 5: TextGrad Backward + Spec Edit Proposal (conditional)
-11. Build a textgrad computation graph mirroring the DAG:
-    - Each skill spec (SKILL.md) becomes a `requires_grad` Variable
-    - Each firing node becomes an output Variable; its predecessors are its
-      skill-spec Variable plus its upstream firing-nodes
-    - Attach a `TextLoss` at the synthetic head aggregating all leaves
-12. Call `loss.backward(critique)` where `critique` folds in the per-skill
-    TD errors, strengths, and a short evidence digest
-13. Run `TextualGradientDescent.step()` but only over skills with
-    `strength == hard`. This enforces the one-edit-per-session safety cap
-    (the proposal writer further narrows to the single highest |td| skill).
-14. Check trigger conditions:
-    - Any skill with `strength == hard`, OR
-    - Same improvement_direction for a skill in 3+ consecutive sessions
-    - If neither met → skip, log "insufficient signal"
-15. Generate proposal:
-    ```
-    [EVOLVE] {skill-name} (Q^L: {old} → {new}, td: {±d.dd})
-    Problem: {aggregated evidence}
-    Gradient: {textual gradient from backward()}
-    Diff: {candidate SKILL.md after TGD.step}
-    Evidence: {aggregated G1 pattern}
-    Risk: {what could break; history snapshot path}
-    ```
-16. Append proposal to `skills/td-nl/feedback-log.md § Pending Proposals`
-17. Do NOT auto-apply — present to user for approval via `evolve-apply`.
+If a `[ROLLBACK-CANDIDATE]` line exists, route to **Phase 4b** (rollback
+proposal) instead of a forward edit. A rollback always wins over a forward
+edit in the same session.
 
-## Phase 6: Cleanup
-18. Move processed G2 entries from `## Pending Feedback` to `## Processed Feedback`
-19. Write cycle summary (per-session):
-    ```
-    - Cycle YYYY-MM-DD [session:{sid}]: {N} entries across {M} skills (V^L old→new)
-      - {skill-name}: net_delta=N, td_error=±d.dd, strength=hard|soft|drop
-      - Spec proposal: {yes|none}
-    ```
+## Phase 4a — Forward proposal
 
-**Outputs**: Updated skill-values, updated value-function, optional spec edit proposal
-**Token**: ~2-4K (the Python backend is essentially token-free; phases 1-6 manual fallback costs ~2-4K)
-**Composition**: If proposal generated → present to user → `evolve-apply` on approval
+Pick **one** skill: the one with the largest `|Q_new − Q_at_edit|` since its
+last edit (or `|Q_new − Q_first_seen|` if it has never been edited).
+
+Synthesize the proposal:
+
+1. **Pattern**: 1–2 sentence summary of the flag evidence strings — what
+   actually went wrong or right across firings. Quote at most one short
+   evidence snippet.
+2. **Suggested edit**: 1–3 sentences describing the prose change to apply
+   to `skills/{skill-name}/SKILL.md`. Be specific about *where* in the spec
+   the change goes (e.g., "in the 'Process' section, add a step before X").
+   Do not paste a full rewritten file.
+3. **Risk**: name what could regress, and the rollback path
+   `skills/td-nl/history/{skill-name}-v{N}.md` that `evolve-apply` will
+   create.
+
+Append to `skills/td-nl/feedback-log.md § Pending Proposals`:
+
+```
+- [YYYY-MM-DD] [PROPOSE] skill:{name} Q^L:{old}→{new}
+    Pattern: {pattern}
+    Edit:    {suggested edit}
+    Risk:    {risk + history path}
+```
+
+## Phase 4b — Rollback proposal
+
+When a `[ROLLBACK-CANDIDATE]` exists for skill `S`:
+
+1. Locate the most recent `[APPLIED]` entry for `S` in `§ Processed Flags`
+   (or the historical applied log).
+2. Read `skills/td-nl/history/{S}-v{N-1}.md` to confirm it exists.
+3. Append:
+   ```
+   - [YYYY-MM-DD] [PROPOSE-ROLLBACK] skill:{S} v{N}→v{N-1}
+       Reason: {rollback evidence — Q^L drop of {drop} within 5 firings}
+       Restores: skills/td-nl/history/{S}-v{N-1}.md
+   ```
+
+## Phase 5 — Cleanup
+
+- Move flags consumed by Phase 3/4 from `§ Pending Flags` to
+  `§ Processed Flags` (annotated with the cycle date).
+- Write a one-line cycle summary at the top of `§ Processed Flags`:
+  ```
+  - Cycle YYYY-MM-DD: {N} flags processed → V^L {old}→{new}, proposal: {forward|rollback|none}
+  ```
+
+## What this skill never does
+
+- It does **not** modify any `SKILL.md` file directly. Spec edits are the
+  job of `evolve-apply` after user approval.
+- It does **not** write per-skill `Q^L` updates. Those happen online via
+  `skill-feedback`.
+- It does **not** require pending G2 blocks in the v3 5-phase format.
+  That format is deprecated and migrated to flags.
+- It does **not** run the TextGrad backward pass. That belonged to the
+  batch DAG attribution and added cost without changing outcomes after the
+  feedback signal moved online.
+
+## Outputs
+
+- Updated `skills/td-nl/value-function.md` (recomputed V^L)
+- Optional one or two lines appended to `skills/td-nl/feedback-log.md`
+  (proposal + cycle summary)
+
+## Token cost
+
+- `--audit`: ~1–2K (read flags, read skill-values, recompute, emit report)
+- Default (with proposal drafting): ~2–3K
+- Old v3 cost was ~2–4K + per-firing G2 blocks (~200-400 tokens × every
+  firing) that mostly never got read. Net win is on the per-session
+  amortised cost, not the per-invocation one.
+
+## Composition
+
+- **Upstream**: `skill-feedback` (writes the flags this skill consumes).
+- **Downstream**: user reviews proposal → `evolve-apply` (forward edit or
+  rollback).
+- May be invoked at `session-close` when the user opts in. Not mandatory.

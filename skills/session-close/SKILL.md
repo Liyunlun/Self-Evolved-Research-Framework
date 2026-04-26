@@ -1,6 +1,6 @@
 ---
 name: session-close
-description: Wraps up a conversation. Auto-summarizes the session, asks the user to save a digest log, writes logs/digest/YYYY-MM-DD.yaml, updates SUMMARY.md, then chains into memory-write, memory-consolidate, evolve-suggest, and checklist-update. Triggers on end-of-conversation signals (user says goodbye/done, or a long session with substantial work completed).
+description: Wraps up a conversation. Auto-summarizes the session, asks the user to save a digest log, writes logs/digest/YYYY-MM-DD.yaml, updates SUMMARY.md, then chains into memory-write, memory-consolidate, and checklist-update. Optionally invokes evolve-suggest for skill audit/proposal when the user asks for it. Triggers on end-of-conversation signals (user says goodbye/done, or a long session with substantial work completed).
 ---
 
 # session-close
@@ -28,13 +28,19 @@ description: Wraps up a conversation. Auto-summarizes the session, asks the user
    milestone_phase: "{current phase}"
    ```
 4. Update `logs/digest/SUMMARY.md` index table with new entry
+5. Skill evolution is **not** run automatically at session-close. Per-firing
+   `Q^L` updates already happened online via `skill-feedback` whenever a real
+   reward signal was present. Offer once: "Run skill audit? [y/N]" — if yes,
+   chain to `evolve-suggest`; otherwise terminate. Defaulting off keeps
+   session-close cheap and avoids the dead-batch failure mode of the v3
+   pipeline (running aggregation when there is nothing to aggregate).
 
 **Inputs**: Conversation history, config.yaml
 **Outputs**: `logs/digest/YYYY-MM-DD.yaml`, updated SUMMARY.md
-**Token**: ~2K
+**Token**: ~2K (plus ~2-3K only if the user opts into `evolve-suggest`)
 **Composition**:
 - Chain to `memory-write` (capture unrecorded insights/decisions)
 - Chain to `memory-consolidate` (check if consolidation needed)
-- Chain to `evolve-suggest` (G1 aggregation + skill value updates + optional spec edit proposal)
 - Chain to `checklist-update` — mark completed items from this session
+- Optional: chain to `evolve-suggest` only if the user accepted the audit prompt
 - Terminal after all chains complete

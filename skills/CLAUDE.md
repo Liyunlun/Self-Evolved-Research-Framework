@@ -82,9 +82,10 @@ so it's ignored by `scripts/install-skills.sh`.
 - Shared vocabulary: `_shared/cross-model-review.md` (writing-review, idea-verify; codex track only)
 - `codex` track preflight strictly verifies `/codex:setup`, Superpowers, `/codex:review`, and `mcp__codex__codex` MCP registration
 
-### Meta (TD-NL skill evolution)
-- `evolve-suggest`, `evolve-apply`, `general-research`
-- Shared vocabulary: `_shared/evolve-cycle.md`
+### Meta (skill evolution)
+- `skill-feedback` (online per-firing Q-update, signal-gated), `evolve-suggest` (on-demand audit + proposal), `evolve-apply` (commit proposal with version archive + rollback)
+- `general-research` (research-adjacent fallback)
+- Shared vocabulary: `_shared/evolve-cycle.md`. Replaces the deprecated v3 batch G2→G1 + TextGrad pipeline.
 
 ### Integration (one-off)
 - `project-integrate` — merge an unpacked SER distribution into an existing project

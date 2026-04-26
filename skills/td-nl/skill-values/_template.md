@@ -22,6 +22,7 @@
 - spec_file: "skills/{skill-name}/SKILL.md"
 - last_spec_edit: "none"
 - edit_reason: ""
+- Q_at_edit: null     # set by evolve-apply at edit time; consumed by skill-feedback rollback gate
 
 ### Session History (last 10)
 | Date | Context | Outcome | Delta | Evidence |

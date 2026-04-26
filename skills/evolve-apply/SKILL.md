@@ -22,20 +22,28 @@ description: Apply approved skill-spec edits from evolve-suggest — archive the
 
 ## Phase 3: Apply Edits (for each approved proposal)
 6. Archive current spec: copy `skills/{skill-name}/SKILL.md` → `skills/td-nl/history/{skill-name}-v{N}.md`
-7. Apply the edit to `skills/{skill-name}/SKILL.md`
+7. Apply the edit to `skills/{skill-name}/SKILL.md` — for forward proposals,
+   apply the prose change in the named section. For `[PROPOSE-ROLLBACK]`,
+   instead overwrite `skills/{skill-name}/SKILL.md` with the contents of the
+   referenced `skills/td-nl/history/{skill-name}-v{N-1}.md`.
 8. Update the `skill-values/{skill-name}.md`:
    - Set `last_spec_edit` to today's date
    - Set `edit_reason` to the proposal summary
-9. Log to feedback-log.md:
+   - Set `Q_at_edit` to the current `overall` (used by the rollback gate)
+9. Log to feedback-log.md (forward edit or rollback):
    ```
-   - [YYYY-MM-DD] APPLIED: {skill-name} v{N-1}→v{N}: "{edit summary}"
+   - [YYYY-MM-DD] [APPLIED]   skill:{name} v{N-1}→v{N} "{edit summary}"
+   - [YYYY-MM-DD] [ROLLBACK]  skill:{name} v{N}→v{N-1} reason:"{reason}"
    ```
 
-## Phase 4: Rollback Check (next session)
-10. At the next `evolve-suggest`, compare pre-edit and post-edit performance:
-    - If output_usefulness dropped >= 2 points → auto-propose rollback
-    - Rollback: restore from `skills/td-nl/history/{skill-name}-v{N-1}.md`
-    - Log: `[YYYY-MM-DD] ROLLBACK: {skill-name} v{N}→v{N-1}: "{reason}"`
+## Phase 4: Rollback gate (defined, post-edit)
+10. The rollback path is fully online: `skill-feedback`, on every subsequent
+    firing of an edited skill, compares the current `Q^L` to the stamped
+    `Q_at_edit`. If `Q^L` has dropped by ≥ 1.5 within 5 firings since the
+    edit, `skill-feedback` writes a `[ROLLBACK-CANDIDATE]` flag. The next
+    `evolve-suggest` run turns that flag into a `[PROPOSE-ROLLBACK]` proposal,
+    which the user can approve back through this skill.
+11. Rollbacks count against the one-edit-per-session cap (they are edits too).
 
 ## Phase 5: Evolution Report
 11. Generate report:

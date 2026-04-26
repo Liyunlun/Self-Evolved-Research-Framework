@@ -4,9 +4,12 @@
 > All skills trigger automatically via intent detection — no explicit commands needed.
 
 > **Self-Evolving Principle**: The framework improves its own micro-skills through use.
-> Every skill execution generates feedback (G2). At session-close, feedback is aggregated (G1)
-> and used to propose spec edits via natural language TD learning. The skills you use today
-> become better tomorrow.
+> When a SER skill firing has an actual reward signal — explicit user feedback,
+> downstream consumption, or hard failure — `skill-feedback` updates that skill's
+> Q^L online (EWMA-with-anchor, signal-gated). Audit and spec-edit proposals are
+> on-demand via `evolve-suggest`. The dead "G2 every firing → G1 batch" pipeline
+> is deprecated; the skills you use today become better tomorrow only when there
+> is real signal to learn from.
 
 ## Enforcement Priority
 
@@ -37,21 +40,32 @@ At the start of each conversation, **silently execute** the following steps, the
 6. If milestone ≤3 days away: append `** MILESTONE APPROACHING **`
 7. Proceed directly to the user's request without asking questions
 
-### During Session → G2 Inline Assessment
+### During Session → Online Q-update via `skill-feedback`
 
-After EVERY micro-skill execution, silently append a G2 feedback entry to
-`skills/td-nl/feedback-log.md`. See `skills/_shared/evolve-cycle.md § G2` for format.
-This is automatic and costs ~100-200 tokens per skill firing.
+After a SER micro-skill fires, invoke `skill-feedback` **only when a usable
+reward signal exists**:
+
+1. Explicit user feedback in the messages following the firing (correction,
+   acceptance, rejection),
+2. Downstream consumption (a later skill read the output, used the file,
+   chained from it — or had to retry it), OR
+3. Hard failure (no output, error, schema-invalid artifact).
+
+Self-assessed "I think this was fine" is **not** a signal. Skip silently.
+See `skills/_shared/evolve-cycle.md` for the full spec. Cost: ~80-150 tokens
+per fire, zero when the gate rejects.
 
 ### Conversation End → `session-close`
 
 When the conversation is about to end:
 1. Generate a summary (1-3 key points + decisions + file changes). **Record all user text input.**
 2. Execute `memory-write` → `memory-consolidate`
-3. Execute `evolve-suggest` (G1 aggregation + optional spec edit proposal)
-4. Update `memory/MEMORY.md`
-5. Ask: "Save session log? [Y/edit]"
-6. Write to `logs/digest/YYYY-MM-DD.yaml`, update `SUMMARY.md`
+3. Update `memory/MEMORY.md`
+4. Ask: "Save session log? [Y/edit]"
+5. Write to `logs/digest/YYYY-MM-DD.yaml`, update `SUMMARY.md`
+6. Optional: ask "Run skill audit? [y/N]" → `evolve-suggest` only if yes.
+   Skill audit is no longer mandatory because per-firing Q^L updates already
+   happened online via `skill-feedback`.
 
 ---
 
@@ -105,6 +119,8 @@ should be chosen.
 | 38 | User asks to plan / design an experiment / "what experiments should we run" — or chained after `idea-refine` | `experiment-plan` |
 | 39 | User asks to sweep / tune / explore hyperparameters / DSE / "grid search" / "超参搜索" | `experiment-dse` |
 | 40 | User asks to search the literature / find papers / "arxiv search" / "related work" / "survey this topic" / "文献搜索" | `paper-lit-search` |
+| 41 | A SER skill just fired AND there's a real reward signal (user feedback / downstream consumption / hard failure) | `skill-feedback` |
+| 42 | User asks to audit skills / "propose any skill improvements" / "are any skills underperforming" | `evolve-suggest` |
 
 ---
 
@@ -126,15 +142,31 @@ vocabulary (tree, markers, composition rules, paper audit template) lives in
 
 ---
 
-## Skill Evolution (TD-NL)
+## Skill Evolution (online + on-demand audit)
 
-The framework optimizes its own micro-skill specs using natural language TD learning:
+The framework optimizes its own micro-skill specs in two tiers:
 
-1. **G2 (inline)**: After every skill fires → append outcome assessment to feedback log
-2. **G1 (session-close)**: `evolve-suggest` aggregates G2 → updates per-skill values → proposes spec edits
-3. **Apply (user-triggered)**: `evolve-apply` edits skill specs with version archive + rollback safety
+1. **Online Q-update (`skill-feedback`)**: After a SER skill fires *and only when
+   a real reward signal is present* (explicit user feedback, downstream
+   consumption, or hard failure), update that skill's `Q^L` via an
+   EWMA-with-anchor pull. Hard signals (|delta| ≥ 2) write a `[FLAG-HARD]`
+   line to `feedback-log.md`. Cost: ~80-150 tokens per fire, **zero** when
+   there is no signal.
+2. **On-demand audit (`evolve-suggest`)**: Run when the user asks (or
+   optionally at session-close). Recomputes `V^L` from the per-skill `Q^L`'s,
+   reads `§ Pending Flags`, and — only if the signal threshold is met — drafts
+   one spec-edit proposal.
+3. **Apply (`evolve-apply`)**: User approves a proposal; the skill is edited
+   with version archive + rollback support. A `Q^L` drop of ≥1.5 within 5
+   firings post-edit auto-stages a rollback proposal.
 
-Infrastructure lives in `skills/td-nl/`. See `skills/_shared/evolve-cycle.md` for the full process.
+Honesty note: the per-firing math is **not** TD(0) — there is no Markov
+state-transition between skill firings. It is incremental EWMA. The deprecated
+v3 "G2 every firing → G1 batch + TextGrad backward" path is documented in
+`skills/_shared/evolve-cycle.md § Migration notes`.
+
+Infrastructure lives in `skills/td-nl/`. See `skills/_shared/evolve-cycle.md`
+for the full process.
 
 ---
 
