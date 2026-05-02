@@ -24,6 +24,8 @@ Implements a venue-aware, optionally multi-reviewer extension of the AAAI-26 AI-
 
 Before downloading or preprocessing anything, collect the run configuration. Use `AskUserQuestion` for any field not provided via inline override.
 
+**Pre-built run shortcut.** If `outputs/peer-review/<paper_id>/run_config.yaml` AND `outputs/peer-review/<paper_id>/level_bar.md` already exist at the resolved `paper_id`, AND `run_config.yaml` contains every required field (`level`, `reviewers`, `recommendation`, plus a `reviewer_backgrounds` list of length `reviewers` when `reviewers > 1`), then skip the four interactive questions below and use the existing files verbatim. This is how shortcut wrappers like `peer-review-for-ddl` hand off without re-prompting the user. Required: print one line `[orchestrator] using pre-built run_config.yaml + level_bar.md from <path>` so the user sees that Step 0 was bypassed. Conflict resolution: if an inline override (e.g. `level=oral`) disagrees with the file, halt and ask the user which to keep — do not silently overwrite.
+
 1. **Venue level** (`level`): one of `poster` / `oral` / `best_paper`.
    - Poster: NeurIPS/ICML/ICLR poster track — sound + useful result.
    - Oral: additionally requires genuine new insight AND strong method validation.
@@ -145,6 +147,7 @@ outputs/peer-review/<paper_id>/
 
 - `peer-review-story`, `peer-review-presentation`, `peer-review-evaluations`, `peer-review-correctness`, `peer-review-significance`, `peer-review-critique`, `peer-review-qa` — the 7 per-reviewer pipeline skills this orchestrator invokes.
 - `peer-review-sac` — synthesizes N independent reviews in multi-reviewer mode (short meta-summary, NOT an AAAI-format review).
+- `peer-review-for-ddl` — deadline-mode shortcut wrapper that pre-builds `run_config.yaml` + `level_bar.md` (best_paper × 3 reviewers × Kaiming-He writing-style overlay × mandatory taste-priors) and hands off to this orchestrator with Step 0 bypassed.
 - `document-skills:pdf` — preprocessing dependency.
 - `superpowers:dispatching-parallel-agents` — reference pattern for launching reviewer sub-agents in parallel.
 
